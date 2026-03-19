@@ -1,0 +1,40 @@
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Kotlin/JVM
+*.class
+*.jar
+*.war
+*.log
+out/
+
+# Gradle wrapper jar (must come after *.jar)
+!gradle/wrapper/gradle-wrapper.jar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.envrc
+local.properties
+
+# Visual regression test artifacts (transient)
+**/goldens/actuals/
+**/goldens/diffs/
+kotlin-js-store/
+
+# Generated docs (CI regenerates these)
+docs/comparison/
+docs/index.html
+
+# Claude Code
+.claude/settings.local.json
