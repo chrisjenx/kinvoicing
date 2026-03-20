@@ -15,9 +15,10 @@ import com.chrisjenx.composepdf.internal.PdfRenderer
 fun renderToPdf(
     config: PdfPageConfig = PdfPageConfig.A4,
     density: Density = Density(2f),
+    mode: RenderMode = RenderMode.VECTOR,
     content: @Composable () -> Unit,
 ): ByteArray {
-    return PdfRenderer.renderSinglePage(config, density, content)
+    return PdfRenderer.renderSinglePage(config, density, mode, content)
 }
 
 /**
@@ -25,7 +26,8 @@ fun renderToPdf(
  *
  * @param pages Number of pages to render.
  * @param config Page size and margins (applied to all pages). Defaults to A4.
- * @param density Render density. Higher values produce sharper raster output.
+ * @param density Render density. Higher values produce sharper output.
+ * @param mode Vector (SVG-based) or raster rendering. Defaults to VECTOR.
  * @param content The composable content for each page. Receives the zero-based page index.
  * @return A valid PDF as a ByteArray.
  */
@@ -33,7 +35,8 @@ fun renderToPdf(
     pages: Int,
     config: PdfPageConfig = PdfPageConfig.A4,
     density: Density = Density(2f),
+    mode: RenderMode = RenderMode.VECTOR,
     content: @Composable (pageIndex: Int) -> Unit,
 ): ByteArray {
-    return PdfRenderer.renderMultiPage(pages, config, density, content)
+    return PdfRenderer.renderMultiPage(pages, config, density, mode, content)
 }
