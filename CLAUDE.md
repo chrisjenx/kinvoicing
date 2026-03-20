@@ -1,4 +1,4 @@
-# CLAUDE.md
+# compose-pdf
 
 ## Project Overview
 
@@ -80,14 +80,22 @@ renderToPdf { content() }
       → Link annotations → ByteArray (raster PDF)
 ```
 
-## Key Research Findings
+## Gotchas & Known Limitations
 
-- Skia's PDF symbols are NOT in Skiko's native binary (checked via `nm` on 0.8.18 and 0.9.47)
-- Skia's SVGCanvas IS available and produces clean vector SVG from Compose content
-- SVGCanvas emits `<image>` with base64 PNG data URIs for Image composables
-- `CanvasLayersComposeScene` accepts any Skia Canvas for rendering
-- PDFBox handles font subsetting automatically via `PDType0Font.load(doc, file)`
-- The public API is backend-agnostic; if Skiko merges PDF support, `RenderMode.SKIA_PDF` can be added
+- **`@InternalComposeUiApi` opt-in required** — `CanvasLayersComposeScene` is internal Compose API. Test files using it need `@file:OptIn(InternalComposeUiApi::class)`.
+- **Variable fonts excluded** — `FontResolver.isVariableFont()` detects and skips fonts with an `fvar` table because PDFBox renders them at default axis values (wrong weight/width). Only static `.ttf`/`.otf` files are embedded.
+- **SVGCanvas bezier path approximation** — Skia's SVGCanvas serializes non-uniform rounded rects as complex quadratic bezier paths (dozens of Q segments), not `<rect rx>`. This produces minor anti-aliasing differences vs Compose's native rendering. Use `PdfRoundedCornerShape` for best results.
+- **SVGCanvas emits images as base64** — `Image` composables become `<image>` with inline base64 PNG data URIs in the SVG, which the converter re-embeds as `PDImageXObject`.
+- **Fidelity diff images use 10x amplification** — `ImageMetrics.generateDiffImage()` amplifies pixel differences 10x. Bright colors in diff images are expected for vector mode and do not indicate failures. Check RMSE values instead.
+
+## Fidelity Tests
+
+```bash
+./gradlew :compose-pdf-test:test                           # Run all fidelity tests
+open compose-pdf-test/build/reports/fidelity/index.html    # View HTML report
+```
+
+To add a fixture: create a `@Composable` function in `FidelityFixtures.kt`, then add a `Fixture(...)` entry to the `fidelityFixtures` list. Set `vectorThreshold` based on content complexity (0.15 default, up to 0.40 for dense layouts).
 
 ## Code Conventions
 
