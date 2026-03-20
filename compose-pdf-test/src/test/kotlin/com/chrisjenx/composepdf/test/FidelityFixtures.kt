@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chrisjenx.composepdf.PdfLink
+import com.chrisjenx.composepdf.PdfPageConfig
+import com.chrisjenx.composepdf.PdfRoundedCornerShape
 import kotlin.math.cos
 import kotlin.math.sin
 import org.jetbrains.skia.Color as SkColor
@@ -52,6 +54,7 @@ data class Fixture(
     val category: String = "basic",
     val description: String = "",
     val vectorThreshold: Double = 0.15,
+    val config: PdfPageConfig = PdfPageConfig.A4,
     val content: @Composable () -> Unit,
 )
 
@@ -91,6 +94,15 @@ val fidelityFixtures = listOf(
     Fixture("overlapping-elements", "edge-case", "Z-order with 3 overlapping semi-transparent boxes + text") { OverlappingElementsFixture() },
     Fixture("color-bands", "edge-case", "32 thin HSL color bands") { ColorBandsFixture() },
     Fixture("empty-page", "edge-case", "Nearly blank page with 1dp black marker") { EmptyPageFixture() },
+    // Real-world documents
+    Fixture("detailed-invoice", "document", "Professional invoice with tax, discounts, and payment terms", 0.25) { DetailedInvoiceFixture() },
+    Fixture("receipt", "document", "Point-of-sale receipt with itemized list and barcode placeholder") { ReceiptFixture() },
+    Fixture("report-page", "document", "Business report page with KPI cards and data table", 0.25) { ReportPageFixture() },
+    Fixture("form-layout", "document", "Structured form with labeled fields and checkboxes") { FormLayoutFixture() },
+    Fixture("technical-diagram", "document", "Flowchart-style diagram with connected shapes", 0.20) { TechnicalDiagramFixture() },
+    // Page sizes
+    Fixture("letter-page", "page-size", "US Letter size content", config = PdfPageConfig.Letter) { LetterPageFixture() },
+    Fixture("a3-page", "page-size", "A3 size content", config = PdfPageConfig.A3) { A3PageFixture() },
 )
 
 // ── Basic ──
@@ -372,7 +384,7 @@ private fun ClipShapesFixture() {
         }
         Box(
             Modifier.size(120.dp, 80.dp)
-                .clip(RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp))
+                .clip(PdfRoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp))
                 .background(Color(0xFF6600FF)),
         )
         // Nested clips
@@ -959,6 +971,477 @@ private fun EmptyPageFixture() {
                 .size(1.dp)
                 .background(Color.Black),
         )
+    }
+}
+
+// ── Real-World Documents ──
+
+@Composable
+private fun DetailedInvoiceFixture() {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        // Header
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text("INVOICE", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
+                Text("#INV-2024-0847", fontSize = 14.sp, color = Color.Gray)
+                Text("Date: March 15, 2024", fontSize = 12.sp, color = Color.Gray)
+                Text("Due: April 14, 2024", fontSize = 12.sp, color = Color.Red)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text("TechCorp Solutions", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("742 Evergreen Terrace", fontSize = 11.sp, color = Color.Gray)
+                Text("Springfield, IL 62704", fontSize = 11.sp, color = Color.Gray)
+                Text("billing@techcorp.io", fontSize = 11.sp, color = Color(0xFF1565C0))
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Divider(color = Color(0xFF1A237E), thickness = 2.dp)
+        Spacer(Modifier.height(8.dp))
+        // Bill To
+        Text("Bill To:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+        Text("Acme Industries Ltd.", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("456 Oak Avenue, Suite 200", fontSize = 11.sp)
+        Spacer(Modifier.height(12.dp))
+        // Table header
+        Row(Modifier.fillMaxWidth().background(Color(0xFF1A237E)).padding(8.dp)) {
+            Text("Description", Modifier.weight(3f), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text("Qty", Modifier.weight(0.7f), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text("Rate", Modifier.weight(1f), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text("Amount", Modifier.weight(1f), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        }
+        // Line items
+        val items = listOf(
+            listOf("Web Application Development", "40", "$150.00", "$6,000.00"),
+            listOf("UI/UX Design Services", "20", "$120.00", "$2,400.00"),
+            listOf("Database Architecture", "15", "$175.00", "$2,625.00"),
+            listOf("QA Testing & Code Review", "10", "$100.00", "$1,000.00"),
+            listOf("Project Management", "8", "$130.00", "$1,040.00"),
+        )
+        for ((idx, item) in items.withIndex()) {
+            val bg = if (idx % 2 == 0) Color(0xFFF5F5F5) else Color.White
+            Row(Modifier.fillMaxWidth().background(bg).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Text(item[0], Modifier.weight(3f), fontSize = 11.sp)
+                Text(item[1], Modifier.weight(0.7f), fontSize = 11.sp)
+                Text(item[2], Modifier.weight(1f), fontSize = 11.sp)
+                Text(item[3], Modifier.weight(1f), fontSize = 11.sp)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Divider()
+        // Totals
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+            Row(Modifier.width(200.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Subtotal:", fontSize = 12.sp)
+                Text("$13,065.00", fontSize = 12.sp)
+            }
+            Row(Modifier.width(200.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Discount (10%):", fontSize = 12.sp, color = Color(0xFF2E7D32))
+                Text("-$1,306.50", fontSize = 12.sp, color = Color(0xFF2E7D32))
+            }
+            Row(Modifier.width(200.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Tax (8.5%):", fontSize = 12.sp)
+                Text("$999.47", fontSize = 12.sp)
+            }
+            Divider(Modifier.width(200.dp))
+            Row(Modifier.width(200.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Total Due:", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("$12,757.97", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        // Payment terms
+        Box(Modifier.fillMaxWidth().background(Color(0xFFFFF3E0), RoundedCornerShape(8.dp)).padding(12.dp)) {
+            Text("Payment Terms: Net 30. Please make checks payable to TechCorp Solutions or wire to account ending 4892.", fontSize = 10.sp, color = Color(0xFFE65100))
+        }
+    }
+}
+
+@Composable
+private fun ReceiptFixture() {
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = 80.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("COFFEE HOUSE", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("123 Main Street", fontSize = 11.sp, color = Color.Gray)
+        Text("Tel: (555) 123-4567", fontSize = 11.sp, color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+        // Dashed line simulation
+        Text("- - - - - - - - - - - - - - - - - - - - - - - -", fontSize = 10.sp, color = Color.Gray)
+        Spacer(Modifier.height(4.dp))
+        Text("ORDER #4821", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("Mar 20, 2024  2:34 PM", fontSize = 11.sp, color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+        val receiptItems = listOf(
+            Triple("Cappuccino (Large)", "x2", "$9.50"),
+            Triple("Blueberry Muffin", "x1", "$3.75"),
+            Triple("Avocado Toast", "x1", "$8.95"),
+            Triple("Fresh OJ", "x1", "$4.50"),
+            Triple("Chocolate Croissant", "x2", "$7.00"),
+        )
+        for ((item, qty, price) in receiptItems) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                Text(item, Modifier.weight(2f), fontSize = 12.sp)
+                Text(qty, Modifier.weight(0.5f), fontSize = 12.sp, textAlign = TextAlign.Center)
+                Text(price, Modifier.weight(0.8f), fontSize = 12.sp, textAlign = TextAlign.End)
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text("- - - - - - - - - - - - - - - - - - - - - - - -", fontSize = 10.sp, color = Color.Gray)
+        Row(Modifier.fillMaxWidth()) {
+            Text("Subtotal", Modifier.weight(1f), fontSize = 12.sp)
+            Text("$33.70", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+        Row(Modifier.fillMaxWidth()) {
+            Text("Tax (7%)", Modifier.weight(1f), fontSize = 12.sp, color = Color.Gray)
+            Text("$2.36", fontSize = 12.sp, color = Color.Gray)
+        }
+        Row(Modifier.fillMaxWidth()) {
+            Text("Tip", Modifier.weight(1f), fontSize = 12.sp, color = Color.Gray)
+            Text("$5.00", fontSize = 12.sp, color = Color.Gray)
+        }
+        Divider(thickness = 2.dp)
+        Row(Modifier.fillMaxWidth()) {
+            Text("TOTAL", Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("$41.06", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Paid with Visa **** 4242", fontSize = 11.sp, color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+        // Barcode placeholder
+        Row(horizontalArrangement = Arrangement.Center) {
+            for (i in 0 until 30) {
+                val w = if (i % 3 == 0) 3.dp else 1.dp
+                Box(Modifier.width(w).height(40.dp).background(Color.Black))
+                Spacer(Modifier.width(1.dp))
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text("Thank you for your visit!", fontSize = 12.sp, fontStyle = FontStyle.Italic)
+    }
+}
+
+@Composable
+private fun ReportPageFixture() {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text("Q1 2024 Performance Report", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Prepared: March 31, 2024", fontSize = 11.sp, color = Color.Gray)
+        Spacer(Modifier.height(12.dp))
+        // KPI Cards
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val kpis = listOf(
+                Triple("Revenue", "$2.4M", Color(0xFF1565C0)),
+                Triple("Users", "184K", Color(0xFF2E7D32)),
+                Triple("Churn", "2.1%", Color(0xFFE65100)),
+                Triple("NPS", "72", Color(0xFF6A1B9A)),
+            )
+            for ((label, value, color) in kpis) {
+                Box(
+                    Modifier.weight(1f)
+                        .background(color.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                ) {
+                    Column {
+                        Text(label, fontSize = 10.sp, color = Color.Gray)
+                        Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = color)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        // Bar chart simulation
+        Text("Monthly Revenue (K)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Row(
+            Modifier.fillMaxWidth().height(100.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            val bars = listOf(65f, 78f, 72f, 85f, 90f, 88f, 95f, 82f, 76f, 91f, 97f, 100f)
+            val months = listOf("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
+            for ((i, pct) in bars.withIndex()) {
+                Column(
+                    Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth()
+                            .height((pct * 0.8f).dp)
+                            .background(Color(0xFF1565C0), RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)),
+                    )
+                    Text(months[i], fontSize = 8.sp, color = Color.Gray)
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        // Data table
+        Text("Top Customers", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(6.dp)) {
+            Text("Customer", Modifier.weight(2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text("Revenue", Modifier.weight(1f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text("Growth", Modifier.weight(1f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
+        val customers = listOf(
+            Triple("Acme Corp", "$342K", "+12%"),
+            Triple("Global Tech", "$298K", "+8%"),
+            Triple("Pinnacle Ltd", "$245K", "+22%"),
+            Triple("Atlas Industries", "$198K", "-3%"),
+            Triple("Nova Systems", "$176K", "+15%"),
+        )
+        for ((name, rev, growth) in customers) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 3.dp)) {
+                Text(name, Modifier.weight(2f), fontSize = 10.sp)
+                Text(rev, Modifier.weight(1f), fontSize = 10.sp)
+                val growthColor = if (growth.startsWith("+")) Color(0xFF2E7D32) else Color.Red
+                Text(growth, Modifier.weight(1f), fontSize = 10.sp, color = growthColor)
+            }
+            Divider(color = Color(0xFFEEEEEE))
+        }
+    }
+}
+
+@Composable
+private fun FormLayoutFixture() {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text("Patient Registration Form", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Text("Please fill in all required fields (*)", fontSize = 11.sp, color = Color.Gray)
+        Spacer(Modifier.height(12.dp))
+
+        // Form section
+        Text("Personal Information", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        Divider(color = Color(0xFF1565C0))
+        Spacer(Modifier.height(8.dp))
+
+        // Field rows
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FormField("First Name *", "John", Modifier.weight(1f))
+            FormField("Last Name *", "Doe", Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FormField("Date of Birth *", "1985-06-15", Modifier.weight(1f))
+            FormField("Phone *", "(555) 867-5309", Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        FormField("Email", "john.doe@email.com", Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        FormField("Address", "742 Evergreen Terrace, Springfield, IL 62704", Modifier.fillMaxWidth())
+
+        Spacer(Modifier.height(12.dp))
+        Text("Insurance Information", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        Divider(color = Color(0xFF1565C0))
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FormField("Provider", "BlueCross Shield", Modifier.weight(1f))
+            FormField("Policy #", "BC-4492-7781", Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        FormField("Group #", "GRP-88421", Modifier.fillMaxWidth(0.5f))
+
+        Spacer(Modifier.height(12.dp))
+        // Checkboxes
+        Text("Reason for Visit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        Divider(color = Color(0xFF1565C0))
+        Spacer(Modifier.height(8.dp))
+        val reasons = listOf("Annual Checkup" to true, "Follow-up" to false, "New Symptom" to true, "Referral" to false, "Lab Work" to false)
+        for ((reason, checked) in reasons) {
+            Row(Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(14.dp).border(1.dp, Color.DarkGray, RoundedCornerShape(2.dp))
+                        .background(if (checked) Color(0xFF1565C0) else Color.White, RoundedCornerShape(2.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (checked) Text("✓", fontSize = 10.sp, color = Color.White)
+                }
+                Spacer(Modifier.width(6.dp))
+                Text(reason, fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FormField(label: String, value: String, modifier: Modifier) {
+    Column(modifier) {
+        Text(label, fontSize = 10.sp, color = Color.Gray)
+        Box(
+            Modifier.fillMaxWidth()
+                .border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(4.dp))
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+        ) {
+            Text(value, fontSize = 12.sp)
+        }
+    }
+}
+
+@Composable
+private fun TechnicalDiagramFixture() {
+    Canvas(Modifier.fillMaxSize().padding(24.dp)) {
+        val boxW = 140f
+        val boxH = 50f
+
+        // Draw boxes
+        fun drawBox(x: Float, y: Float, label: String, color: Long) {
+            drawRoundRect(
+                color = Color(color),
+                topLeft = Offset(x, y),
+                size = Size(boxW, boxH),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f),
+            )
+            drawRoundRect(
+                color = Color.Black,
+                topLeft = Offset(x, y),
+                size = Size(boxW, boxH),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f),
+                style = Stroke(width = 2f),
+            )
+        }
+
+        // Draw arrows (simple lines with arrowheads)
+        fun drawArrow(x1: Float, y1: Float, x2: Float, y2: Float) {
+            drawLine(Color.Black, Offset(x1, y1), Offset(x2, y2), strokeWidth = 2f)
+            // Arrowhead
+            val dx = x2 - x1
+            val dy = y2 - y1
+            val len = kotlin.math.sqrt(dx * dx + dy * dy)
+            val ux = dx / len
+            val uy = dy / len
+            val ax = x2 - ux * 10f + uy * 5f
+            val ay = y2 - uy * 10f - ux * 5f
+            val bx = x2 - ux * 10f - uy * 5f
+            val by = y2 - uy * 10f + ux * 5f
+            val arrowPath = Path().apply {
+                moveTo(x2, y2)
+                lineTo(ax, ay)
+                lineTo(bx, by)
+                close()
+            }
+            drawPath(arrowPath, Color.Black)
+        }
+
+        // Flowchart layout
+        val centerX = (size.width - boxW) / 2
+        drawBox(centerX, 10f, "Start", 0xFFE3F2FD)
+        drawBox(centerX, 100f, "Process A", 0xFFFFF3E0)
+        drawBox(centerX - 100f, 200f, "Decision", 0xFFE8F5E9)
+        drawBox(centerX + 100f, 200f, "Process B", 0xFFFCE4EC)
+        drawBox(centerX, 300f, "Merge", 0xFFF3E5F5)
+        drawBox(centerX, 390f, "End", 0xFFE3F2FD)
+
+        // Arrows
+        drawArrow(centerX + boxW / 2, 60f, centerX + boxW / 2, 100f)
+        drawArrow(centerX + boxW / 2, 150f, centerX - 100f + boxW / 2, 200f)
+        drawArrow(centerX + boxW / 2, 150f, centerX + 100f + boxW / 2, 200f)
+        drawArrow(centerX - 100f + boxW / 2, 250f, centerX + boxW / 2, 300f)
+        drawArrow(centerX + 100f + boxW / 2, 250f, centerX + boxW / 2, 300f)
+        drawArrow(centerX + boxW / 2, 350f, centerX + boxW / 2, 390f)
+
+        // Diamond for decision
+        val dcx = centerX - 100f + boxW / 2
+        val dcy = 225f
+        val diamond = Path().apply {
+            moveTo(dcx, dcy - 20f)
+            lineTo(dcx + 30f, dcy)
+            lineTo(dcx, dcy + 20f)
+            lineTo(dcx - 30f, dcy)
+            close()
+        }
+        drawPath(diamond, Color(0xFF4CAF50), style = Stroke(width = 2f))
+
+        // Yes/No labels
+        drawCircle(Color.White, radius = 12f, center = Offset(centerX - 40f, 175f))
+        drawCircle(Color.White, radius = 12f, center = Offset(centerX + boxW + 40f, 175f))
+    }
+}
+
+// ── Page Size Fixtures ──
+
+@Composable
+private fun LetterPageFixture() {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text("US Letter Format", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Text("8.5 × 11 inches (215.9 × 279.4 mm)", fontSize = 14.sp, color = Color.Gray)
+        Spacer(Modifier.height(16.dp))
+        Box(
+            Modifier.fillMaxWidth().height(60.dp)
+                .background(Color(0xFF1565C0), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Header Section", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(
+                Modifier.weight(1f).height(120.dp)
+                    .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+            ) { Text("Column A content with text wrapping to test layout on Letter paper.", fontSize = 12.sp) }
+            Box(
+                Modifier.weight(1f).height(120.dp)
+                    .background(Color(0xFFFFF3E0), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+            ) { Text("Column B content verifying width calculations match Letter dimensions.", fontSize = 12.sp) }
+        }
+        Spacer(Modifier.height(12.dp))
+        for (i in 1..5) {
+            Text("Paragraph $i: Standard body text line for Letter format fidelity testing.", fontSize = 12.sp)
+            Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun A3PageFixture() {
+    Column(Modifier.fillMaxSize().padding(32.dp)) {
+        Text("A3 Format Document", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        Text("297 × 420 mm — Larger format for posters and presentations", fontSize = 16.sp, color = Color.Gray)
+        Spacer(Modifier.height(16.dp))
+        // 3-column layout (A3 is wide enough)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            for (col in listOf("Overview", "Details", "Summary")) {
+                Box(
+                    Modifier.weight(1f).height(200.dp)
+                        .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(12.dp))
+                        .padding(16.dp),
+                ) {
+                    Column {
+                        Text(col, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "A3 provides extra width for multi-column layouts. This section " +
+                                "verifies correct rendering at the larger page dimensions.",
+                            fontSize = 13.sp,
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        // Wide data table (6 columns)
+        Row(Modifier.fillMaxWidth().background(Color(0xFF424242)).padding(8.dp)) {
+            for (header in listOf("ID", "Product", "Category", "Price", "Stock", "Status")) {
+                Text(header, Modifier.weight(1f), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        val data = listOf(
+            listOf("001", "Widget Pro", "Hardware", "$49.99", "342", "Active"),
+            listOf("002", "Gadget X", "Electronics", "$129.00", "87", "Active"),
+            listOf("003", "Service Plan", "Subscription", "$9.99/mo", "1204", "Active"),
+            listOf("004", "Cable Kit", "Accessories", "$24.50", "0", "Out of Stock"),
+        )
+        for ((idx, row) in data.withIndex()) {
+            val bg = if (idx % 2 == 0) Color(0xFFF5F5F5) else Color.White
+            Row(Modifier.fillMaxWidth().background(bg).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                for (cell in row) {
+                    Text(cell, Modifier.weight(1f), fontSize = 11.sp)
+                }
+            }
+        }
     }
 }
 
