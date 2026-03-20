@@ -12,7 +12,7 @@
 
 ```
 ├── compose-pdf-core/    # Library: public API + renderers + SVG→PDF converter
-├── compose-pdf-test/    # Fidelity comparison tests (9 fixtures, HTML report)
+├── compose-pdf-test/    # Fidelity comparison tests (34 fixtures, HTML report)
 ├── sample-desktop/      # Compose Desktop demo app (invoice with links)
 └── sample-ktor/         # Headless server demo (PDF endpoint)
 ```
@@ -28,7 +28,7 @@
 
 ```bash
 ./gradlew :compose-pdf-core:build      # Build core library
-./gradlew :compose-pdf-core:test       # Run unit tests (19 tests)
+./gradlew :compose-pdf-core:test       # Run unit tests
 ./gradlew :compose-pdf-test:test       # Run fidelity comparison tests
 ./gradlew :sample-desktop:run          # Run desktop demo
 ./gradlew :sample-ktor:run             # Run headless server (port 8080)
@@ -38,16 +38,22 @@
 
 ```kotlin
 // Single page (vector by default)
-renderToPdf(config, density, mode) { Text("Hello") } → ByteArray
+renderToPdf(config, density, mode, useBundledFont) { Text("Hello") } → ByteArray
 
 // Multi-page
-renderToPdf(pages = 3, config, density, mode) { pageIndex → content } → ByteArray
+renderToPdf(pages = 3, config, density, mode, useBundledFont) { pageIndex → content } → ByteArray
 
 // Link annotations
 PdfLink(href = "https://example.com") { Text("Click me") }
+
+// PDF-safe rounded corners (non-uniform radii emit path instead of rect)
+PdfRoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp)
+existingShape.asPdfSafe()
 ```
 
-Types: `PdfPageConfig` (A4/Letter/A3 presets), `PdfMargins`, `Density`, `RenderMode` (VECTOR/RASTER), `PdfLink`, `PdfLinkAnnotation`.
+Types: `PdfPageConfig` (A4/Letter/A3 presets), `PdfMargins`, `Density`, `RenderMode` (VECTOR/RASTER), `PdfLink`, `PdfLinkAnnotation`, `PdfRoundedCornerShape`, `PdfFontFamily`.
+
+Parameters: `useBundledFont` (default `true`) — uses bundled Inter fonts so Compose and PDFBox render with the exact same font file, eliminating variable-font mismatch.
 
 ## Architecture
 
