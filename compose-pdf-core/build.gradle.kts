@@ -8,6 +8,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.runtime)
     implementation(compose.foundation)
+    implementation(compose.material)
     implementation(compose.ui)
 
     // v0.1: PDFBox for raster PDF creation. Will be replaced by Skia's native PDF backend.
