@@ -6,32 +6,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.ImageComposeScene
-import androidx.compose.ui.graphics.asComposeCanvas
-import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.ui.text.TextStyle
+import com.chrisjenx.composepdf.LocalPdfElementCollector
 import com.chrisjenx.composepdf.LocalPdfLinkCollector
+import com.chrisjenx.composepdf.PdfButtonAnnotation
+import com.chrisjenx.composepdf.PdfCheckboxAnnotation
+import com.chrisjenx.composepdf.PdfElementAnnotation
+import com.chrisjenx.composepdf.PdfElementCollector
 import com.chrisjenx.composepdf.PdfFontFamily
 import com.chrisjenx.composepdf.PdfLinkAnnotation
 import com.chrisjenx.composepdf.PdfLinkCollector
 import com.chrisjenx.composepdf.PdfPageConfig
+import com.chrisjenx.composepdf.PdfRadioButtonAnnotation
+import com.chrisjenx.composepdf.PdfSelectAnnotation
+import com.chrisjenx.composepdf.PdfTextFieldAnnotation
 import com.chrisjenx.composepdf.RenderMode
-import kotlinx.coroutines.Dispatchers
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary
-import org.jetbrains.skia.OutputWStream
-import org.jetbrains.skia.PictureRecorder
-import org.jetbrains.skia.Rect
-import org.jetbrains.skia.svg.SVGCanvas
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm
+import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox
+import org.apache.pdfbox.pdmodel.interactive.form.PDComboBox
+import org.apache.pdfbox.pdmodel.interactive.form.PDPushButton
+import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -88,8 +96,12 @@ internal object PdfRenderer {
         try {
             for (pageIndex in 0 until pageCount) {
                 val linkCollector = PdfLinkCollector()
-                val svg = renderComposeToSvg(pxW, pxH, density) {
-                    CompositionLocalProvider(LocalPdfLinkCollector provides linkCollector) {
+                val elementCollector = PdfElementCollector()
+                val svg = ComposeToSvg.render(pxW, pxH, density) {
+                    CompositionLocalProvider(
+                        LocalPdfLinkCollector provides linkCollector,
+                        LocalPdfElementCollector provides elementCollector,
+                    ) {
                         if (useBundledFont) {
                             ProvideTextStyle(TextStyle(fontFamily = PdfFontFamily)) {
                                 content(pageIndex)
@@ -101,6 +113,7 @@ internal object PdfRenderer {
                 }
                 SvgToPdfConverter.addPage(pdfDoc, svg, config.width.value, config.height.value, fontCache)
                 addLinkAnnotations(pdfDoc.getPage(pageIndex), config, linkCollector.links)
+                addFormFields(pdfDoc, pdfDoc.getPage(pageIndex), config, elementCollector.elements)
             }
             val baos = ByteArrayOutputStream()
             pdfDoc.save(baos)
@@ -108,47 +121,6 @@ internal object PdfRenderer {
         } finally {
             pdfDoc.close()
         }
-    }
-
-    private fun renderComposeToSvg(
-        widthPx: Int,
-        heightPx: Int,
-        density: Density,
-        content: @Composable () -> Unit,
-    ): String {
-        // Step 1: Record Compose draw commands via PictureRecorder
-        val recorder = PictureRecorder()
-        val recordCanvas = recorder.beginRecording(
-            Rect.makeWH(widthPx.toFloat(), heightPx.toFloat())
-        )
-
-        val scene = CanvasLayersComposeScene(
-            density = density,
-            size = IntSize(widthPx, heightPx),
-            coroutineContext = Dispatchers.Unconfined,
-            invalidate = {},
-        )
-        scene.setContent(content)
-        scene.render(recordCanvas.asComposeCanvas(), nanoTime = 0)
-        scene.close()
-
-        val picture = recorder.finishRecordingAsPicture()
-
-        // Step 2: Replay onto SVGCanvas to get vector SVG
-        val baos = ByteArrayOutputStream()
-        val wstream = OutputWStream(baos)
-        val svgCanvas = SVGCanvas.make(
-            Rect.makeWH(widthPx.toFloat(), heightPx.toFloat()),
-            wstream,
-            convertTextToPaths = false,
-            prettyXML = false,
-        )
-
-        picture.playback(svgCanvas)
-        svgCanvas.close()
-        wstream.close()
-
-        return baos.toString(Charsets.UTF_8)
     }
 
     // --- Raster path: Compose → ImageComposeScene → bitmap → PDF ---
@@ -167,12 +139,16 @@ internal object PdfRenderer {
         try {
             for (pageIndex in 0 until pageCount) {
                 val linkCollector = PdfLinkCollector()
+                val elementCollector = PdfElementCollector()
                 val bitmap = renderComposeToBitmap(
                     width = contentWidthPx,
                     height = contentHeightPx,
                     density = density,
                     content = {
-                        CompositionLocalProvider(LocalPdfLinkCollector provides linkCollector) {
+                        CompositionLocalProvider(
+                            LocalPdfLinkCollector provides linkCollector,
+                            LocalPdfElementCollector provides elementCollector,
+                        ) {
                             if (useBundledFont) {
                                 ProvideTextStyle(TextStyle(fontFamily = PdfFontFamily)) {
                                     content(pageIndex)
@@ -185,6 +161,7 @@ internal object PdfRenderer {
                 )
                 addBitmapPage(doc, config, bitmap)
                 addLinkAnnotations(doc.getPage(pageIndex), config, linkCollector.links)
+                addFormFields(doc, doc.getPage(pageIndex), config, elementCollector.elements)
             }
             val baos = ByteArrayOutputStream()
             doc.save(baos)
@@ -273,6 +250,157 @@ internal object PdfRenderer {
             annotation.borderStyle = borderStyle
 
             page.annotations.add(annotation)
+        }
+    }
+
+    // --- Form fields (buttons, text fields) ---
+
+    private fun addFormFields(
+        doc: PDDocument,
+        page: PDPage,
+        config: PdfPageConfig,
+        elements: List<PdfElementAnnotation>,
+    ) {
+        val formElements = elements.filter {
+            it is PdfButtonAnnotation || it is PdfTextFieldAnnotation ||
+                it is PdfCheckboxAnnotation || it is PdfRadioButtonAnnotation ||
+                it is PdfSelectAnnotation
+        }
+        if (formElements.isEmpty()) return
+
+        val acroForm = doc.documentCatalog.acroForm ?: PDAcroForm(doc).also {
+            val resources = org.apache.pdfbox.pdmodel.PDResources()
+            val helvetica = org.apache.pdfbox.pdmodel.font.PDType1Font(
+                org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA
+            )
+            resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), helvetica)
+            it.defaultResources = resources
+            it.defaultAppearance = "/Helv 12 Tf 0 g"
+            doc.documentCatalog.acroForm = it
+        }
+
+        val pageHeight = config.height.value
+        val marginLeft = config.margins.left.value
+        val marginTop = config.margins.top.value
+
+        for (elem in formElements) {
+            val llx = marginLeft + elem.x
+            val lly = pageHeight - marginTop - elem.y - elem.height
+            val rect = PDRectangle(llx, lly, elem.width, elem.height)
+
+            when (elem) {
+                is PdfButtonAnnotation -> {
+                    val widget = PDAnnotationWidget()
+                    widget.rectangle = rect
+                    widget.page = page
+
+                    val pushButton = PDPushButton(acroForm)
+                    pushButton.partialName = elem.name
+                    pushButton.widgets = listOf(widget)
+
+                    if (elem.onClick != null) {
+                        widget.action = PDActionJavaScript(elem.onClick)
+                    }
+
+                    acroForm.fields.add(pushButton)
+                    page.annotations.add(widget)
+                }
+
+                is PdfTextFieldAnnotation -> {
+                    val widget = PDAnnotationWidget()
+                    widget.rectangle = rect
+                    widget.page = page
+
+                    val textField = PDTextField(acroForm)
+                    textField.partialName = elem.name
+                    if (elem.value.isNotEmpty()) textField.value = elem.value
+                    if (elem.maxLength > 0) textField.maxLen = elem.maxLength
+                    textField.isMultiline = elem.multiline
+                    textField.widgets = listOf(widget)
+
+                    acroForm.fields.add(textField)
+                    page.annotations.add(widget)
+                }
+
+                is PdfCheckboxAnnotation -> {
+                    val widget = PDAnnotationWidget()
+                    widget.rectangle = rect
+                    widget.page = page
+
+                    val checkbox = PDCheckBox(acroForm)
+                    checkbox.partialName = elem.name
+                    checkbox.widgets = listOf(widget)
+                    if (elem.checked) checkbox.check()
+
+                    acroForm.fields.add(checkbox)
+                    page.annotations.add(widget)
+                }
+
+                is PdfRadioButtonAnnotation -> {
+                    // Group radio buttons by groupName — find or create the PDRadioButton field
+                    val existingField = acroForm.fields.find {
+                        it is PDRadioButton && it.partialName == elem.groupName
+                    } as? PDRadioButton
+
+                    val widget = PDAnnotationWidget()
+                    widget.rectangle = rect
+                    widget.page = page
+                    // Set up widget appearance dict with the value as the "on" state
+                    val apNDict = org.apache.pdfbox.cos.COSDictionary()
+                    apNDict.setItem(
+                        org.apache.pdfbox.cos.COSName.getPDFName(elem.value),
+                        org.apache.pdfbox.cos.COSStream(),
+                    )
+                    apNDict.setItem(org.apache.pdfbox.cos.COSName.OFF, org.apache.pdfbox.cos.COSStream())
+                    val apDict = org.apache.pdfbox.cos.COSDictionary()
+                    apDict.setItem(org.apache.pdfbox.cos.COSName.N, apNDict)
+                    widget.cosObject.setItem(org.apache.pdfbox.cos.COSName.AP, apDict)
+
+                    if (existingField != null) {
+                        val widgets = existingField.widgets.toMutableList()
+                        widgets.add(widget)
+                        existingField.widgets = widgets
+                        val exportVals = existingField.exportValues.toMutableList()
+                        exportVals.add(elem.value)
+                        existingField.exportValues = exportVals
+                    } else {
+                        val radioButton = PDRadioButton(acroForm)
+                        radioButton.partialName = elem.groupName
+                        radioButton.widgets = listOf(widget)
+                        radioButton.exportValues = listOf(elem.value)
+                        acroForm.fields.add(radioButton)
+                    }
+
+                    if (elem.selected) {
+                        val radioField = (acroForm.fields.find {
+                            it is PDRadioButton && it.partialName == elem.groupName
+                        } as? PDRadioButton)
+                        radioField?.setValue(elem.value)
+                    }
+
+                    page.annotations.add(widget)
+                }
+
+                is PdfSelectAnnotation -> {
+                    val widget = PDAnnotationWidget()
+                    widget.rectangle = rect
+                    widget.page = page
+
+                    val comboBox = PDComboBox(acroForm)
+                    comboBox.partialName = elem.name
+                    comboBox.setOptions(
+                        elem.options.map { it.value },
+                        elem.options.map { it.label },
+                    )
+                    if (elem.selectedValue.isNotEmpty()) comboBox.setValue(elem.selectedValue)
+                    comboBox.widgets = listOf(widget)
+
+                    acroForm.fields.add(comboBox)
+                    page.annotations.add(widget)
+                }
+
+                else -> {}
+            }
         }
     }
 }
