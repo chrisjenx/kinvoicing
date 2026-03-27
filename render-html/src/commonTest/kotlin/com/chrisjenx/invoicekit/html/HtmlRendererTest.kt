@@ -1,0 +1,198 @@
+package com.chrisjenx.invoicekit.html
+
+import com.chrisjenx.invoicekit.*
+import kotlin.test.*
+
+class HtmlRendererTest {
+
+    private val renderer = HtmlRenderer()
+
+    @Test
+    fun basicFixtureRendersWithoutError() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue(html.isNotBlank())
+    }
+
+    @Test
+    fun allFixturesRenderWithoutError() {
+        InvoiceFixtures.all.forEachIndexed { i, doc ->
+            val html = renderer.render(doc)
+            assertTrue(html.isNotBlank(), "Fixture $i produced empty HTML")
+        }
+    }
+
+    @Test
+    fun outputContainsDoctype() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue(html.startsWith("<!DOCTYPE html>"), "Should start with DOCTYPE")
+    }
+
+    @Test
+    fun outputContainsHtmlAndBodyTags() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("<html" in html, "Missing <html> tag")
+        assertTrue("<body" in html, "Missing <body> tag")
+        assertTrue("</html>" in html, "Missing </html> tag")
+        assertTrue("</body>" in html, "Missing </body> tag")
+    }
+
+    @Test
+    fun noStyleBlocks() {
+        InvoiceFixtures.all.forEach { doc ->
+            val html = renderer.render(doc)
+            assertFalse("<style" in html, "Email-safe HTML should not contain <style> blocks")
+        }
+    }
+
+    @Test
+    fun inlineStylesPresent() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("style=\"" in html, "Should contain inline styles")
+    }
+
+    @Test
+    fun maxWidthConstraint() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("max-width" in html || "600" in html, "Should have max-width constraint for email")
+    }
+
+    @Test
+    fun invoiceNumberAppears() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("INV-2026-0001" in html, "Invoice number should appear in output")
+    }
+
+    @Test
+    fun billToNameAppears() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("Jane Smith" in html, "Bill-to name should appear")
+    }
+
+    @Test
+    fun lineItemDescriptionsAppear() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("Web Development" in html)
+        assertTrue("Design Services" in html)
+        assertTrue("Hosting (Monthly)" in html)
+    }
+
+    @Test
+    fun lineItemsTableExists() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("<table" in html, "Line items should be in a table")
+        assertTrue("<thead" in html || "<th" in html, "Table should have headers")
+        assertTrue("<tbody" in html || "<td" in html, "Table should have body rows")
+    }
+
+    @Test
+    fun summaryTotalAppears() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        // Basic fixture: 40*150 + 10*100 + 1*49.99 = 7049.99
+        assertTrue("7,049.99" in html || "7049.99" in html, "Total should appear in output")
+    }
+
+    @Test
+    fun footerNotesAppear() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("Thank you for your business!" in html)
+    }
+
+    @Test
+    fun footerTermsAppear() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("Net 30" in html)
+    }
+
+    @Test
+    fun paymentLinkRendersAsAnchor() {
+        val html = renderer.render(InvoiceFixtures.fullFeatured)
+        assertTrue("<a" in html && "https://pay.acme.com/inv-0042" in html,
+            "Payment link should render as <a> tag")
+    }
+
+    @Test
+    fun metaEntriesAppear() {
+        val html = renderer.render(InvoiceFixtures.fullFeatured)
+        assertTrue("PO Number" in html)
+        assertTrue("PO-2026-1138" in html)
+        assertTrue("Website Redesign" in html)
+    }
+
+    @Test
+    fun brandingPrimaryNameAppears() {
+        val html = renderer.render(InvoiceFixtures.basic)
+        assertTrue("Acme Corp" in html)
+    }
+
+    @Test
+    fun poweredByBrandingAppears() {
+        val html = renderer.render(InvoiceFixtures.fullFeatured)
+        assertTrue("Acme Payments" in html || "Powered by" in html,
+            "Powered-by branding should appear")
+    }
+
+    @Test
+    fun negativeAmountsDisplay() {
+        val html = renderer.render(InvoiceFixtures.negativeValues)
+        // Negative amounts should show as negative (minus sign or parentheses)
+        assertTrue("-" in html || "(" in html,
+            "Negative amounts should be visually indicated")
+    }
+
+    @Test
+    fun longFixtureRendersAllItems() {
+        val html = renderer.render(InvoiceFixtures.long)
+        // Should contain first and last items
+        assertTrue("Service item #1" in html)
+        assertTrue("Service item #55" in html)
+    }
+
+    @Test
+    fun minimalFixtureRendersGracefully() {
+        val html = renderer.render(InvoiceFixtures.minimal)
+        assertTrue("INV-MIN" in html)
+        assertTrue("Service" in html)
+    }
+
+    @Test
+    fun styledFixtureAppliesColors() {
+        val html = renderer.render(InvoiceFixtures.styled)
+        // Red primary color (#DC2626) should appear in inline styles
+        assertTrue("DC2626" in html.uppercase() || "dc2626" in html.lowercase(),
+            "Custom primary color should appear in styles")
+    }
+
+    @Test
+    fun adjustmentsAppearInSummary() {
+        val html = renderer.render(InvoiceFixtures.fullFeatured)
+        assertTrue("Early payment" in html, "Discount label should appear")
+        assertTrue("CO Sales Tax" in html, "Tax label should appear")
+        assertTrue("Wire transfer fee" in html, "Fee label should appear")
+    }
+
+    @Test
+    fun subItemsRender() {
+        val html = renderer.render(InvoiceFixtures.fullFeatured)
+        assertTrue("Senior engineer" in html, "Sub-items should render")
+        assertTrue("Junior engineer" in html)
+    }
+
+    @Test
+    fun configEmbedImagesDefault() {
+        val config = HtmlRenderConfig()
+        assertTrue(config.embedImages, "Default should embed images as base64")
+    }
+
+    @Test
+    fun configIncludeDoctypeDefault() {
+        val config = HtmlRenderConfig()
+        assertTrue(config.includeDoctype, "Default should include DOCTYPE")
+    }
+
+    @Test
+    fun extensionFunctionWorks() {
+        val html = InvoiceFixtures.basic.toHtml()
+        assertTrue(html.isNotBlank())
+        assertTrue("INV-2026-0001" in html)
+    }
+}

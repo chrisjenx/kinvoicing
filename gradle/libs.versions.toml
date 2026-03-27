@@ -1,0 +1,25 @@
+[versions]
+kotlin = "2.3.20"
+compose-multiplatform = "1.8.1"
+kotlinx-datetime = "0.6.2"
+kotlinx-html = "0.12.0"
+kotlinx-serialization = "1.8.1"
+compose2pdf = "1.0.0"
+pdfbox = "3.0.4"
+playwright = "1.49.0"
+
+[libraries]
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version.ref = "kotlinx-html" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+compose2pdf = { module = "com.chrisjenx:compose2pdf", version.ref = "compose2pdf" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

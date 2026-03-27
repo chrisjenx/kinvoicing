@@ -1,0 +1,27 @@
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
+}
+
+kotlin {
+    explicitApi()
+    jvm()
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(project(":core"))
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(compose.ui)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
+    }
+}
