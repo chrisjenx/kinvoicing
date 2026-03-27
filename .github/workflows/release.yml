@@ -1,0 +1,169 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Invalid version format: $VERSION (expected X.Y.Z or X.Y.Z-suffix)"
+            exit 1
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+
+  test:
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Build all targets
+        run: ./gradlew assemble -PVERSION_NAME=${{ inputs.version }}
+
+      - name: JVM tests
+        run: ./gradlew jvmTest -PVERSION_NAME=${{ inputs.version }}
+
+      - name: iOS simulator tests
+        run: ./gradlew iosSimulatorArm64Test -PVERSION_NAME=${{ inputs.version }}
+
+      - name: Fidelity tests
+        run: ./gradlew :kinvoicing-fidelity-test:test -PVERSION_NAME=${{ inputs.version }}
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/'
+          retention-days: 7
+
+  publish:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew publishAndReleaseToMavenCentral -PVERSION_NAME=${{ inputs.version }}
+
+  tag-and-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Create tag
+        run: |
+          git config user.name "kinvoicing-release-bot[bot]"
+          git config user.email "kinvoicing-release-bot[bot]@users.noreply.github.com"
+          if git ls-remote --tags origin "v${{ inputs.version }}" | grep -q .; then
+            echo "Tag v${{ inputs.version }} already exists, skipping"
+          else
+            git tag -a "v${{ inputs.version }}" -m "Release ${{ inputs.version }}"
+            git push origin "v${{ inputs.version }}"
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if gh release view "v${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Release v${{ inputs.version }} already exists, skipping"
+          else
+            gh release create "v${{ inputs.version }}" \
+              --title "v${{ inputs.version }}" \
+              --generate-notes
+          fi
+
+  bump-version:
+    needs: tag-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Compute next version
+        id: next
+        run: |
+          IFS='.' read -r major minor patch <<< "${{ inputs.version }}"
+          patch_num="${patch%%-*}"
+          NEXT="${major}.${minor}.$((patch_num + 1))-SNAPSHOT"
+          echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version and push to main
+        run: |
+          NEXT="${{ steps.next.outputs.version }}"
+          CURRENT=$(grep '^VERSION_NAME=' gradle.properties | cut -d'=' -f2)
+          if [ "$CURRENT" = "$NEXT" ]; then
+            echo "Version already at $NEXT, skipping"
+            exit 0
+          fi
+          git config user.name "kinvoicing-release-bot[bot]"
+          git config user.email "kinvoicing-release-bot[bot]@users.noreply.github.com"
+          git pull origin main
+          sed -i "s/^VERSION_NAME=.*/VERSION_NAME=${NEXT}/" gradle.properties
+          git add gradle.properties
+          git commit -m "Bump version to ${NEXT}"
+          git push origin main

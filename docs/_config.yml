@@ -1,0 +1,40 @@
+title: Kinvoicing
+description: Kotlin Multiplatform invoicing library with a sealed IR, type-safe DSL builder, and four renderers.
+url: https://chrisjenx.github.io
+baseurl: /kinvoicing
+
+remote_theme: just-the-docs/just-the-docs@v0.10.1
+
+plugins:
+  - jekyll-remote-theme
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+color_scheme: light
+
+permalink: pretty
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - technical-spec-pdf-rendering.md
+  - comparison/
+
+nav_external_links:
+  - title: API Reference
+    url: https://chrisjenx.github.io/kinvoicing/api/
+  - title: GitHub
+    url: https://github.com/chrisjenx/kinvoicing
+
+aux_links:
+  GitHub: https://github.com/chrisjenx/kinvoicing
+
+footer_content: >-
+  Copyright &copy; 2026 Christopher Jenkins. Licensed under Apache 2.0.
+
+back_to_top: true
+back_to_top_text: Back to top

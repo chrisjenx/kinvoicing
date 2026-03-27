@@ -1,0 +1,38 @@
+[versions]
+kotlin = "2.3.20"
+compose-multiplatform = "1.10.3"
+agp = "8.13.0"
+kotlinx-datetime = "0.7.1"
+kotlinx-html = "0.12.0"
+kotlinx-serialization = "1.10.0"
+kotlinx-coroutines = "1.10.2"
+compose2pdf = "1.0.0"
+pdfbox = "3.0.7"
+playwright = "1.58.0"
+jsoup = "1.22.1"
+junit = "5.11.3"
+dokka = "2.2.0"
+maven-publish = "0.36.0"
+
+[libraries]
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version.ref = "kotlinx-html" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+compose2pdf = { module = "com.chrisjenx:compose2pdf", version.ref = "compose2pdf" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
