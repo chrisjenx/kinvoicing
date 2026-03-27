@@ -1,0 +1,29 @@
+{
+  "enabledPlugins": {
+    "context-mode@context-mode": true,
+    "kotlin-lsp@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__plugin_context-mode_context-mode__*",
+      "mcp__plugin_linear_linear__*",
+      "mcp__plugin_kotlin-lsp_kotlin-lsp__*",
+      "mcp__context7__*",
+      "mcp__plugin_commit-commands_commit-commands__*",
+      "mcp__plugin_claude-md-management_claude-md-management__*",
+      "mcp__plugin_code-review_code-review__*",
+      "mcp__plugin_code-simplifier_code-simplifier__*",
+      "mcp__plugin_pr-review-toolkit_pr-review-toolkit__*",
+      "mcp__plugin_compose-screenshot_compose-screenshot__*",
+      "mcp__plugin_github_github__*"
+    ]
+  }
+}
