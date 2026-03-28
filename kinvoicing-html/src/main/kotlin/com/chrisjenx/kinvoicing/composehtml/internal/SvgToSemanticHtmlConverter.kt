@@ -22,21 +22,14 @@ internal object SvgToSemanticHtmlConverter {
         val contentHeightPt = config.contentHeight.value
 
         // Parse each SVG page and convert to HTML nodes
-        val htmlPages = svgPages.mapIndexed { pageIndex, svg ->
+        val pageNodes = svgPages.mapIndexed { pageIndex, svg ->
             val svgNodes = SvgParser.parse(svg, density)
             val htmlNode = SvgToHtmlConverter.convert(svgNodes, density)
             val links = linksByPage.getOrElse(pageIndex) { emptyList() }
-            val elements = elementsByPage.getOrElse(pageIndex) { emptyList() }
-            Triple(htmlNode, links, elements)
+            addLinkOverlays(htmlNode, links)
         }
 
-        // Collect hover CSS
         val hoverCss = buildHoverCss(elementsByPage)
-
-        // Build the final HTML using CssEmitter pattern
-        val pageNodes = htmlPages.map { (node, links, elements) ->
-            addLinkOverlays(node, links)
-        }
 
         return CssEmitter.render(pageNodes, config, fontBase64, hoverCss)
     }

@@ -68,36 +68,9 @@ object ImageMetrics {
         return op.filter(src, null)
     }
 
-    fun computeRmse(reference: BufferedImage, candidate: BufferedImage): Double {
-        val ref = gaussianBlur(flattenOnWhite(reference))
-        val cand = gaussianBlur(flattenOnWhite(candidate))
-        val w = minOf(ref.width, cand.width)
-        val h = minOf(ref.height, cand.height)
-        if (w == 0 || h == 0) return 1.0
+    fun computeRmse(reference: BufferedImage, candidate: BufferedImage): Double =
+        computeBlurredRmse(reference, candidate, sigma = 1.5)
 
-        var sumSqError = 0.0
-        var pixelCount = 0L
-
-        for (y in 0 until h) {
-            for (x in 0 until w) {
-                val refRgb = ref.getRGB(x, y)
-                val candRgb = cand.getRGB(x, y)
-
-                val rr = ((refRgb shr 16) and 0xFF) / 255.0
-                val rg = ((refRgb shr 8) and 0xFF) / 255.0
-                val rb = (refRgb and 0xFF) / 255.0
-
-                val cr = ((candRgb shr 16) and 0xFF) / 255.0
-                val cg = ((candRgb shr 8) and 0xFF) / 255.0
-                val cb = (candRgb and 0xFF) / 255.0
-
-                sumSqError += (rr - cr) * (rr - cr) + (rg - cg) * (rg - cg) + (rb - cb) * (rb - cb)
-                pixelCount++
-            }
-        }
-
-        return sqrt(sumSqError / (3.0 * pixelCount))
-    }
 
     /**
      * Fraction of pixels where all RGB channels match within tolerance (±[tolerance] per channel).
@@ -270,16 +243,15 @@ object ImageMetrics {
     }
 
     /**
-     * Structural RMSE: uses heavy gaussian blur (sigma=5) to eliminate text anti-aliasing
-     * differences and focus on layout/shape correctness. A missing shape, wrong position,
-     * or wrong color will still produce high RMSE, but text rendering differences between
-     * Skia and Chromium are blurred away.
+     * Structural RMSE: heavy gaussian blur (sigma=5) eliminates text anti-aliasing
+     * differences while preserving layout/shape mismatches.
      */
-    fun computeStructuralRmse(reference: BufferedImage, candidate: BufferedImage): Double {
-        // sigma=5 blurs away text anti-aliasing differences while preserving
-        // shape/layout mismatches (missing elements, wrong positions, wrong colors)
-        val ref = gaussianBlur(flattenOnWhite(reference), sigma = 5.0)
-        val cand = gaussianBlur(flattenOnWhite(candidate), sigma = 5.0)
+    fun computeStructuralRmse(reference: BufferedImage, candidate: BufferedImage): Double =
+        computeBlurredRmse(reference, candidate, sigma = 5.0)
+
+    private fun computeBlurredRmse(reference: BufferedImage, candidate: BufferedImage, sigma: Double): Double {
+        val ref = gaussianBlur(flattenOnWhite(reference), sigma)
+        val cand = gaussianBlur(flattenOnWhite(candidate), sigma)
         val w = minOf(ref.width, cand.width)
         val h = minOf(ref.height, cand.height)
         if (w == 0 || h == 0) return 1.0

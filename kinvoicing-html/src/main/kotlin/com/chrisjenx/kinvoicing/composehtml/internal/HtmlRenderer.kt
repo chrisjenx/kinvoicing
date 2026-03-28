@@ -90,7 +90,7 @@ internal object HtmlRenderer {
         )
     }
 
-    private fun loadBundledFontsBase64(): Map<String, String> {
+    private val cachedFontBase64: Map<String, String> by lazy {
         val variants = mapOf(
             "400-normal" to "fonts/Inter-Regular.ttf",
             "700-normal" to "fonts/Inter-Bold.ttf",
@@ -98,7 +98,7 @@ internal object HtmlRenderer {
             "700-italic" to "fonts/Inter-BoldItalic.ttf",
         )
         val result = mutableMapOf<String, String>()
-        val classLoader = Thread.currentThread().contextClassLoader ?: return result
+        val classLoader = Thread.currentThread().contextClassLoader ?: return@lazy result
         for ((variant, path) in variants) {
             try {
                 val bytes = classLoader.getResourceAsStream(path)?.readBytes() ?: continue
@@ -107,6 +107,8 @@ internal object HtmlRenderer {
                 // Skip fonts that can't be loaded
             }
         }
-        return result
+        result
     }
+
+    private fun loadBundledFontsBase64(): Map<String, String> = cachedFontBase64
 }

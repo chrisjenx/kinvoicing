@@ -85,55 +85,6 @@ data class PdfListItemAnnotation(
     val text: String,
 )
 
-data class PdfCheckboxAnnotation(
-    val name: String,
-    val checked: Boolean,
-    override val x: Float,
-    override val y: Float,
-    override val width: Float,
-    override val height: Float,
-    override val id: String,
-) : PdfElementAnnotation
-
-data class PdfRadioButtonAnnotation(
-    val name: String,
-    val group: String,
-    val selected: Boolean,
-    override val x: Float,
-    override val y: Float,
-    override val width: Float,
-    override val height: Float,
-    override val id: String,
-) : PdfElementAnnotation
-
-data class PdfSelectAnnotation(
-    val name: String,
-    val options: List<PdfSelectOption>,
-    val selectedIndex: Int,
-    override val x: Float,
-    override val y: Float,
-    override val width: Float,
-    override val height: Float,
-    override val id: String,
-) : PdfElementAnnotation
-
-data class PdfSelectOption(
-    val label: String,
-    val value: String,
-)
-
-data class PdfSliderAnnotation(
-    val name: String,
-    val min: Float,
-    val max: Float,
-    val value: Float,
-    override val x: Float,
-    override val y: Float,
-    override val width: Float,
-    override val height: Float,
-    override val id: String,
-) : PdfElementAnnotation
-
 data class HoverStyles(
     val backgroundColor: String? = null,
     val opacity: Float? = null,

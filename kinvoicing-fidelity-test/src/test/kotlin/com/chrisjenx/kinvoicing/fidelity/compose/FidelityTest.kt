@@ -165,16 +165,12 @@ class FidelityTest {
             saveImage(htmlImage, imagesDir, "${fixture.name}-html.png")
             htmlPath = "images/${fixture.name}-html.png"
 
-            htmlRmse = ImageMetrics.computeRmse(composeImage, htmlImage)
             htmlSsim = ImageMetrics.computeSsim(composeImage, htmlImage)
             htmlExactMatch = ImageMetrics.computeExactMatchPercent(composeImage, htmlImage)
             htmlMaxError = ImageMetrics.computeMaxPixelError(composeImage, htmlImage)
-            // Use structural RMSE (heavy blur) for pass/fail — focuses on layout/shape
-            // correctness while ignoring text anti-aliasing differences between Skia and Chromium
-            val structuralRmse = ImageMetrics.computeStructuralRmse(composeImage, htmlImage)
-            htmlStatusResult = htmlStatus(structuralRmse, fixture.htmlThreshold)
-            // Store structural RMSE for reporting (overwrite htmlRmse so failures show correct value)
-            htmlRmse = structuralRmse
+            // Structural RMSE (heavy blur) for pass/fail — layout/shape focused, ignores text anti-aliasing
+            htmlRmse = ImageMetrics.computeStructuralRmse(composeImage, htmlImage)
+            htmlStatusResult = htmlStatus(htmlRmse!!, fixture.htmlThreshold)
 
             val diff = ImageMetrics.generateDiffImage(composeImage, htmlImage)
             saveImage(diff, imagesDir, "${fixture.name}-html-diff.png")
