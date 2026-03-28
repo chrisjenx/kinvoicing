@@ -77,7 +77,7 @@ internal object HtmlRenderer {
             elementsByPage.add(elementCollector.elements.toList())
         }
 
-        val fontBase64 = if (useBundledFont) loadBundledFontsBase64() else emptyMap()
+        val fontBase64 = if (useBundledFont) bundledFontBase64 else emptyMap()
 
         return SvgToSemanticHtmlConverter.convert(
             svgPages = svgPages,
@@ -87,10 +87,9 @@ internal object HtmlRenderer {
             elementsByPage = elementsByPage,
             fontBase64 = fontBase64,
         )
-
     }
 
-    private val cachedFontBase64: Map<String, String> by lazy {
+    private val bundledFontBase64: Map<String, String> by lazy {
         val variants = mapOf(
             "400-normal" to "fonts/Inter-Regular.ttf",
             "700-normal" to "fonts/Inter-Bold.ttf",
@@ -104,11 +103,9 @@ internal object HtmlRenderer {
                 val bytes = classLoader.getResourceAsStream(path)?.readBytes() ?: continue
                 result[variant] = Base64.getEncoder().encodeToString(bytes)
             } catch (_: Exception) {
-                // Skip fonts that can't be loaded
+                // Font not available on classpath
             }
         }
         result
     }
-
-    private fun loadBundledFontsBase64(): Map<String, String> = cachedFontBase64
 }
