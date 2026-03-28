@@ -2,12 +2,13 @@ package com.chrisjenx.kinvoicing.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.chrisjenx.kinvoicing.InvoiceColors
 import com.chrisjenx.kinvoicing.InvoiceStyle
 
-internal val LocalInvoiceStyle = compositionLocalOf { InvoiceStyle() }
+public val LocalInvoiceStyle: ProvidableCompositionLocal<InvoiceStyle> = compositionLocalOf { InvoiceStyle() }
 
 // Semantic Compose colors from InvoiceColors
 internal val NegativeColor = InvoiceColors.NEGATIVE.toComposeColor()
@@ -16,7 +17,7 @@ internal val DividerColor = InvoiceColors.DIVIDER.toComposeColor()
 internal val BgMutedColor = InvoiceColors.BG_MUTED.toComposeColor()
 
 @Composable
-internal fun InvoiceStyleProvider(
+public fun InvoiceStyleProvider(
     style: InvoiceStyle,
     content: @Composable () -> Unit,
 ) {
@@ -25,7 +26,7 @@ internal fun InvoiceStyleProvider(
     }
 }
 
-internal fun Long.toComposeColor(): Color {
+public fun Long.toComposeColor(): Color {
     return Color(
         red = ((this shr 16) and 0xFF).toInt(),
         green = ((this shr 8) and 0xFF).toInt(),
@@ -34,7 +35,7 @@ internal fun Long.toComposeColor(): Color {
     )
 }
 
-internal val InvoiceStyle.primaryComposeColor: Color get() = primaryColor.toComposeColor()
-internal val InvoiceStyle.secondaryComposeColor: Color get() = secondaryColor.toComposeColor()
-internal val InvoiceStyle.textComposeColor: Color get() = textColor.toComposeColor()
-internal val InvoiceStyle.backgroundComposeColor: Color get() = backgroundColor.toComposeColor()
+public val InvoiceStyle.primaryComposeColor: Color get() = primaryColor.toComposeColor()
+public val InvoiceStyle.secondaryComposeColor: Color get() = secondaryColor.toComposeColor()
+public val InvoiceStyle.textComposeColor: Color get() = textColor.toComposeColor()
+public val InvoiceStyle.backgroundComposeColor: Color get() = backgroundColor.toComposeColor()
