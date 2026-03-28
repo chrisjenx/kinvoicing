@@ -62,9 +62,10 @@ internal object SvgToSemanticHtmlConverter {
                 appendLine("<div class=\"page\">")
                 appendLine("<div class=\"content\">")
 
-                // Embed SVG directly — the SVG viewBox matches content pixel dimensions,
-                // CSS scales it to content pt dimensions
-                val scaledSvg = injectSvgViewBox(svg, contentWidthPt * density, contentHeightPt * density)
+                // Embed SVG with font fix: replace system font names with Inter
+                // and inject @font-face so Chromium uses the same font as Skia
+                val fixedSvg = fixSvgFonts(svg, fontBase64)
+                val scaledSvg = injectSvgViewBox(fixedSvg, contentWidthPt * density, contentHeightPt * density)
                 appendLine(scaledSvg)
 
                 // Link overlays on top of SVG
@@ -91,11 +92,42 @@ internal object SvgToSemanticHtmlConverter {
     private fun injectSvgViewBox(svg: String, widthPx: Float, heightPx: Float): String {
         val w = widthPx.toInt()
         val h = heightPx.toInt()
-        // If SVG already has viewBox, return as-is
         if (svg.contains("viewBox")) return svg
-        // Add viewBox to the <svg> opening tag
         return svg.replaceFirst("<svg", "<svg viewBox=\"0 0 $w $h\"")
     }
+
+    /**
+     * Replaces system font names (e.g. ".SF NS") with "Inter" in the SVG,
+     * and injects @font-face declarations inside a <defs><style> block
+     * so Chromium renders text with the exact same font Skia used.
+     */
+    private fun fixSvgFonts(svg: String, fontBase64: Map<String, String>): String {
+        // Replace ALL font-family attributes with Inter — Skia emits system font
+        // names (e.g. ".SF NS, System Font, ...") that Chromium can't resolve
+        var fixed = svg.replace(FONT_FAMILY_ATTR_RE, "font-family=\"Inter\"")
+
+        // Inject @font-face inside SVG <defs><style> so the embedded Inter font is used
+        if (fontBase64.isNotEmpty()) {
+            val fontCss = buildString {
+                for ((variant, base64) in fontBase64) {
+                    val parts = variant.split("-")
+                    val weight = parts.getOrElse(0) { "400" }
+                    val style = parts.getOrElse(1) { "normal" }
+                    appendLine("@font-face { font-family: 'Inter'; font-weight: $weight; font-style: $style; src: url(data:font/ttf;base64,$base64) format('truetype'); }")
+                }
+            }
+            val defsStyle = "<defs><style>$fontCss</style></defs>"
+            val insertPos = fixed.indexOf(">", fixed.indexOf("<svg")) + 1
+            if (insertPos > 0) {
+                fixed = fixed.substring(0, insertPos) + defsStyle + fixed.substring(insertPos)
+            }
+        }
+
+        return fixed
+    }
+
+    private val FONT_FAMILY_ATTR_RE = Regex("""font-family="[^"]*"""")
+
 
     private fun buildHoverCss(elementsByPage: List<List<PdfElementAnnotation>>): String {
         val sb = StringBuilder()
