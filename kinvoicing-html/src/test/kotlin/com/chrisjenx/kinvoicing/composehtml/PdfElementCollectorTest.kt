@@ -15,7 +15,7 @@ class PdfElementCollectorTest {
     @Test
     fun `add stores annotation`() {
         val collector = PdfElementCollector()
-        collector.add(PdfButtonAnnotation("Submit", "btn1", x = 10f, y = 20f, width = 100f, height = 30f))
+        collector.add(PdfButtonAnnotation("Submit", "btn1", onClick = null, x = 10f, y = 20f, width = 100f, height = 30f, id = "e0"))
         assertEquals(1, collector.elements.size)
         assertTrue(collector.elements[0] is PdfButtonAnnotation)
     }
@@ -23,9 +23,9 @@ class PdfElementCollectorTest {
     @Test
     fun `add multiple types preserves order`() {
         val collector = PdfElementCollector()
-        collector.add(PdfButtonAnnotation("Submit", "btn1", x = 0f, y = 0f, width = 50f, height = 20f))
-        collector.add(PdfTextFieldAnnotation("email", x = 0f, y = 30f, width = 200f, height = 30f))
-        collector.add(PdfTableAnnotation(rows = emptyList(), x = 0f, y = 70f, width = 300f, height = 100f))
+        collector.add(PdfButtonAnnotation("Submit", "btn1", onClick = null, x = 0f, y = 0f, width = 50f, height = 20f, id = "e0"))
+        collector.add(PdfTextFieldAnnotation("email", placeholder = "", value = "", multiline = false, maxLength = 0, x = 0f, y = 30f, width = 200f, height = 30f, id = "e1"))
+        collector.add(PdfTableAnnotation(rows = emptyList(), caption = null, x = 0f, y = 70f, width = 300f, height = 100f, id = "e2"))
         assertEquals(3, collector.elements.size)
         assertTrue(collector.elements[0] is PdfButtonAnnotation)
         assertTrue(collector.elements[1] is PdfTextFieldAnnotation)
@@ -35,12 +35,11 @@ class PdfElementCollectorTest {
     @Test
     fun `clear removes all elements and resets ID counter`() {
         val collector = PdfElementCollector()
-        collector.add(PdfButtonAnnotation("A", "a", x = 0f, y = 0f, width = 50f, height = 20f))
-        val id1 = collector.generateId()
+        collector.add(PdfButtonAnnotation("A", "a", onClick = null, x = 0f, y = 0f, width = 50f, height = 20f, id = "e0"))
+        collector.generateId()
         collector.clear()
         assertTrue(collector.elements.isEmpty())
-        val id2 = collector.generateId()
-        assertEquals("pdf-elem-0", id2, "ID counter should reset after clear")
+        assertEquals("pdf-elem-0", collector.generateId(), "ID counter should reset after clear")
     }
 
     @Test
@@ -56,22 +55,16 @@ class PdfElementCollectorTest {
         val table = PdfTableAnnotation(
             rows = listOf(
                 PdfTableRowAnnotation(
-                    cells = listOf(
-                        PdfTableCellAnnotation("Name", colSpan = 1),
-                        PdfTableCellAnnotation("Price", colSpan = 1),
-                    ),
+                    cells = listOf(PdfTableCellAnnotation("Name"), PdfTableCellAnnotation("Price")),
                     isHeader = true,
                 ),
                 PdfTableRowAnnotation(
-                    cells = listOf(
-                        PdfTableCellAnnotation("Widget", colSpan = 1),
-                        PdfTableCellAnnotation("$10", colSpan = 1),
-                    ),
+                    cells = listOf(PdfTableCellAnnotation("Widget"), PdfTableCellAnnotation("$10")),
                     isHeader = false,
                 ),
             ),
             caption = "Products",
-            x = 10f, y = 20f, width = 400f, height = 100f,
+            x = 10f, y = 20f, width = 400f, height = 100f, id = "t0",
         )
         assertEquals(2, table.rows.size)
         assertTrue(table.rows[0].isHeader)
@@ -88,7 +81,7 @@ class PdfElementCollectorTest {
                 PdfListItemAnnotation("Second"),
                 PdfListItemAnnotation("Third"),
             ),
-            x = 0f, y = 0f, width = 200f, height = 80f,
+            x = 0f, y = 0f, width = 200f, height = 80f, id = "l0",
         )
         assertTrue(list.ordered)
         assertEquals(3, list.items.size)
@@ -100,15 +93,15 @@ class PdfElementCollectorTest {
         val hover = PdfHoverAnnotation(
             hoverStyles = HoverStyles(
                 backgroundColor = "rgba(0,0,0,0.1)",
-                scale = 1.02f,
+                opacity = 0.9f,
                 cursor = "pointer",
-                customCss = mapOf("box-shadow" to "0 2px 4px rgba(0,0,0,0.2)"),
+                boxShadow = "0 2px 4px rgba(0,0,0,0.2)",
             ),
-            x = 0f, y = 0f, width = 100f, height = 40f,
+            x = 0f, y = 0f, width = 100f, height = 40f, id = "h0",
         )
         assertEquals("rgba(0,0,0,0.1)", hover.hoverStyles.backgroundColor)
-        assertEquals(1.02f, hover.hoverStyles.scale)
+        assertEquals(0.9f, hover.hoverStyles.opacity)
         assertEquals("pointer", hover.hoverStyles.cursor)
-        assertEquals(1, hover.hoverStyles.customCss.size)
+        assertEquals("0 2px 4px rgba(0,0,0,0.2)", hover.hoverStyles.boxShadow)
     }
 }
