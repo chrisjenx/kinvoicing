@@ -77,7 +77,6 @@ internal object HtmlRenderer {
             elementsByPage.add(elementCollector.elements.toList())
         }
 
-        // Base64-encode bundled font files for @font-face embedding
         val fontBase64 = if (useBundledFont) loadBundledFontsBase64() else emptyMap()
 
         return SvgToSemanticHtmlConverter.convert(
@@ -88,6 +87,7 @@ internal object HtmlRenderer {
             elementsByPage = elementsByPage,
             fontBase64 = fontBase64,
         )
+
     }
 
     private val cachedFontBase64: Map<String, String> by lazy {

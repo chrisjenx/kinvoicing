@@ -2,8 +2,16 @@ package com.chrisjenx.kinvoicing.composehtml.internal
 
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.kinvoicing.composehtml.PdfElementAnnotation
+import com.chrisjenx.kinvoicing.composehtml.PdfHoverAnnotation
 import com.chrisjenx.kinvoicing.composehtml.PdfLinkAnnotation
 
+/**
+ * Converts Compose-rendered SVG pages into a self-contained HTML document.
+ *
+ * Rather than converting individual SVG elements to HTML+CSS (lossy),
+ * this embeds the SVG directly — Skia's SVGCanvas output is already a
+ * pixel-perfect representation of the Compose rendering.
+ */
 internal object SvgToSemanticHtmlConverter {
 
     fun convert(
@@ -21,43 +29,79 @@ internal object SvgToSemanticHtmlConverter {
         val contentWidthPt = config.contentWidth.value
         val contentHeightPt = config.contentHeight.value
 
-        // Parse each SVG page and convert to HTML nodes
-        val pageNodes = svgPages.mapIndexed { pageIndex, svg ->
-            val svgNodes = SvgParser.parse(svg, density)
-            val htmlNode = SvgToHtmlConverter.convert(svgNodes, density)
-            val links = linksByPage.getOrElse(pageIndex) { emptyList() }
-            addLinkOverlays(htmlNode, links)
-        }
-
         val hoverCss = buildHoverCss(elementsByPage)
 
-        return CssEmitter.render(pageNodes, config, fontBase64, hoverCss)
+        return buildString {
+            appendLine("<!DOCTYPE html>")
+            appendLine("<html lang='en'><head><meta charset='utf-8'>")
+            appendLine("<meta name='viewport' content='width=device-width, initial-scale=1'>")
+            appendLine("<style>")
+
+            // Embed bundled fonts
+            for ((variant, base64) in fontBase64) {
+                val parts = variant.split("-")
+                val weight = parts.getOrElse(0) { "400" }
+                val style = parts.getOrElse(1) { "normal" }
+                appendLine("@font-face { font-family: 'Inter'; font-weight: $weight; font-style: $style; src: url(data:font/ttf;base64,$base64) format('truetype'); }")
+            }
+
+            appendLine("* { margin: 0; padding: 0; box-sizing: border-box; }")
+            appendLine("body { background: #f5f5f5; font-family: 'Inter', sans-serif; }")
+            appendLine(".page { position: relative; width: ${fmt(pageWidthPt)}pt; height: ${fmt(pageHeightPt)}pt; background: #fff; overflow: hidden; margin: 0 auto; }")
+            appendLine(".page + .page { margin-top: 20px; }")
+            appendLine(".content { position: relative; margin-left: ${fmt(marginLeft)}pt; margin-top: ${fmt(marginTop)}pt; width: ${fmt(contentWidthPt)}pt; height: ${fmt(contentHeightPt)}pt; overflow: hidden; }")
+            appendLine(".content svg { display: block; width: ${fmt(contentWidthPt)}pt; height: ${fmt(contentHeightPt)}pt; }")
+            appendLine(".link-overlay { position: absolute; z-index: 10; }")
+            appendLine("@media print { body { background: none; } .page { margin: 0; page-break-after: always; } .page + .page { margin-top: 0; } }")
+            if (hoverCss.isNotEmpty()) append(hoverCss)
+            appendLine("</style></head><body>")
+
+            for ((pageIndex, svg) in svgPages.withIndex()) {
+                val links = linksByPage.getOrElse(pageIndex) { emptyList() }
+
+                appendLine("<div class=\"page\">")
+                appendLine("<div class=\"content\">")
+
+                // Embed SVG directly — the SVG viewBox matches content pixel dimensions,
+                // CSS scales it to content pt dimensions
+                val scaledSvg = injectSvgViewBox(svg, contentWidthPt * density, contentHeightPt * density)
+                appendLine(scaledSvg)
+
+                // Link overlays on top of SVG
+                for (link in links) {
+                    val left = fmt(link.x)
+                    val top = fmt(link.y)
+                    val w = fmt(link.width)
+                    val h = fmt(link.height)
+                    appendLine("<a href=\"${escapeAttr(link.href)}\" target=\"_blank\" class=\"link-overlay\" style=\"left:${left}pt;top:${top}pt;width:${w}pt;height:${h}pt\"></a>")
+                }
+
+                appendLine("</div>")
+                appendLine("</div>")
+            }
+
+            appendLine("</body></html>")
+        }
     }
 
-    private fun addLinkOverlays(baseNode: HtmlNode, links: List<PdfLinkAnnotation>): HtmlNode {
-        if (links.isEmpty()) return baseNode
-        val linkNodes = links.map { link ->
-            HtmlNode(
-                tag = "a",
-                attributes = mutableMapOf("href" to link.href, "target" to "_blank"),
-                css = mutableMapOf(
-                    "position" to "absolute",
-                    "left" to "${fmt(link.x)}pt",
-                    "top" to "${fmt(link.y)}pt",
-                    "width" to "${fmt(link.width)}pt",
-                    "height" to "${fmt(link.height)}pt",
-                    "z-index" to "10",
-                ),
-            )
-        }
-        return baseNode.copy(children = (baseNode.children + linkNodes).toMutableList())
+    /**
+     * Ensures the SVG has a viewBox attribute matching the pixel dimensions,
+     * so CSS can scale it to pt dimensions without distortion.
+     */
+    private fun injectSvgViewBox(svg: String, widthPx: Float, heightPx: Float): String {
+        val w = widthPx.toInt()
+        val h = heightPx.toInt()
+        // If SVG already has viewBox, return as-is
+        if (svg.contains("viewBox")) return svg
+        // Add viewBox to the <svg> opening tag
+        return svg.replaceFirst("<svg", "<svg viewBox=\"0 0 $w $h\"")
     }
 
     private fun buildHoverCss(elementsByPage: List<List<PdfElementAnnotation>>): String {
         val sb = StringBuilder()
         for (elements in elementsByPage) {
             for (element in elements) {
-                if (element is com.chrisjenx.kinvoicing.composehtml.PdfHoverAnnotation) {
+                if (element is PdfHoverAnnotation) {
                     val styles = element.hoverStyles
                     val cssProps = mutableListOf<String>()
                     styles.backgroundColor?.let { cssProps.add("background-color:$it") }
@@ -79,108 +123,10 @@ internal object SvgToSemanticHtmlConverter {
         val s = "%.4f".format(v)
         return s.trimEnd('0').trimEnd('.')
     }
-}
 
-internal object SvgToHtmlConverter {
-    fun convert(svgNodes: List<SvgNode>, density: Float): HtmlNode {
-        val children = svgNodes.map { convertNode(it, density) }.toMutableList()
-        return HtmlNode(tag = "div", children = children)
-    }
-
-    private fun convertNode(node: SvgNode, density: Float): HtmlNode {
-        val css = mutableMapOf<String, String>()
-        val attrs = mutableMapOf<String, String>()
-
-        // Convert SVG positioning to CSS
-        val transform = node.attributes["transform"] ?: ""
-        val translateMatch = Regex("translate\\(([\\d.e+-]+)[,\\s]+([\\d.e+-]+)\\)").find(transform)
-        if (translateMatch != null) {
-            val tx = translateMatch.groupValues[1].toFloatOrNull() ?: 0f
-            val ty = translateMatch.groupValues[2].toFloatOrNull() ?: 0f
-            css["position"] = "absolute"
-            css["left"] = "${fmt(tx / density)}pt"
-            css["top"] = "${fmt(ty / density)}pt"
-        }
-
-        val tag: String
-        var textContent: String? = null
-
-        when (node.type) {
-            SvgNodeType.TEXT -> {
-                tag = "span"
-                textContent = node.textContent ?: ""
-                css["position"] = "absolute"
-                css["white-space"] = "pre"
-                node.attributes["x"]?.toFloatOrNull()?.let { css["left"] = "${fmt(it / density)}pt" }
-                node.attributes["y"]?.toFloatOrNull()?.let { css["top"] = "${fmt(it / density)}pt" }
-                node.attributes["font-size"]?.replace("px", "")?.toFloatOrNull()?.let {
-                    css["font-size"] = "${fmt(it / density)}pt"
-                }
-                parseFillColor(node)?.let { css["color"] = it }
-            }
-            SvgNodeType.RECT -> {
-                tag = "div"
-                val x = (node.attributes["x"]?.toFloatOrNull() ?: 0f) / density
-                val y = (node.attributes["y"]?.toFloatOrNull() ?: 0f) / density
-                val w = (node.attributes["width"]?.toFloatOrNull() ?: 0f) / density
-                val h = (node.attributes["height"]?.toFloatOrNull() ?: 0f) / density
-                css["position"] = "absolute"
-                css["left"] = "${fmt(x)}pt"
-                css["top"] = "${fmt(y)}pt"
-                css["width"] = "${fmt(w)}pt"
-                css["height"] = "${fmt(h)}pt"
-                parseFillColor(node)?.let { css["background"] = it }
-                node.attributes["rx"]?.toFloatOrNull()?.let { css["border-radius"] = "${fmt(it / density)}pt" }
-            }
-            SvgNodeType.IMAGE -> {
-                tag = "img"
-                val href = node.attributes["href"] ?: node.attributes["xlink:href"] ?: ""
-                attrs["src"] = href
-                val x = (node.attributes["x"]?.toFloatOrNull() ?: 0f) / density
-                val y = (node.attributes["y"]?.toFloatOrNull() ?: 0f) / density
-                val w = (node.attributes["width"]?.toFloatOrNull() ?: 0f) / density
-                val h = (node.attributes["height"]?.toFloatOrNull() ?: 0f) / density
-                css["position"] = "absolute"
-                css["left"] = "${fmt(x)}pt"
-                css["top"] = "${fmt(y)}pt"
-                css["width"] = "${fmt(w)}pt"
-                css["height"] = "${fmt(h)}pt"
-            }
-            else -> {
-                tag = "div"
-                if (node.type == SvgNodeType.PATH || node.type == SvgNodeType.CIRCLE || node.type == SvgNodeType.ELLIPSE || node.type == SvgNodeType.LINE) {
-                    // Complex SVG shapes fall back to inline SVG
-                    return HtmlNode(tag = "div", rawSvg = nodeToSvgString(node))
-                }
-            }
-        }
-
-        val children = node.children.map { convertNode(it, density) }.toMutableList()
-
-        return HtmlNode(
-            tag = tag,
-            css = css,
-            attributes = attrs,
-            textContent = textContent,
-            children = children,
-            selfClosing = tag == "img",
-        )
-    }
-
-    private fun parseFillColor(node: SvgNode): String? {
-        val fill = node.attributes["fill"]
-        if (fill == "none" || fill.isNullOrEmpty()) return null
-        return fill
-    }
-
-    private fun nodeToSvgString(node: SvgNode): String {
-        val attrs = node.attributes.entries.joinToString(" ") { (k, v) -> "$k=\"$v\"" }
-        return "<svg style=\"position:absolute;overflow:visible\"><${node.type.name.lowercase()} $attrs/></svg>"
-    }
-
-    private fun fmt(v: Float): String {
-        if (v == 0f) return "0"
-        val s = "%.4f".format(v)
-        return s.trimEnd('0').trimEnd('.')
-    }
+    private fun escapeAttr(s: String): String = s
+        .replace("&", "&amp;")
+        .replace("\"", "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
 }
