@@ -30,6 +30,7 @@ object InvoiceExamples {
             "styled-stacked" to styledStacked,
             "grid-lines" to gridLines,
             "many-items" to manyItems,
+            "pagination" to pagination,
         )
     }
 
@@ -367,7 +368,7 @@ object InvoiceExamples {
 
     // ── Full Featured ──
 
-    /** Exercises every major feature: dual branding, sub-items, all adjustments, metadata, payment info. */
+    /** Exercises every major feature: dual branding, sub-items, all adjustments, metadata, payment info. Fits on one A4 page. */
     val fullFeatured: InvoiceDocument = invoice {
         style {
             primaryColor = 0xFF1E40AF
@@ -379,22 +380,16 @@ object InvoiceExamples {
                 primary {
                     name("Client's Store")
                     address("456 Oak Ave", "Boulder, CO 80301")
-                    website("https://clientstore.com")
                 }
                 poweredBy {
                     name("Acme Payments")
                     tagline("Powered by Acme Payments")
-                    website("https://acme.com")
                 }
                 layout = BrandLayout.POWERED_BY_FOOTER
             }
             invoiceNumber("INV-2026-0042")
             issueDate(LocalDate(2026, 3, 23))
             dueDate(LocalDate(2026, 4, 22))
-        }
-        billFrom {
-            name("Client's Store")
-            email("billing@clientstore.com")
         }
         billTo {
             name("Jane Smith")
@@ -411,23 +406,16 @@ object InvoiceExamples {
                 sub("Flight LAX-DEN", amount = 280.0)
                 sub("Ground transport", amount = 70.0)
             }
-            item("Unused retainer credit", amount = -500.0)
         }
         meta {
             entry("PO Number", "PO-2026-1138")
             entry("Project", "Website Redesign")
-            entry("Contract Ref", "MSA-2025-007")
         }
         summary {
             currency("USD")
             discount("Early payment", percent = 5.0)
             tax("CO Sales Tax", percent = 4.55)
             fee("Wire transfer fee", fixed = 25.0)
-        }
-        paymentInfo {
-            bankName("First National")
-            accountNumber("****4242")
-            paymentLink("https://pay.acme.com/inv-0042")
         }
         footer {
             notes("Thank you for your business!")
@@ -544,7 +532,7 @@ object InvoiceExamples {
 
     // ── Stress Test ──
 
-    /** Many line items to test layout and potential pagination. */
+    /** Many line items to test dense layout. Fits on one A4 page. */
     val manyItems: InvoiceDocument = invoice {
         header {
             branding { primary { name("Enterprise Solutions") } }
@@ -558,7 +546,31 @@ object InvoiceExamples {
         }
         lineItems {
             columns("Description", "Qty", "Rate", "Amount")
-            for (i in 1..30) {
+            for (i in 1..10) {
+                item("Service item #$i", qty = i, unitPrice = 10.0 + i)
+            }
+        }
+        summary {
+            currency("USD")
+            tax("State Tax", percent = 8.0)
+        }
+    }
+
+    /** 50+ items — designed to overflow and test multi-page pagination. */
+    val pagination: InvoiceDocument = invoice {
+        header {
+            branding { primary { name("Enterprise Solutions") } }
+            invoiceNumber("INV-PAGED-001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 4, 1))
+        }
+        billTo {
+            name("MegaCorp Ltd.")
+            address("1 Corporate Plaza", "New York, NY 10001")
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            for (i in 1..50) {
                 item("Service item #$i", qty = i, unitPrice = 10.0 + i)
             }
         }

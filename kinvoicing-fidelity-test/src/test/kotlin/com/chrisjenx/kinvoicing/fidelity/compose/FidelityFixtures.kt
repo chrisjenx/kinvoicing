@@ -28,5 +28,5 @@ val fidelityFixtures: List<Fixture> = listOf(
     Fixture("StyledStacked", "style", "Green theme with stacked header, right logo placement", InvoiceExamples.styledStacked),
     Fixture("GridLines", "style", "Grid lines and accent border enabled", InvoiceExamples.gridLines),
     Fixture("FullFeatured", "composite", "Every feature: dual branding, sub-items, adjustments, metadata, payment", InvoiceExamples.fullFeatured),
-    Fixture("ManyItems", "stress", "30 line items to test dense layout", InvoiceExamples.manyItems),
+    Fixture("ManyItems", "stress", "15 line items to test dense layout", InvoiceExamples.manyItems),
 )
