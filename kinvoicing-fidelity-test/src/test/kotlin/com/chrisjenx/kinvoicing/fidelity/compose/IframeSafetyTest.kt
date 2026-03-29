@@ -25,6 +25,14 @@ import kotlin.test.fail
  */
 class IframeSafetyTest {
 
+    companion object {
+        private val EVENT_HANDLER_ATTRS = listOf(
+            "onclick", "onload", "onerror", "onmouseover", "onmouseout",
+            "onfocus", "onblur", "onsubmit", "onchange", "onkeydown",
+            "onkeyup", "onkeypress", "ondblclick", "oncontextmenu",
+        )
+    }
+
     private val config = PdfPageConfig.A4
     private val density = Density(2f)
 
@@ -54,20 +62,11 @@ class IframeSafetyTest {
 
     @Test
     fun noEventHandlerAttributes() {
-        val eventAttrs = listOf(
-            "onclick", "onload", "onerror", "onmouseover", "onmouseout",
-            "onfocus", "onblur", "onsubmit", "onchange", "onkeydown",
-            "onkeyup", "onkeypress", "ondblclick", "oncontextmenu",
-        )
+        val selector = EVENT_HANDLER_ATTRS.joinToString(", ") { "[$it]" }
         forEachFixture { name, doc ->
-            doc.allElements.forEach { el ->
-                eventAttrs.forEach { attr ->
-                    assertTrue(
-                        !el.hasAttr(attr),
-                        "$name: <${el.tagName()}> has $attr attribute"
-                    )
-                }
-            }
+            val found = doc.select(selector)
+            assertTrue(found.isEmpty(), "$name: found element(s) with event handlers: " +
+                found.joinToString { "<${it.tagName()}>" })
         }
     }
 
@@ -191,7 +190,6 @@ class IframeSafetyTest {
                     svg.select("foreignObject").isEmpty(),
                     "$name: SVG contains <foreignObject>"
                 )
-                // Check for event handlers within SVG
                 svg.allElements.forEach { el ->
                     el.attributes().forEach { attr ->
                         assertTrue(
