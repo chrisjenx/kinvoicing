@@ -7,6 +7,7 @@ kotlinx-serialization = "1.8.1"
 compose2pdf = "1.0.0"
 pdfbox = "3.0.4"
 playwright = "1.49.0"
+jsoup = "1.18.3"
 
 [libraries]
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
@@ -15,6 +16,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 compose2pdf = { module = "com.chrisjenx:compose2pdf", version.ref = "compose2pdf" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 [plugins]

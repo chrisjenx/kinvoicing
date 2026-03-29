@@ -16,5 +16,6 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testImplementation(libs.pdfbox)
+    testImplementation(libs.jsoup)
     testImplementation(libs.playwright)
 }

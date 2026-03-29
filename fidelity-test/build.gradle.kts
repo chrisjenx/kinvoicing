@@ -16,6 +16,7 @@ kotlin {
                 implementation(project(":render-pdf"))
                 implementation(libs.kotlin.test)
                 implementation(libs.pdfbox)
+                implementation(libs.jsoup)
                 implementation(libs.playwright)
                 implementation(compose.desktop.currentOs)
                 implementation(compose.runtime)
