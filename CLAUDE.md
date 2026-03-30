@@ -7,7 +7,7 @@ Kotlin Multiplatform invoicing library with sealed IR, DSL builder, and three re
 ```bash
 ./gradlew build                              # Build all modules
 ./gradlew :core:test                         # Core IR + DSL tests
-./gradlew :fidelity-test:test                # Invoice renderer visual regression tests
+./gradlew :fidelity-test:jvmTest             # Invoice renderer visual regression tests (KMP module — use jvmTest, not test)
 ./gradlew :kinvoicing-fidelity-test:test     # compose2pdf fidelity tests (Compose vs PDF vs HTML)
 ```
 
@@ -42,5 +42,7 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - Kotlin Multiplatform: core/render-compose/render-html use `commonMain`/`jvmMain` source sets
 - kinvoicing-html/examples/fidelity-test are JVM-only modules
 - `explicitApi()` enabled on published modules (core, render-*)
-- Test fixtures in `core`: `InvoiceFixtures.basic`, `.fullFeatured`, `.minimal`, etc.
-- Example fixtures in `kinvoicing-examples`: `InvoiceExamples.basic`, `.subItems`, `.adjustments`, etc.
+- Test fixtures in `core`: `InvoiceFixtures.all` → `List<InvoiceDocument>` (unnamed, 6 fixtures)
+- Example fixtures in `kinvoicing-examples`: `InvoiceExamples.all` → `List<Pair<String, InvoiceDocument>>` (named, 15 fixtures)
+- Dependencies managed via `gradle/libs.versions.toml` version catalog; reference as `libs.<name>`
+- HTML safety tests: `EmailSafetyTest` (render-html email safety, jsoup), `IframeSafetyTest` (kinvoicing-html iframe safety, jsoup)
