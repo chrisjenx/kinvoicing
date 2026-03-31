@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.toSize
  * @param content Table content defined using [PdfTableScope] DSL.
  */
 @Composable
-fun PdfTable(
+public fun PdfTable(
     modifier: Modifier = Modifier,
     caption: String? = null,
     content: @Composable PdfTableScope.() -> Unit,
@@ -59,17 +59,17 @@ fun PdfTable(
     }
 }
 
-interface PdfTableScope {
+public interface PdfTableScope {
     @Composable
-    fun HeaderRow(content: @Composable PdfTableRowScope.() -> Unit)
+    public fun HeaderRow(content: @Composable PdfTableRowScope.() -> Unit)
 
     @Composable
-    fun Row(content: @Composable PdfTableRowScope.() -> Unit)
+    public fun Row(content: @Composable PdfTableRowScope.() -> Unit)
 }
 
-interface PdfTableRowScope {
+public interface PdfTableRowScope {
     @Composable
-    fun Cell(
+    public fun Cell(
         semanticText: String? = null,
         colSpan: Int = 1,
         rowSpan: Int = 1,

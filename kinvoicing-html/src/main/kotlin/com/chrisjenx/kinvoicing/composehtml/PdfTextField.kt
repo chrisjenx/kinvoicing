@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.toSize
  * @param content Visual composable content for the field appearance.
  */
 @Composable
-fun PdfTextField(
+public fun PdfTextField(
     name: String,
     modifier: Modifier = Modifier,
     placeholder: String = "",

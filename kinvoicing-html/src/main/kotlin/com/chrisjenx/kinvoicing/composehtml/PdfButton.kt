@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.toSize
  * @param content Visual composable content for the button.
  */
 @Composable
-fun PdfButton(
+public fun PdfButton(
     label: String,
     name: String,
     onClick: String? = null,

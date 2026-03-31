@@ -9,26 +9,26 @@ import androidx.compose.runtime.compositionLocalOf
  * Generalizes [PdfLinkCollector] to support tables, lists, buttons, text fields,
  * images, and hover annotations.
  */
-class PdfElementCollector {
+public class PdfElementCollector {
     private val _elements = mutableListOf<PdfElementAnnotation>()
-    val elements: List<PdfElementAnnotation> get() = _elements
+    public val elements: List<PdfElementAnnotation> get() = _elements
 
     private var nextId = 0
 
-    fun add(annotation: PdfElementAnnotation) {
+    public fun add(annotation: PdfElementAnnotation) {
         _elements.add(annotation)
     }
 
-    fun clear() {
+    public fun clear() {
         _elements.clear()
         nextId = 0
     }
 
-    fun generateId(): String = "pdf-elem-${nextId++}"
+    public fun generateId(): String = "pdf-elem-${nextId++}"
 }
 
 /**
  * CompositionLocal providing access to the element collector during PDF/HTML rendering.
  * When rendering to screen (not PDF/HTML), this is null and element annotations are ignored.
  */
-val LocalPdfElementCollector = compositionLocalOf<PdfElementCollector?> { null }
+public val LocalPdfElementCollector: androidx.compose.runtime.ProvidableCompositionLocal<PdfElementCollector?> = compositionLocalOf { null }

@@ -9,7 +9,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.toSize
 
-data class PdfLinkAnnotation(
+public data class PdfLinkAnnotation(
     val href: String,
     val x: Float,
     val y: Float,
@@ -17,23 +17,23 @@ data class PdfLinkAnnotation(
     val height: Float,
 )
 
-class PdfLinkCollector {
+public class PdfLinkCollector {
     private val _links = mutableListOf<PdfLinkAnnotation>()
-    val links: List<PdfLinkAnnotation> get() = _links
+    public val links: List<PdfLinkAnnotation> get() = _links
 
-    fun add(annotation: PdfLinkAnnotation) {
+    public fun add(annotation: PdfLinkAnnotation) {
         _links.add(annotation)
     }
 
-    fun clear() {
+    public fun clear() {
         _links.clear()
     }
 }
 
-val LocalPdfLinkCollector = compositionLocalOf<PdfLinkCollector?> { null }
+public val LocalPdfLinkCollector: androidx.compose.runtime.ProvidableCompositionLocal<PdfLinkCollector?> = compositionLocalOf { null }
 
 @Composable
-fun PdfLink(
+public fun PdfLink(
     href: String,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,

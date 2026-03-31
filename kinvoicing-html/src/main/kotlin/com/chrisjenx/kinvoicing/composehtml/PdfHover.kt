@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.toSize
  * @param content Visual composable content.
  */
 @Composable
-fun PdfHover(
+public fun PdfHover(
     hoverStyles: HoverStyles,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,

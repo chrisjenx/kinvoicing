@@ -2,6 +2,11 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.maven.publish)
+}
+
+kotlin {
+    explicitApi()
 }
 
 dependencies {

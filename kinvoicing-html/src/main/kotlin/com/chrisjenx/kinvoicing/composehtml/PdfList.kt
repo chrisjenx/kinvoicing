@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.toSize
  * by a native `<ol>` element. On screen, the Compose content displays normally.
  */
 @Composable
-fun PdfOrderedList(
+public fun PdfOrderedList(
     modifier: Modifier = Modifier,
     content: @Composable PdfListScope.() -> Unit,
 ) {
@@ -31,16 +31,16 @@ fun PdfOrderedList(
  * by a native `<ul>` element. On screen, the Compose content displays normally.
  */
 @Composable
-fun PdfUnorderedList(
+public fun PdfUnorderedList(
     modifier: Modifier = Modifier,
     content: @Composable PdfListScope.() -> Unit,
 ) {
     PdfListInternal(modifier = modifier, ordered = false, content = content)
 }
 
-interface PdfListScope {
+public interface PdfListScope {
     @Composable
-    fun Item(
+    public fun Item(
         semanticText: String? = null,
         modifier: Modifier = Modifier,
         content: @Composable () -> Unit,

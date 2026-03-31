@@ -22,7 +22,7 @@ import com.chrisjenx.kinvoicing.composehtml.internal.HtmlRenderer
  * @param content The composable content to render.
  * @return A self-contained HTML document string.
  */
-fun renderToHtml(
+public fun renderToHtml(
     config: PdfPageConfig = PdfPageConfig.A4,
     density: Density = Density(2f),
     useBundledFont: Boolean = true,
@@ -45,7 +45,7 @@ fun renderToHtml(
  * @param content The composable content for each page. Receives the zero-based page index.
  * @return A self-contained HTML document string.
  */
-fun renderToHtml(
+public fun renderToHtml(
     pages: Int,
     config: PdfPageConfig = PdfPageConfig.A4,
     density: Density = Density(2f),

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.toSize
  * @param content Visual composable content (typically an Image composable).
  */
 @Composable
-fun PdfImage(
+public fun PdfImage(
     altText: String,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,

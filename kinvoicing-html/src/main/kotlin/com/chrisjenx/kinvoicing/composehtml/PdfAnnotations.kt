@@ -1,14 +1,14 @@
 package com.chrisjenx.kinvoicing.composehtml
 
-sealed interface PdfElementAnnotation {
-    val x: Float
-    val y: Float
-    val width: Float
-    val height: Float
-    val id: String
+public sealed interface PdfElementAnnotation {
+    public val x: Float
+    public val y: Float
+    public val width: Float
+    public val height: Float
+    public val id: String
 }
 
-data class PdfButtonAnnotation(
+public data class PdfButtonAnnotation(
     val label: String,
     val name: String,
     val onClick: String?,
@@ -19,7 +19,7 @@ data class PdfButtonAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfTextFieldAnnotation(
+public data class PdfTextFieldAnnotation(
     val name: String,
     val placeholder: String,
     val value: String,
@@ -32,7 +32,7 @@ data class PdfTextFieldAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfImageAnnotation(
+public data class PdfImageAnnotation(
     val altText: String,
     override val x: Float,
     override val y: Float,
@@ -41,7 +41,7 @@ data class PdfImageAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfHoverAnnotation(
+public data class PdfHoverAnnotation(
     val hoverStyles: HoverStyles,
     override val x: Float,
     override val y: Float,
@@ -50,7 +50,7 @@ data class PdfHoverAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfTableAnnotation(
+public data class PdfTableAnnotation(
     val rows: List<PdfTableRowAnnotation>,
     val caption: String?,
     override val x: Float,
@@ -60,18 +60,18 @@ data class PdfTableAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfTableRowAnnotation(
+public data class PdfTableRowAnnotation(
     val cells: List<PdfTableCellAnnotation>,
     val isHeader: Boolean,
 )
 
-data class PdfTableCellAnnotation(
+public data class PdfTableCellAnnotation(
     val text: String,
     val colSpan: Int = 1,
     val rowSpan: Int = 1,
 )
 
-data class PdfListAnnotation(
+public data class PdfListAnnotation(
     val ordered: Boolean,
     val items: List<PdfListItemAnnotation>,
     override val x: Float,
@@ -81,11 +81,11 @@ data class PdfListAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-data class PdfListItemAnnotation(
+public data class PdfListItemAnnotation(
     val text: String,
 )
 
-data class HoverStyles(
+public data class HoverStyles(
     val backgroundColor: String? = null,
     val opacity: Float? = null,
     val transform: String? = null,
