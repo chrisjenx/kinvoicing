@@ -2,6 +2,7 @@ package com.chrisjenx.kinvoicing.composehtml
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -30,7 +31,7 @@ public class PdfLinkCollector {
     }
 }
 
-public val LocalPdfLinkCollector: androidx.compose.runtime.ProvidableCompositionLocal<PdfLinkCollector?> = compositionLocalOf { null }
+public val LocalPdfLinkCollector: ProvidableCompositionLocal<PdfLinkCollector?> = compositionLocalOf { null }
 
 @Composable
 public fun PdfLink(

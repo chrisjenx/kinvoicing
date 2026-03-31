@@ -1,5 +1,6 @@
 package com.chrisjenx.kinvoicing.composehtml
 
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 
 /**
@@ -31,4 +32,4 @@ public class PdfElementCollector {
  * CompositionLocal providing access to the element collector during PDF/HTML rendering.
  * When rendering to screen (not PDF/HTML), this is null and element annotations are ignored.
  */
-public val LocalPdfElementCollector: androidx.compose.runtime.ProvidableCompositionLocal<PdfElementCollector?> = compositionLocalOf { null }
+public val LocalPdfElementCollector: ProvidableCompositionLocal<PdfElementCollector?> = compositionLocalOf { null }
