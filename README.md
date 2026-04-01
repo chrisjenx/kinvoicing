@@ -14,7 +14,8 @@ dependencies {
 
     // Pick your renderer(s):
     implementation("com.chrisjenx.kinvoicing:render-compose:<version>")
-    implementation("com.chrisjenx.kinvoicing:render-html:<version>")
+    implementation("com.chrisjenx.kinvoicing:render-html-email:<version>")  // Email-safe HTML
+    implementation("com.chrisjenx.kinvoicing:render-html:<version>")        // Compose → HTML (via compose2pdf)
     implementation("com.chrisjenx.kinvoicing:render-pdf:<version>")
 }
 ```
@@ -69,9 +70,9 @@ val doc = invoice {
 |--------|----------|-------------|
 | `:core` | `core` | Invoice IR (sealed classes), DSL builder, currency formatting |
 | `:render-compose` | `render-compose` | Compose Multiplatform UI renderer |
-| `:render-html` | `render-html` | HTML renderer via kotlinx.html |
+| `:render-html-email` | `render-html-email` | Email-safe HTML renderer via kotlinx.html |
 | `:render-pdf` | `render-pdf` | PDF renderer via compose2pdf |
-| `:kinvoicing-html` | `kinvoicing-html` | HTML rendering extensions on compose2pdf |
+| `:render-html` | `render-html` | Compose → HTML renderer via compose2pdf |
 
 ## Architecture
 

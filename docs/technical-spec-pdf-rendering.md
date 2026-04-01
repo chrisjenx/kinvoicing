@@ -137,9 +137,9 @@ A single `PDDocument` with shared font cache. For each page: clear collectors �
 kinvoicing/
 ├── core/                          # Invoice IR + DSL (com.chrisjenx.kinvoicing)
 ├── render-compose/                # InvoiceDocument → Compose (com.chrisjenx.kinvoicing.compose)
-├── render-html/                   # InvoiceDocument → HTML (com.chrisjenx.kinvoicing.html)
+├── render-html-email/             # InvoiceDocument → email-safe HTML (com.chrisjenx.kinvoicing.html.email)
 ├── render-pdf/                    # InvoiceDocument → PDF via compose2pdf (com.chrisjenx.kinvoicing.pdf)
-├── kinvoicing-html/               # HTML rendering extensions on compose2pdf (com.chrisjenx.kinvoicing.composehtml)
+├── render-html/                   # Compose → HTML via compose2pdf (com.chrisjenx.kinvoicing.html)
 │   ├── ComposeHtml.kt             # Public API: renderToHtml()
 │   ├── PdfLink.kt                 # Link composable + collector (for HTML pipeline)
 │   ├── PdfElementCollector.kt     # Element annotation collector
