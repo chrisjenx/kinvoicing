@@ -1,6 +1,7 @@
 package com.chrisjenx.kinvoicing.util
 
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToLong
 
 /**
@@ -117,17 +118,7 @@ public object CurrencyFormatter {
         }
     }
 
-    private fun pow10(n: Int): Double = when (n) {
-        0 -> 1.0
-        1 -> 10.0
-        2 -> 100.0
-        3 -> 1000.0
-        else -> {
-            var result = 1.0
-            repeat(n) { result *= 10.0 }
-            result
-        }
-    }
+    private fun pow10(n: Int): Double = 10.0.pow(n)
 
     private fun Long.formatWithCommas(): String {
         val s = this.toString()

@@ -24,9 +24,7 @@ public class InvoiceBuilder {
 
     /** Set the document currency code (e.g., "USD", "EUR"). Must be a 3-letter uppercase code. */
     public fun currency(value: String) {
-        require(value.length == 3 && value.all { it.isUpperCase() }) {
-            "Currency code must be a 3-letter uppercase code (e.g., 'USD'), got: '$value'"
-        }
+        requireValidCurrencyCode(value)
         currencyCode = value
     }
 

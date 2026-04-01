@@ -11,14 +11,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.*
-import com.chrisjenx.kinvoicing.util.CurrencyFormatter
-import com.chrisjenx.kinvoicing.util.formatAsQuantity
 import com.chrisjenx.kinvoicing.util.labelWithPercent
 
 @Composable
 internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: String) {
     val style = LocalInvoiceStyle.current
-    val hasColumn = lineItems.columns.map { it.column }.toSet()
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.lg)) {
         // Header row
@@ -55,12 +52,7 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                     .padding(vertical = InvoiceSpacing.sm, horizontal = InvoiceSpacing.sm)
             ) {
                 lineItems.columns.forEach { col ->
-                    val text = when (col.column) {
-                        LineItemColumn.DESCRIPTION -> item.description
-                        LineItemColumn.QUANTITY -> item.quantity?.formatAsQuantity() ?: ""
-                        LineItemColumn.UNIT_PRICE -> item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
-                        LineItemColumn.AMOUNT -> CurrencyFormatter.format(item.amount, currency)
-                    }
+                    val text = col.column.textFor(item.description, item.quantity, item.unitPrice, item.amount, currency)
                     val color = if (col.column == LineItemColumn.AMOUNT && item.amount < 0) {
                         style.negativeComposeColor
                     } else {
@@ -91,12 +83,7 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                         .padding(start = InvoiceSpacing.lg)
                 ) {
                     lineItems.columns.forEach { col ->
-                        val text = when (col.column) {
-                            LineItemColumn.DESCRIPTION -> sub.description
-                            LineItemColumn.QUANTITY -> sub.quantity?.formatAsQuantity() ?: ""
-                            LineItemColumn.UNIT_PRICE -> sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
-                            LineItemColumn.AMOUNT -> CurrencyFormatter.format(sub.amount, currency)
-                        }
+                        val text = col.column.textFor(sub.description, sub.quantity, sub.unitPrice, sub.amount, currency)
                         Text(
                             text = text,
                             fontSize = InvoiceTypography.bodySmall,

@@ -2,8 +2,6 @@ package com.chrisjenx.kinvoicing.html.sections
 
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.html.toHexColor
-import com.chrisjenx.kinvoicing.util.CurrencyFormatter
-import com.chrisjenx.kinvoicing.util.formatAsQuantity
 import com.chrisjenx.kinvoicing.util.labelWithPercent
 import kotlinx.html.*
 
@@ -46,12 +44,7 @@ internal fun FlowContent.renderLineItems(
                 tr {
                     lineItems.columns.forEach { col ->
                         td {
-                            val text = when (col.column) {
-                                LineItemColumn.DESCRIPTION -> item.description
-                                LineItemColumn.QUANTITY -> item.quantity?.formatAsQuantity() ?: ""
-                                LineItemColumn.UNIT_PRICE -> item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
-                                LineItemColumn.AMOUNT -> CurrencyFormatter.format(item.amount, currency)
-                            }
+                            val text = col.column.textFor(item.description, item.quantity, item.unitPrice, item.amount, currency)
                             val amountColor = if (col.column == LineItemColumn.AMOUNT && item.amount < 0) negativeHex else textHex
                             val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right; " else ""
                             attributes["style"] = "font-size: 14px; color: $amountColor; ${align}padding: 10px 8px; $cellBorder $bgColor"
@@ -64,12 +57,7 @@ internal fun FlowContent.renderLineItems(
                     tr {
                         lineItems.columns.forEach { col ->
                             td {
-                                val text = when (col.column) {
-                                    LineItemColumn.DESCRIPTION -> sub.description
-                                    LineItemColumn.QUANTITY -> sub.quantity?.formatAsQuantity() ?: ""
-                                    LineItemColumn.UNIT_PRICE -> sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
-                                    LineItemColumn.AMOUNT -> CurrencyFormatter.format(sub.amount, currency)
-                                }
+                                val text = col.column.textFor(sub.description, sub.quantity, sub.unitPrice, sub.amount, currency)
                                 val padding = if (col.column == LineItemColumn.DESCRIPTION) "padding: 4px 8px 4px 24px;" else "padding: 4px 8px;"
                                 val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right; " else ""
                                 attributes["style"] = "font-size: 12px; color: $secondaryHex; $align$padding $cellBorder"

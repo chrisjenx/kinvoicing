@@ -165,3 +165,10 @@ internal fun buildAdjustmentValue(percent: Double?, fixed: Double?, label: Strin
     fixed != null -> AdjustmentValue.Fixed(fixed)
     else -> error("$label must specify either percent or fixed amount")
 }
+
+/** Validates that [value] is a 3-letter uppercase ISO 4217 currency code. */
+internal fun requireValidCurrencyCode(value: String) {
+    require(value.length == 3 && value.all { it.isUpperCase() }) {
+        "Currency code must be a 3-letter uppercase code (e.g., 'USD'), got: '$value'"
+    }
+}
