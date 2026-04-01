@@ -1,13 +1,9 @@
 package com.chrisjenx.kinvoicing.pdf
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceRenderer
-import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
+import com.chrisjenx.kinvoicing.compose.InvoiceSectionsContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
 import com.chrisjenx.kinvoicing.currency
 import java.io.OutputStream
@@ -15,9 +11,9 @@ import java.io.OutputStream
 /**
  * Renders an [InvoiceDocument] to PDF bytes via compose2pdf.
  *
- * Each invoice section is emitted as a direct child of the `renderToPdf`
- * content lambda, enabling compose2pdf's auto-pagination to keep sections
- * together and split between them at page boundaries.
+ * Uses [InvoiceSectionsContent] for intelligent section grouping (e.g.,
+ * adjacent BillFrom + BillTo rendered side-by-side). Each logical group is
+ * a direct child of the `renderToPdf` lambda, enabling auto-pagination.
  */
 public class PdfRenderer(
     private val config: PdfRenderConfig = PdfRenderConfig.Default,
@@ -31,10 +27,7 @@ public class PdfRenderer(
             pagination = config.pagination,
         ) {
             InvoiceStyleProvider(document.style) {
-                for (section in document.sections) {
-                    InvoiceSectionContent(section, document.currency)
-                    Spacer(Modifier.height(8.dp))
-                }
+                InvoiceSectionsContent(document.sections, document.currency)
             }
         }
     }

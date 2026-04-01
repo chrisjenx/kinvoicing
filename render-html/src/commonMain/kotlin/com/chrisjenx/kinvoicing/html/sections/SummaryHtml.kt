@@ -36,7 +36,7 @@ internal fun FlowContent.renderSummary(
                         tr {
                             td {
                                 val color = when (adj.type) {
-                                    AdjustmentType.DISCOUNT, AdjustmentType.CREDIT -> InvoiceColors.NEGATIVE.toHexColor()
+                                    AdjustmentType.DISCOUNT, AdjustmentType.CREDIT -> style.negativeColor.toHexColor()
                                     else -> style.secondaryColor.toHexColor()
                                 }
                                 attributes["style"] = "font-size: 13px; color: $color;"
@@ -44,7 +44,7 @@ internal fun FlowContent.renderSummary(
                             }
                             td {
                                 val adjAmount = adj.displayAmount(summary.subtotal)
-                                val color = if (adjAmount < 0) InvoiceColors.NEGATIVE.toHexColor() else style.textColor.toHexColor()
+                                val color = if (adjAmount < 0) style.negativeColor.toHexColor() else style.textColor.toHexColor()
                                 attributes["style"] = "font-size: 13px; color: $color; text-align: right;"
                                 +CurrencyFormatter.format(adjAmount, currency)
                             }
@@ -52,8 +52,8 @@ internal fun FlowContent.renderSummary(
                     }
 
                     tr {
-                        td { attributes["style"] = "font-size: 16px; font-weight: bold; color: ${style.textColor.toHexColor()}; border-top: 2px solid ${style.primaryColor.toHexColor()}; padding-top: 8px;" ; +"Total" }
-                        td { attributes["style"] = "font-size: 16px; font-weight: bold; color: ${style.textColor.toHexColor()}; text-align: right; border-top: 2px solid ${style.primaryColor.toHexColor()}; padding-top: 8px;" ; +CurrencyFormatter.format(summary.total, currency) }
+                        td { attributes["style"] = "font-size: 20px; font-weight: bold; color: ${style.textColor.toHexColor()}; border-top: 3px solid ${style.primaryColor.toHexColor()}; padding-top: 8px;" ; +"Total" }
+                        td { attributes["style"] = "font-size: 20px; font-weight: bold; color: ${style.primaryColor.toHexColor()}; text-align: right; border-top: 3px solid ${style.primaryColor.toHexColor()}; padding-top: 8px;" ; +CurrencyFormatter.format(summary.total, currency) }
                     }
                 }
             }

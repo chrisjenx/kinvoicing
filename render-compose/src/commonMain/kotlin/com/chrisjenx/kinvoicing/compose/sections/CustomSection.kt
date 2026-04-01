@@ -6,7 +6,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
@@ -28,7 +27,7 @@ private fun ElementContent(element: InvoiceElement) {
         is InvoiceElement.Text -> {
             Text(
                 text = element.value,
-                fontSize = 14.sp,
+                fontSize = InvoiceTypography.bodyLarge,
                 color = style.textComposeColor,
             )
         }
@@ -36,7 +35,7 @@ private fun ElementContent(element: InvoiceElement) {
             Spacer(modifier = Modifier.height(element.height.dp))
         }
         is InvoiceElement.Divider -> {
-            HorizontalDivider(color = BorderColor, modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(color = style.borderComposeColor, modifier = Modifier.padding(vertical = InvoiceSpacing.sm))
         }
         is InvoiceElement.Row -> {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -53,12 +52,9 @@ private fun ElementContent(element: InvoiceElement) {
             }
         }
         is InvoiceElement.Image -> {
-            // Image rendering would require platform-specific bitmap decoding.
-            // In compose2pdf/PDF context, this would be handled by the PDF renderer.
-            // For preview, we show a placeholder.
             Text(
                 text = "[Image: ${element.contentType}]",
-                fontSize = 12.sp,
+                fontSize = InvoiceTypography.bodySmall,
                 color = style.secondaryComposeColor,
             )
         }

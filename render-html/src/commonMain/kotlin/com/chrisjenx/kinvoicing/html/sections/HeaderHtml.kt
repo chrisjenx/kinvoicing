@@ -6,39 +6,61 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
     val borderStyle = if (style.accentBorder) "border-bottom: 3px solid ${style.primaryColor.toHexColor()};" else ""
-    table {
-        attributes["width"] = "100%"
-        attributes["cellpadding"] = "0"
-        attributes["cellspacing"] = "0"
-        attributes["style"] = "margin-bottom: 24px; $borderStyle"
-        tr {
-            td {
-                attributes["style"] = "vertical-align: top; padding-bottom: 16px;"
-                header.branding?.let { branding ->
-                    renderBranding(branding, style)
-                }
-            }
-            td {
-                attributes["style"] = "vertical-align: top; text-align: right; padding-bottom: 16px;"
-                header.invoiceNumber?.let {
-                    div {
-                        attributes["style"] = "font-size: 20px; font-weight: bold; color: ${style.primaryColor.toHexColor()};"
-                        +it
+
+    when (style.headerLayout) {
+        HeaderLayout.HORIZONTAL -> {
+            table {
+                attributes["width"] = "100%"
+                attributes["cellpadding"] = "0"
+                attributes["cellspacing"] = "0"
+                attributes["style"] = "margin-bottom: 24px; $borderStyle"
+                tr {
+                    td {
+                        attributes["style"] = "vertical-align: top; padding-bottom: 16px;"
+                        header.branding?.let { renderBranding(it, style) }
                     }
-                }
-                header.issueDate?.let {
-                    div {
-                        attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-top: 4px;"
-                        +"Issue Date: $it"
-                    }
-                }
-                header.dueDate?.let {
-                    div {
-                        attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-top: 4px;"
-                        +"Due Date: $it"
+                    td {
+                        attributes["style"] = "vertical-align: top; text-align: right; padding-bottom: 16px;"
+                        renderInvoiceDetails(header, style)
                     }
                 }
             }
+        }
+        HeaderLayout.STACKED -> {
+            val textAlign = when (style.logoPlacement) {
+                LogoPlacement.LEFT -> "left"
+                LogoPlacement.CENTER -> "center"
+                LogoPlacement.RIGHT -> "right"
+            }
+            div {
+                attributes["style"] = "margin-bottom: 24px; text-align: $textAlign; $borderStyle"
+                header.branding?.let { renderBranding(it, style) }
+                div {
+                    attributes["style"] = "margin-top: 16px; text-align: right;"
+                    renderInvoiceDetails(header, style)
+                }
+            }
+        }
+    }
+}
+
+private fun FlowContent.renderInvoiceDetails(header: InvoiceSection.Header, style: InvoiceStyle) {
+    header.invoiceNumber?.let {
+        div {
+            attributes["style"] = "font-size: 20px; font-weight: bold; color: ${style.primaryColor.toHexColor()};"
+            +it
+        }
+    }
+    header.issueDate?.let {
+        div {
+            attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-top: 4px;"
+            +"Issue Date: $it"
+        }
+    }
+    header.dueDate?.let {
+        div {
+            attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-top: 4px;"
+            +"Due Date: $it"
         }
     }
 }

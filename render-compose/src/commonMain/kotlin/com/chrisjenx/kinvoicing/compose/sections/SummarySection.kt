@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.*
 import com.chrisjenx.kinvoicing.util.CurrencyFormatter
@@ -25,7 +24,7 @@ internal fun SummarySection(summary: InvoiceSection.Summary, currency: String) {
         Spacer(modifier = Modifier.weight(1f))
 
         Column(
-            modifier = Modifier.width(250.dp),
+            modifier = Modifier.fillMaxWidth(0.4f),
             horizontalAlignment = Alignment.End,
         ) {
             // Subtotal
@@ -39,12 +38,12 @@ internal fun SummarySection(summary: InvoiceSection.Summary, currency: String) {
             // Adjustments
             summary.adjustments.forEach { adj ->
                 val adjAmount = adj.displayAmount(summary.subtotal)
-                val color = if (adjAmount < 0) NegativeColor else style.textComposeColor
+                val color = if (adjAmount < 0) style.negativeComposeColor else style.textComposeColor
                 SummaryRow(
                     label = adj.labelWithPercent,
                     value = CurrencyFormatter.format(adjAmount, currency),
                     labelColor = if (adj.type == AdjustmentType.DISCOUNT || adj.type == AdjustmentType.CREDIT) {
-                        NegativeColor
+                        style.negativeComposeColor
                     } else {
                         style.secondaryComposeColor
                     },
@@ -53,24 +52,24 @@ internal fun SummarySection(summary: InvoiceSection.Summary, currency: String) {
             }
 
             // Total divider
-            Spacer(modifier = Modifier.height(4.dp))
-            HorizontalDivider(thickness = 2.dp, color = style.primaryComposeColor)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
+            HorizontalDivider(thickness = 3.dp, color = style.primaryComposeColor)
+            Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
 
-            // Total
+            // Total — emphasized
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Total",
-                    fontSize = 16.sp,
+                    fontSize = InvoiceTypography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = style.textComposeColor,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
                     text = CurrencyFormatter.format(summary.total, currency),
-                    fontSize = 16.sp,
+                    fontSize = InvoiceTypography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = style.textComposeColor,
+                    color = style.primaryComposeColor,
                     textAlign = TextAlign.End,
                 )
             }
@@ -86,10 +85,10 @@ private fun SummaryRow(
     valueColor: Color,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = InvoiceSpacing.xxs),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = label, fontSize = 13.sp, color = labelColor)
-        Text(text = value, fontSize = 13.sp, color = valueColor, textAlign = TextAlign.End)
+        Text(text = label, fontSize = InvoiceTypography.bodyMedium, color = labelColor)
+        Text(text = value, fontSize = InvoiceTypography.bodyMedium, color = valueColor, textAlign = TextAlign.End)
     }
 }

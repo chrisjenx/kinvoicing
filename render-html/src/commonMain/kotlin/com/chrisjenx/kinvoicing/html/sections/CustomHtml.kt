@@ -25,7 +25,7 @@ internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceSt
             div { attributes["style"] = "height: ${element.height}px;" }
         }
         is InvoiceElement.Divider -> {
-            hr { attributes["style"] = "border: none; border-top: 1px solid ${InvoiceColors.BORDER.toHexColor()}; margin: 8px 0;" }
+            hr { attributes["style"] = "border: none; border-top: 1px solid ${style.borderColor.toHexColor()}; margin: 8px 0;" }
         }
         is InvoiceElement.Row -> {
             table {

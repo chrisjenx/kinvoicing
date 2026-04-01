@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -17,50 +16,80 @@ internal fun HeaderSection(header: InvoiceSection.Header) {
     val style = LocalInvoiceStyle.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            // Left: Branding
-            Column(modifier = Modifier.weight(1f)) {
-                header.branding?.let { branding ->
-                    BrandingContent(branding, style)
-                }
-            }
-
-            // Right: Invoice details
-            Column(horizontalAlignment = Alignment.End) {
-                header.invoiceNumber?.let {
-                    Text(
-                        text = it,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = style.primaryComposeColor,
-                    )
-                }
-                header.issueDate?.let {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Issue Date: $it",
-                        fontSize = 13.sp,
-                        color = style.secondaryComposeColor,
-                    )
-                }
-                header.dueDate?.let {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Due Date: $it",
-                        fontSize = 13.sp,
-                        color = style.secondaryComposeColor,
-                    )
-                }
-            }
+        when (style.headerLayout) {
+            HeaderLayout.HORIZONTAL -> HorizontalHeader(header, style)
+            HeaderLayout.STACKED -> StackedHeader(header, style)
         }
 
         if (style.accentBorder) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(InvoiceSpacing.md))
             HorizontalDivider(thickness = 3.dp, color = style.primaryComposeColor)
+        }
+    }
+}
+
+@Composable
+private fun HorizontalHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            header.branding?.let { branding ->
+                BrandingContent(branding, style)
+            }
+        }
+        InvoiceDetailsColumn(header, style)
+    }
+}
+
+@Composable
+private fun StackedHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
+    val alignment = when (style.logoPlacement) {
+        LogoPlacement.LEFT -> Alignment.Start
+        LogoPlacement.CENTER -> Alignment.CenterHorizontally
+        LogoPlacement.RIGHT -> Alignment.End
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = alignment,
+    ) {
+        header.branding?.let { branding ->
+            BrandingContent(branding, style)
+        }
+        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+        InvoiceDetailsColumn(header, style)
+    }
+}
+
+@Composable
+private fun InvoiceDetailsColumn(header: InvoiceSection.Header, style: InvoiceStyle) {
+    Column(horizontalAlignment = Alignment.End) {
+        header.invoiceNumber?.let {
+            Text(
+                text = it,
+                fontSize = InvoiceTypography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = style.primaryComposeColor,
+            )
+        }
+        header.issueDate?.let {
+            Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
+            Text(
+                text = "Issue Date: $it",
+                fontSize = InvoiceTypography.bodyMedium,
+                color = style.secondaryComposeColor,
+            )
+        }
+        header.dueDate?.let {
+            Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
+            Text(
+                text = "Due Date: $it",
+                fontSize = InvoiceTypography.bodyMedium,
+                color = style.secondaryComposeColor,
+            )
         }
     }
 }
@@ -69,44 +98,44 @@ internal fun HeaderSection(header: InvoiceSection.Header) {
 private fun BrandingContent(branding: Branding, style: InvoiceStyle) {
     Text(
         text = branding.primary.name,
-        fontSize = 18.sp,
+        fontSize = InvoiceTypography.titleMedium,
         fontWeight = FontWeight.Bold,
         color = style.textComposeColor,
     )
     branding.primary.address.forEach { line ->
-        Text(text = line, fontSize = 13.sp, color = style.secondaryComposeColor)
+        Text(text = line, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
     }
     branding.primary.email?.let {
-        Text(text = it, fontSize = 13.sp, color = style.secondaryComposeColor)
+        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
     }
     branding.primary.phone?.let {
-        Text(text = it, fontSize = 13.sp, color = style.secondaryComposeColor)
+        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
     }
     branding.primary.website?.let {
-        Text(text = it, fontSize = 13.sp, color = style.primaryComposeColor)
+        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.primaryComposeColor)
     }
 
     branding.poweredBy?.let { pb ->
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
         when (branding.layout) {
             BrandLayout.POWERED_BY_FOOTER -> {
                 Text(
                     text = pb.tagline ?: "Powered by ${pb.name}",
-                    fontSize = 11.sp,
+                    fontSize = InvoiceTypography.caption,
                     color = style.secondaryComposeColor,
                 )
             }
             BrandLayout.POWERED_BY_HEADER -> {
                 Text(
                     text = pb.name,
-                    fontSize = 12.sp,
+                    fontSize = InvoiceTypography.bodySmall,
                     color = style.secondaryComposeColor,
                 )
             }
             BrandLayout.DUAL_HEADER -> {
                 Text(
                     text = pb.name,
-                    fontSize = 14.sp,
+                    fontSize = InvoiceTypography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = style.textComposeColor,
                 )

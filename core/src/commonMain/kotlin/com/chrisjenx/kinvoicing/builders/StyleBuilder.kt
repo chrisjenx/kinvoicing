@@ -14,6 +14,29 @@ public class StyleBuilder {
     public var headerLayout: HeaderLayout = HeaderLayout.HORIZONTAL
     public var showGridLines: Boolean = false
     public var accentBorder: Boolean = false
+    public var negativeColor: Long = 0xFFDC2626
+    public var borderColor: Long = 0xFFE2E8F0
+    public var dividerColor: Long = 0xFFF1F5F9
+    public var mutedBackgroundColor: Long = 0xFFF8FAFC
+    public var surfaceColor: Long = 0xFFFFFFFF
+
+    /** Apply a pre-built [InvoiceStyle] as the base, then override individual properties. */
+    public fun theme(base: InvoiceStyle) {
+        primaryColor = base.primaryColor
+        secondaryColor = base.secondaryColor
+        textColor = base.textColor
+        backgroundColor = base.backgroundColor
+        fontFamily = base.fontFamily
+        logoPlacement = base.logoPlacement
+        headerLayout = base.headerLayout
+        showGridLines = base.showGridLines
+        accentBorder = base.accentBorder
+        negativeColor = base.negativeColor
+        borderColor = base.borderColor
+        dividerColor = base.dividerColor
+        mutedBackgroundColor = base.mutedBackgroundColor
+        surfaceColor = base.surfaceColor
+    }
 
     internal fun build(): InvoiceStyle = InvoiceStyle(
         primaryColor = primaryColor,
@@ -25,5 +48,10 @@ public class StyleBuilder {
         headerLayout = headerLayout,
         showGridLines = showGridLines,
         accentBorder = accentBorder,
+        negativeColor = negativeColor,
+        borderColor = borderColor,
+        dividerColor = dividerColor,
+        mutedBackgroundColor = mutedBackgroundColor,
+        surfaceColor = surfaceColor,
     )
 }

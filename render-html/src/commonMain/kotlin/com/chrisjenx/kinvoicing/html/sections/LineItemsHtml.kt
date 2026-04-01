@@ -16,11 +16,11 @@ internal fun FlowContent.renderLineItems(
     val primaryHex = style.primaryColor.toHexColor()
     val secondaryHex = style.secondaryColor.toHexColor()
     val textHex = style.textColor.toHexColor()
-    val negativeHex = InvoiceColors.NEGATIVE.toHexColor()
-    val bgMutedHex = InvoiceColors.BG_MUTED.toHexColor()
+    val negativeHex = style.negativeColor.toHexColor()
+    val bgMutedHex = style.mutedBackgroundColor.toHexColor()
 
     val borderStyle = if (style.accentBorder) "border-left: 4px solid $primaryHex;" else ""
-    val cellBorder = if (style.showGridLines) "border: 1px solid ${InvoiceColors.BORDER.toHexColor()};" else "border-bottom: 1px solid ${InvoiceColors.DIVIDER.toHexColor()};"
+    val cellBorder = if (style.showGridLines) "border: 1px solid ${style.borderColor.toHexColor()};" else "border-bottom: 1px solid ${style.dividerColor.toHexColor()};"
 
     table {
         attributes["width"] = "100%"

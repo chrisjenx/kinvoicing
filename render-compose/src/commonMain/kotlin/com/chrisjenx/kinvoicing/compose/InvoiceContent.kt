@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.sections.*
 
@@ -27,22 +26,50 @@ public fun InvoiceContent(
         Column(
             modifier = modifier
                 .background(style.backgroundComposeColor)
-                .padding(24.dp)
+                .padding(InvoiceSpacing.xl)
         ) {
-            for (section in document.sections) {
-                InvoiceSectionContent(section, currency)
-                Spacer(modifier = Modifier.height(8.dp))
+            InvoiceSectionsContent(document.sections, currency)
+        }
+    }
+}
+
+/**
+ * Renders all [sections] with intelligent grouping (e.g., adjacent BillFrom + BillTo
+ * rendered side-by-side). Each logical group is emitted as a direct child, making this
+ * suitable for compose2pdf's auto-pagination.
+ */
+@Composable
+public fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: String) {
+    var i = 0
+    while (i < sections.size) {
+        val section = sections[i]
+        if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
+            val next = sections[i + 1]
+            if (next is InvoiceSection.BillTo) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(section.name, section.address, section.email, section.phone, "From")
+                    }
+                    Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(next.name, next.address, next.email, next.phone, "Bill To")
+                    }
+                }
+                Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                i += 2
+                continue
             }
         }
+        InvoiceSectionContent(section, currency)
+        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+        i++
     }
 }
 
 /**
  * Renders a single [InvoiceSection] to its corresponding composable.
  *
- * Call this per-section inside compose2pdf's `renderToPdf` lambda so each
- * section is a direct child — enabling auto-pagination to keep sections
- * together and split between them at page boundaries.
+ * For grouped rendering with side-by-side parties, use [InvoiceSectionsContent] instead.
  */
 @Composable
 public fun InvoiceSectionContent(section: InvoiceSection, currency: String) {

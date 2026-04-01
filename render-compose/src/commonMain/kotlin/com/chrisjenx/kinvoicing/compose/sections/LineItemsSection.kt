@@ -9,8 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.*
 import com.chrisjenx.kinvoicing.util.CurrencyFormatter
@@ -21,18 +19,18 @@ import com.chrisjenx.kinvoicing.util.labelWithPercent
 internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: String) {
     val style = LocalInvoiceStyle.current
 
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.lg)) {
         // Header row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(style.primaryComposeColor.copy(alpha = 0.06f))
-                .padding(vertical = 10.dp, horizontal = 8.dp)
+                .padding(vertical = InvoiceSpacing.sm, horizontal = InvoiceSpacing.sm)
         ) {
             lineItems.columnHeaders.forEachIndexed { i, header ->
                 Text(
                     text = header.uppercase(),
-                    fontSize = 12.sp,
+                    fontSize = InvoiceTypography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = style.secondaryComposeColor,
                     textAlign = if (i == lineItems.columnHeaders.lastIndex) TextAlign.End else TextAlign.Start,
@@ -42,29 +40,29 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
         }
 
         if (style.showGridLines) {
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = style.borderComposeColor)
         }
 
         // Data rows
         lineItems.rows.forEachIndexed { rowIdx, item ->
-            val bgColor = if (rowIdx % 2 == 1) BgMutedColor else Color.Transparent
+            val bgColor = if (rowIdx % 2 == 1) style.mutedBgComposeColor else Color.Transparent
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(bgColor)
-                    .padding(vertical = 10.dp, horizontal = 8.dp)
+                    .padding(vertical = InvoiceSpacing.sm, horizontal = InvoiceSpacing.sm)
             ) {
                 Text(
                     text = item.description,
-                    fontSize = 14.sp,
+                    fontSize = InvoiceTypography.bodyLarge,
                     color = style.textComposeColor,
                     modifier = Modifier.weight(2f),
                 )
                 if (lineItems.columnHeaders.size >= 3) {
                     Text(
                         text = item.quantity?.formatAsQuantity() ?: "",
-                        fontSize = 14.sp,
+                        fontSize = InvoiceTypography.bodyLarge,
                         color = style.textComposeColor,
                         modifier = Modifier.weight(1f),
                     )
@@ -72,24 +70,24 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                 if (lineItems.columnHeaders.size >= 4) {
                     Text(
                         text = item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "",
-                        fontSize = 14.sp,
+                        fontSize = InvoiceTypography.bodyLarge,
                         color = style.textComposeColor,
                         modifier = Modifier.weight(1f),
                     )
                 }
                 Text(
                     text = CurrencyFormatter.format(item.amount, currency),
-                    fontSize = 14.sp,
-                    color = if (item.amount < 0) NegativeColor else style.textComposeColor,
+                    fontSize = InvoiceTypography.bodyLarge,
+                    color = if (item.amount < 0) style.negativeComposeColor else style.textComposeColor,
                     textAlign = TextAlign.End,
                     modifier = Modifier.weight(1f),
                 )
             }
 
             if (style.showGridLines) {
-                HorizontalDivider(color = BorderColor)
+                HorizontalDivider(color = style.borderComposeColor)
             } else {
-                HorizontalDivider(color = DividerColor)
+                HorizontalDivider(color = style.dividerComposeColor)
             }
 
             // Sub-items
@@ -97,19 +95,19 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp, horizontal = 8.dp)
-                        .padding(start = 16.dp)
+                        .padding(vertical = InvoiceSpacing.xs, horizontal = InvoiceSpacing.sm)
+                        .padding(start = InvoiceSpacing.lg)
                 ) {
                     Text(
                         text = sub.description,
-                        fontSize = 12.sp,
+                        fontSize = InvoiceTypography.bodySmall,
                         color = style.secondaryComposeColor,
                         modifier = Modifier.weight(2f),
                     )
                     if (lineItems.columnHeaders.size >= 3) {
                         Text(
                             text = sub.quantity?.formatAsQuantity() ?: "",
-                            fontSize = 12.sp,
+                            fontSize = InvoiceTypography.bodySmall,
                             color = style.secondaryComposeColor,
                             modifier = Modifier.weight(1f),
                         )
@@ -117,14 +115,14 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                     if (lineItems.columnHeaders.size >= 4) {
                         Text(
                             text = sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "",
-                            fontSize = 12.sp,
+                            fontSize = InvoiceTypography.bodySmall,
                             color = style.secondaryComposeColor,
                             modifier = Modifier.weight(1f),
                         )
                     }
                     Text(
                         text = CurrencyFormatter.format(sub.amount, currency),
-                        fontSize = 12.sp,
+                        fontSize = InvoiceTypography.bodySmall,
                         color = style.secondaryComposeColor,
                         textAlign = TextAlign.End,
                         modifier = Modifier.weight(1f),
@@ -137,13 +135,13 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp, horizontal = 8.dp)
-                        .padding(start = 16.dp)
+                        .padding(vertical = InvoiceSpacing.xxs, horizontal = InvoiceSpacing.sm)
+                        .padding(start = InvoiceSpacing.lg)
                 ) {
                     Text(
                         text = disc.labelWithPercent,
-                        fontSize = 12.sp,
-                        color = NegativeColor,
+                        fontSize = InvoiceTypography.bodySmall,
+                        color = style.negativeComposeColor,
                         modifier = Modifier.weight(1f),
                     )
                 }

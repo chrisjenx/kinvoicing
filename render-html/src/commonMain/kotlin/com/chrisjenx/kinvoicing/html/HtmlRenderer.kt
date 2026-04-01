@@ -43,12 +43,49 @@ public class HtmlRenderer(
                         tr {
                             td {
                                 attributes["style"] = "padding: 24px;"
-                                for (section in document.sections) {
+                                val sections = document.sections
+                                var i = 0
+                                while (i < sections.size) {
+                                    val section = sections[i]
+                                    if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
+                                        val next = sections[i + 1]
+                                        if (next is InvoiceSection.BillTo) {
+                                            renderPartiesSideBySide(section, next, style)
+                                            i += 2
+                                            continue
+                                        }
+                                    }
                                     renderSection(section, style, currency)
+                                    i++
                                 }
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun FlowContent.renderPartiesSideBySide(
+        from: InvoiceSection.BillFrom,
+        to: InvoiceSection.BillTo,
+        style: InvoiceStyle,
+    ) {
+        table {
+            attributes["width"] = "100%"
+            attributes["cellpadding"] = "0"
+            attributes["cellspacing"] = "0"
+            attributes["style"] = "margin-bottom: 16px;"
+            tr {
+                td {
+                    attributes["width"] = "50%"
+                    attributes["style"] = "vertical-align: top;"
+                    renderParty(from.name, from.address, from.email, from.phone, "From", style)
+                }
+                td {
+                    attributes["width"] = "50%"
+                    attributes["style"] = "vertical-align: top;"
+                    renderParty(to.name, to.address, to.email, to.phone, "Bill To", style)
                 }
             }
         }

@@ -6,13 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -23,8 +21,8 @@ internal fun MetaBlockSection(metaBlock: InvoiceSection.MetaBlock) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgMutedColor, RoundedCornerShape(4.dp))
-            .padding(12.dp)
+            .background(style.mutedBgComposeColor, RoundedCornerShape(4.dp))
+            .padding(InvoiceSpacing.md)
     ) {
         metaBlock.entries.forEach { entry ->
             Text(
@@ -36,8 +34,8 @@ internal fun MetaBlockSection(metaBlock: InvoiceSection.MetaBlock) {
                         append(entry.value)
                     }
                 },
-                fontSize = 13.sp,
-                modifier = Modifier.padding(bottom = 4.dp),
+                fontSize = InvoiceTypography.bodyMedium,
+                modifier = Modifier.padding(bottom = InvoiceSpacing.xs),
             )
         }
     }

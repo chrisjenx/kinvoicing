@@ -5,8 +5,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.compose.*
 
 @Composable
@@ -19,28 +17,28 @@ internal fun PartySection(
 ) {
     val style = LocalInvoiceStyle.current
 
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.sm)) {
         Text(
             text = label.uppercase(),
-            fontSize = 11.sp,
+            fontSize = InvoiceTypography.caption,
             fontWeight = FontWeight.Bold,
             color = style.secondaryComposeColor,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
         Text(
             text = name,
-            fontSize = 14.sp,
+            fontSize = InvoiceTypography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = style.textComposeColor,
         )
         address.forEach { line ->
-            Text(text = line, fontSize = 13.sp, color = style.textComposeColor)
+            Text(text = line, fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         email?.let {
-            Text(text = it, fontSize = 13.sp, color = style.secondaryComposeColor)
+            Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
         }
         phone?.let {
-            Text(text = it, fontSize = 13.sp, color = style.secondaryComposeColor)
+            Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
         }
     }
 }

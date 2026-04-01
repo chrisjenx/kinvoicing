@@ -6,7 +6,7 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-bottom: 24px; padding: 16px; background-color: ${InvoiceColors.BG_MUTED.toHexColor()}; border-radius: 4px;"
+        attributes["style"] = "margin-bottom: 24px; padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
         div {
             attributes["style"] = "font-size: 13px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;"
             +"Payment Information"

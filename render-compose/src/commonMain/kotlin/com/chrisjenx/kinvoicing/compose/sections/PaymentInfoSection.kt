@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -19,38 +18,38 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgMutedColor, RoundedCornerShape(4.dp))
-            .padding(16.dp)
+            .background(style.mutedBgComposeColor, RoundedCornerShape(4.dp))
+            .padding(InvoiceSpacing.lg)
     ) {
         Text(
             text = "PAYMENT INFORMATION",
-            fontSize = 13.sp,
+            fontSize = InvoiceTypography.bodyMedium,
             fontWeight = FontWeight.Bold,
             color = style.secondaryComposeColor,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
 
         payment.bankName?.let {
-            Text(text = "Bank: $it", fontSize = 13.sp, color = style.textComposeColor)
+            Text(text = "Bank: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         payment.accountNumber?.let {
-            Text(text = "Account: $it", fontSize = 13.sp, color = style.textComposeColor)
+            Text(text = "Account: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         payment.routingNumber?.let {
-            Text(text = "Routing: $it", fontSize = 13.sp, color = style.textComposeColor)
+            Text(text = "Routing: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         payment.paymentLink?.let {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
             Text(
                 text = "Pay Online: $it",
-                fontSize = 14.sp,
+                fontSize = InvoiceTypography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = style.primaryComposeColor,
             )
         }
         payment.notes?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = it, fontSize = 12.sp, color = style.secondaryComposeColor)
+            Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
+            Text(text = it, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
         }
     }
 }

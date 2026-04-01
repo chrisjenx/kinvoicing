@@ -3,6 +3,7 @@ package com.chrisjenx.kinvoicing.examples
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.HeaderLayout
 import com.chrisjenx.kinvoicing.InvoiceDocument
+import com.chrisjenx.kinvoicing.InvoiceThemes
 import com.chrisjenx.kinvoicing.LogoPlacement
 import com.chrisjenx.kinvoicing.invoice
 import kotlinx.datetime.LocalDate
@@ -31,6 +32,13 @@ object InvoiceExamples {
             "grid-lines" to gridLines,
             "many-items" to manyItems,
             "pagination" to pagination,
+            "theme-corporate" to themeCorporate,
+            "theme-modern" to themeModern,
+            "theme-bold" to themeBold,
+            "theme-warm" to themeWarm,
+            "theme-minimal" to themeMinimal,
+            "theme-elegant" to themeElegant,
+            "theme-fresh" to themeFresh,
         )
     }
 
@@ -578,5 +586,83 @@ object InvoiceExamples {
             currency("USD")
             tax("State Tax", percent = 8.0)
         }
+    }
+
+    // ── Built-in Theme Showcase ──
+
+    /** Corporate theme: navy, accent stripe, professional. */
+    val themeCorporate: InvoiceDocument = themedInvoice(InvoiceThemes.Corporate, "CORP")
+
+    /** Modern theme: indigo, airy, minimal decoration. */
+    val themeModern: InvoiceDocument = themedInvoice(InvoiceThemes.Modern, "MOD")
+
+    /** Bold theme: strong blue, grid lines, structured. */
+    val themeBold: InvoiceDocument = themedInvoice(InvoiceThemes.Bold, "BOLD")
+
+    /** Warm theme: amber earth tones, Georgia font, friendly. */
+    val themeWarm: InvoiceDocument = themedInvoice(InvoiceThemes.Warm, "WARM")
+
+    /** Minimal theme: near-monochrome, ultra-clean. */
+    val themeMinimal: InvoiceDocument = themedInvoice(InvoiceThemes.Minimal, "MIN")
+
+    /** Elegant theme: dark stone + gold, Georgia font. */
+    val themeElegant: InvoiceDocument = themedInvoice(InvoiceThemes.Elegant, "ELGNT")
+
+    /** Fresh theme: green/teal, eco-feeling. */
+    val themeFresh: InvoiceDocument = themedInvoice(InvoiceThemes.Fresh, "FRESH")
+}
+
+/**
+ * Creates a representative invoice using a given theme, exercising header,
+ * parties, line items, summary, payment info, and footer.
+ */
+private fun themedInvoice(
+    theme: com.chrisjenx.kinvoicing.InvoiceStyle,
+    code: String,
+): InvoiceDocument = invoice {
+    style { theme(theme) }
+    header {
+        branding {
+            primary {
+                name("Kinvoicing Demo")
+                address("1 Theme Lane", "San Francisco, CA 94102")
+                email("hello@kinvoicing.dev")
+            }
+        }
+        invoiceNumber("INV-$code-001")
+        issueDate(LocalDate(2026, 3, 1))
+        dueDate(LocalDate(2026, 3, 31))
+    }
+    billFrom {
+        name("Kinvoicing Demo")
+        address("1 Theme Lane", "San Francisco, CA 94102")
+        email("hello@kinvoicing.dev")
+        phone("+1 (555) 000-0000")
+    }
+    billTo {
+        name("Showcase Client")
+        address("200 Preview Blvd", "New York, NY 10001")
+        email("client@example.com")
+    }
+    lineItems {
+        columns("Description", "Qty", "Rate", "Amount")
+        item("Strategic Consulting", qty = 20, unitPrice = 250.0)
+        item("Technical Implementation", qty = 40, unitPrice = 175.0)
+        item("Project Management", qty = 10, unitPrice = 150.0)
+    }
+    summary {
+        currency("USD")
+        discount("Early payment", percent = 5.0)
+        tax("Sales Tax", percent = 8.25)
+    }
+    paymentInfo {
+        bankName("First National Bank")
+        accountNumber("****1234")
+        paymentLink("https://pay.example.com/inv-$code-001")
+        notes("Wire transfer preferred.")
+    }
+    footer {
+        notes("Thank you for your business!")
+        terms("Net 30. 1.5% monthly interest on overdue balances.")
     }
 }
