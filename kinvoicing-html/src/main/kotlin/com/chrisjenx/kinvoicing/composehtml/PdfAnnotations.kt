@@ -1,14 +1,14 @@
 package com.chrisjenx.kinvoicing.composehtml
 
-public sealed interface PdfElementAnnotation {
-    public val x: Float
-    public val y: Float
-    public val width: Float
-    public val height: Float
-    public val id: String
+internal sealed interface PdfElementAnnotation {
+    val x: Float
+    val y: Float
+    val width: Float
+    val height: Float
+    val id: String
 }
 
-public data class PdfButtonAnnotation(
+internal data class PdfButtonAnnotation(
     val label: String,
     val name: String,
     val onClick: String?,
@@ -19,7 +19,7 @@ public data class PdfButtonAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfTextFieldAnnotation(
+internal data class PdfTextFieldAnnotation(
     val name: String,
     val placeholder: String,
     val value: String,
@@ -32,7 +32,7 @@ public data class PdfTextFieldAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfImageAnnotation(
+internal data class PdfImageAnnotation(
     val altText: String,
     override val x: Float,
     override val y: Float,
@@ -41,7 +41,7 @@ public data class PdfImageAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfHoverAnnotation(
+internal data class PdfHoverAnnotation(
     val hoverStyles: HoverStyles,
     override val x: Float,
     override val y: Float,
@@ -50,7 +50,7 @@ public data class PdfHoverAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfTableAnnotation(
+internal data class PdfTableAnnotation(
     val rows: List<PdfTableRowAnnotation>,
     val caption: String?,
     override val x: Float,
@@ -60,18 +60,18 @@ public data class PdfTableAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfTableRowAnnotation(
+internal data class PdfTableRowAnnotation(
     val cells: List<PdfTableCellAnnotation>,
     val isHeader: Boolean,
 )
 
-public data class PdfTableCellAnnotation(
+internal data class PdfTableCellAnnotation(
     val text: String,
     val colSpan: Int = 1,
     val rowSpan: Int = 1,
 )
 
-public data class PdfListAnnotation(
+internal data class PdfListAnnotation(
     val ordered: Boolean,
     val items: List<PdfListItemAnnotation>,
     override val x: Float,
@@ -81,7 +81,7 @@ public data class PdfListAnnotation(
     override val id: String,
 ) : PdfElementAnnotation
 
-public data class PdfListItemAnnotation(
+internal data class PdfListItemAnnotation(
     val text: String,
 )
 

@@ -32,10 +32,10 @@ public fun ArgbColor.toComposeColor(): Color {
 }
 
 // Branding colors
-public val InvoiceStyle.primaryComposeColor: Color get() = primaryColor.toComposeColor()
-public val InvoiceStyle.secondaryComposeColor: Color get() = secondaryColor.toComposeColor()
-public val InvoiceStyle.textComposeColor: Color get() = textColor.toComposeColor()
-public val InvoiceStyle.backgroundComposeColor: Color get() = backgroundColor.toComposeColor()
+internal val InvoiceStyle.primaryComposeColor: Color get() = primaryColor.toComposeColor()
+internal val InvoiceStyle.secondaryComposeColor: Color get() = secondaryColor.toComposeColor()
+internal val InvoiceStyle.textComposeColor: Color get() = textColor.toComposeColor()
+internal val InvoiceStyle.backgroundComposeColor: Color get() = backgroundColor.toComposeColor()
 
 // Semantic colors (theme-aware, replacing hardcoded InvoiceColors constants)
 internal val InvoiceStyle.negativeComposeColor: Color get() = negativeColor.toComposeColor()
