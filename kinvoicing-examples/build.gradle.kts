@@ -7,7 +7,7 @@ plugins {
 dependencies {
     api(project(":core"))
     api(project(":render-compose"))
-    implementation(project(":kinvoicing-html"))
+    implementation(project(":render-html"))
     implementation(libs.compose2pdf)
     implementation(compose.desktop.currentOs)
     implementation(compose.runtime)

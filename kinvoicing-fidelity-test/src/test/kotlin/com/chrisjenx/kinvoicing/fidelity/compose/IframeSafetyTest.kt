@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
-import com.chrisjenx.kinvoicing.composehtml.renderToHtml
+import com.chrisjenx.kinvoicing.html.renderToHtml
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document

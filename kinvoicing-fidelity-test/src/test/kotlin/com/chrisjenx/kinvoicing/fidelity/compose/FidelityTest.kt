@@ -18,8 +18,8 @@ import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.compose.InvoiceContent
 import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
-import com.chrisjenx.kinvoicing.composehtml.PdfFontFamily
-import com.chrisjenx.kinvoicing.composehtml.renderToHtml
+import com.chrisjenx.kinvoicing.html.PdfFontFamily
+import com.chrisjenx.kinvoicing.html.renderToHtml
 
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserType

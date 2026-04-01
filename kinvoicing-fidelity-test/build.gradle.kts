@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    testImplementation(project(":kinvoicing-html"))
+    testImplementation(project(":render-html"))
     testImplementation(project(":kinvoicing-examples"))
     testImplementation(libs.compose2pdf)
     testImplementation(compose.desktop.currentOs)
