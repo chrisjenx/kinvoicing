@@ -1,6 +1,8 @@
 package com.chrisjenx.kinvoicing.html
 
+import com.chrisjenx.kinvoicing.ArgbColor
 import com.chrisjenx.kinvoicing.InvoiceDocument
+import com.chrisjenx.kinvoicing.InvoiceStyle
 
 /**
  * Convenience extension to render an InvoiceDocument to HTML.
@@ -10,13 +12,17 @@ public fun InvoiceDocument.toHtml(config: HtmlRenderConfig = HtmlRenderConfig())
 }
 
 /**
- * Convert a Long ARGB color to a CSS hex string (e.g., "#2563EB").
+ * Pre-computed CSS hex color strings for an [InvoiceStyle].
+ * Created once per render to avoid repeated [ArgbColor.toHexColor] conversions in section loops.
  */
-internal fun Long.toHexColor(): String {
-    val r = (this shr 16 and 0xFF).toInt()
-    val g = (this shr 8 and 0xFF).toInt()
-    val b = (this and 0xFF).toInt()
-    return "#${r.hex()}${g.hex()}${b.hex()}"
+internal class HtmlColors(val style: InvoiceStyle) {
+    val primary: String = style.primaryColor.toHexColor()
+    val secondary: String = style.secondaryColor.toHexColor()
+    val text: String = style.textColor.toHexColor()
+    val background: String = style.backgroundColor.toHexColor()
+    val negative: String = style.negativeColor.toHexColor()
+    val border: String = style.borderColor.toHexColor()
+    val divider: String = style.dividerColor.toHexColor()
+    val mutedBg: String = style.mutedBackgroundColor.toHexColor()
+    val surface: String = style.surfaceColor.toHexColor()
 }
-
-private fun Int.hex(): String = this.toString(16).padStart(2, '0').uppercase()

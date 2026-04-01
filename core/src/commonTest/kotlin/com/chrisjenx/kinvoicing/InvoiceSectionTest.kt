@@ -9,8 +9,8 @@ class InvoiceSectionTest {
     fun allSealedVariantsConstructible() {
         val sections: List<InvoiceSection> = listOf(
             InvoiceSection.Header(invoiceNumber = "INV-001"),
-            InvoiceSection.BillFrom(name = "Seller"),
-            InvoiceSection.BillTo(name = "Buyer"),
+            InvoiceSection.BillFrom(ContactInfo(name = "Seller")),
+            InvoiceSection.BillTo(ContactInfo(name = "Buyer")),
             InvoiceSection.LineItems(
                 columns = listOf(
                     ColumnHeader(LineItemColumn.DESCRIPTION, "Desc"),

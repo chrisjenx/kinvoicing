@@ -60,9 +60,9 @@ class InvoiceThemesTest {
     fun allThemesHaveValidColors() {
         InvoiceThemes.all.forEach { (name, style) ->
             // All colors should have full alpha (0xFF prefix)
-            assertTrue((style.primaryColor shr 24) and 0xFF == 0xFFL, "$name: primaryColor missing alpha")
-            assertTrue((style.textColor shr 24) and 0xFF == 0xFFL, "$name: textColor missing alpha")
-            assertTrue((style.negativeColor shr 24) and 0xFF == 0xFFL, "$name: negativeColor missing alpha")
+            assertTrue((style.primaryColor.value shr 24) and 0xFF == 0xFFL, "$name: primaryColor missing alpha")
+            assertTrue((style.textColor.value shr 24) and 0xFF == 0xFFL, "$name: textColor missing alpha")
+            assertTrue((style.negativeColor.value shr 24) and 0xFF == 0xFFL, "$name: negativeColor missing alpha")
         }
     }
 }

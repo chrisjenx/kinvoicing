@@ -80,12 +80,12 @@ public class HtmlRenderer(
                 td {
                     attributes["width"] = "50%"
                     attributes["style"] = "vertical-align: top;"
-                    renderParty(from.name, from.address, from.email, from.phone, "From", style)
+                    renderParty(from.contact, "From", style)
                 }
                 td {
                     attributes["width"] = "50%"
                     attributes["style"] = "vertical-align: top;"
-                    renderParty(to.name, to.address, to.email, to.phone, "Bill To", style)
+                    renderParty(to.contact, "Bill To", style)
                 }
             }
         }
@@ -98,8 +98,8 @@ public class HtmlRenderer(
     ) {
         when (section) {
             is InvoiceSection.Header -> renderHeader(section, style)
-            is InvoiceSection.BillFrom -> renderParty(section.name, section.address, section.email, section.phone, "From", style)
-            is InvoiceSection.BillTo -> renderParty(section.name, section.address, section.email, section.phone, "Bill To", style)
+            is InvoiceSection.BillFrom -> renderParty(section.contact, "From", style)
+            is InvoiceSection.BillTo -> renderParty(section.contact, "Bill To", style)
             is InvoiceSection.LineItems -> renderLineItems(section, style, currency)
             is InvoiceSection.Summary -> renderSummary(section, style, currency)
             is InvoiceSection.PaymentInfo -> renderPaymentInfo(section, style)

@@ -40,24 +40,12 @@ public class InvoiceBuilder {
 
     /** Configure the sender/issuer contact details. */
     public fun billFrom(init: PartyBuilder.() -> Unit) {
-        val party = PartyBuilder().apply(init).build()
-        billFrom = InvoiceSection.BillFrom(
-            name = party.name,
-            address = party.address,
-            email = party.email,
-            phone = party.phone,
-        )
+        billFrom = InvoiceSection.BillFrom(PartyBuilder().apply(init).build())
     }
 
     /** Configure the recipient/customer contact details. */
     public fun billTo(init: PartyBuilder.() -> Unit) {
-        val party = PartyBuilder().apply(init).build()
-        billTo = InvoiceSection.BillTo(
-            name = party.name,
-            address = party.address,
-            email = party.email,
-            phone = party.phone,
-        )
+        billTo = InvoiceSection.BillTo(PartyBuilder().apply(init).build())
     }
 
     /** Configure the line items table (columns and individual items). */

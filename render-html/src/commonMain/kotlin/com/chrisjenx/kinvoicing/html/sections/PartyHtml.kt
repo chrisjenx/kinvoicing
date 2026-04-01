@@ -1,17 +1,10 @@
 package com.chrisjenx.kinvoicing.html.sections
 
+import com.chrisjenx.kinvoicing.ContactInfo
 import com.chrisjenx.kinvoicing.InvoiceStyle
-import com.chrisjenx.kinvoicing.html.toHexColor
 import kotlinx.html.*
 
-internal fun FlowContent.renderParty(
-    name: String,
-    address: List<String>,
-    email: String?,
-    phone: String?,
-    label: String,
-    style: InvoiceStyle,
-) {
+internal fun FlowContent.renderParty(contact: ContactInfo, label: String, style: InvoiceStyle) {
     div {
         attributes["style"] = "margin-bottom: 16px;"
         div {
@@ -20,15 +13,15 @@ internal fun FlowContent.renderParty(
         }
         div {
             attributes["style"] = "font-size: 14px; font-weight: bold; color: ${style.textColor.toHexColor()};"
-            +name
+            +contact.name
         }
-        address.forEach { line ->
+        contact.address.forEach { line ->
             div { attributes["style"] = "font-size: 13px; color: ${style.textColor.toHexColor()};" ; +line }
         }
-        email?.let {
+        contact.email?.let {
             div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
         }
-        phone?.let {
+        contact.phone?.let {
             div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
         }
     }

@@ -17,20 +17,10 @@ public sealed class InvoiceSection {
     ) : InvoiceSection()
 
     /** Sender/issuer contact details. */
-    public data class BillFrom(
-        val name: String,
-        val address: List<String> = emptyList(),
-        val email: String? = null,
-        val phone: String? = null,
-    ) : InvoiceSection()
+    public data class BillFrom(val contact: ContactInfo) : InvoiceSection()
 
     /** Recipient/customer contact details. */
-    public data class BillTo(
-        val name: String,
-        val address: List<String> = emptyList(),
-        val email: String? = null,
-        val phone: String? = null,
-    ) : InvoiceSection()
+    public data class BillTo(val contact: ContactInfo) : InvoiceSection()
 
     /** Table of billable line items with typed column descriptors. */
     public data class LineItems(

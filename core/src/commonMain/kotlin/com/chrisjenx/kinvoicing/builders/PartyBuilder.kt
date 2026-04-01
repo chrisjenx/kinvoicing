@@ -1,5 +1,6 @@
 package com.chrisjenx.kinvoicing.builders
 
+import com.chrisjenx.kinvoicing.ContactInfo
 import com.chrisjenx.kinvoicing.InvoiceDsl
 
 /** DSL builder for sender/recipient contact details ([InvoiceSection.BillFrom] or [InvoiceSection.BillTo]). */
@@ -19,17 +20,10 @@ public class PartyBuilder {
     /** Set the party contact phone number. */
     public fun phone(value: String) { phone = value }
 
-    internal fun build(): PartyData = PartyData(
+    internal fun build(): ContactInfo = ContactInfo(
         name = requireNotNull(name) { "Party requires a name" },
         address = address,
         email = email,
         phone = phone,
     )
 }
-
-internal data class PartyData(
-    val name: String,
-    val address: List<String>,
-    val email: String?,
-    val phone: String?,
-)

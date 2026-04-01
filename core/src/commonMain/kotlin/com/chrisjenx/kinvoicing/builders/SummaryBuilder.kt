@@ -22,17 +22,21 @@ public class SummaryBuilder {
 
     /** Add a discount adjustment (reduces the total). */
     public fun discount(label: String, percent: Double? = null, fixed: Double? = null) {
-        adjustments.add(Adjustment(label, AdjustmentType.DISCOUNT, buildAdjustmentValue(percent, fixed, "Discount")))
+        addAdjustment(label, AdjustmentType.DISCOUNT, percent, fixed)
     }
 
     /** Add a tax adjustment (increases the total). */
     public fun tax(label: String, percent: Double? = null, fixed: Double? = null) {
-        adjustments.add(Adjustment(label, AdjustmentType.TAX, buildAdjustmentValue(percent, fixed, "Tax")))
+        addAdjustment(label, AdjustmentType.TAX, percent, fixed)
     }
 
     /** Add a fee adjustment (increases the total). */
     public fun fee(label: String, percent: Double? = null, fixed: Double? = null) {
-        adjustments.add(Adjustment(label, AdjustmentType.FEE, buildAdjustmentValue(percent, fixed, "Fee")))
+        addAdjustment(label, AdjustmentType.FEE, percent, fixed)
+    }
+
+    private fun addAdjustment(label: String, type: AdjustmentType, percent: Double?, fixed: Double?) {
+        adjustments.add(Adjustment(label, type, buildAdjustmentValue(percent, fixed, type.name)))
     }
 
     /** Add a credit (always reduces the total by the given positive [amount]). */

@@ -74,13 +74,13 @@ class DslBuilderTest {
         }
 
         val from = doc.sections.filterIsInstance<InvoiceSection.BillFrom>().single()
-        assertEquals("Seller Corp", from.name)
-        assertEquals(listOf("123 Sell St", "Suite 1"), from.address)
-        assertEquals("sell@corp.com", from.email)
-        assertEquals("555-0100", from.phone)
+        assertEquals("Seller Corp", from.contact.name)
+        assertEquals(listOf("123 Sell St", "Suite 1"), from.contact.address)
+        assertEquals("sell@corp.com", from.contact.email)
+        assertEquals("555-0100", from.contact.phone)
 
         val to = doc.sections.filterIsInstance<InvoiceSection.BillTo>().single()
-        assertEquals("Buyer Inc", to.name)
+        assertEquals("Buyer Inc", to.contact.name)
     }
 
     @Test
@@ -263,7 +263,7 @@ class DslBuilderTest {
             summary {}
         }
 
-        assertEquals(0xFFFF0000, doc.style.primaryColor)
+        assertEquals(ArgbColor(0xFFFF0000), doc.style.primaryColor)
         assertEquals("Helvetica", doc.style.fontFamily)
         assertTrue(doc.style.showGridLines)
         assertTrue(doc.style.accentBorder)

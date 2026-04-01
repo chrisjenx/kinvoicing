@@ -48,11 +48,11 @@ public fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: Stri
             if (next is InvoiceSection.BillTo) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Box(modifier = Modifier.weight(1f)) {
-                        PartySection(section.name, section.address, section.email, section.phone, "From")
+                        PartySection(section.contact, "From")
                     }
                     Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
                     Box(modifier = Modifier.weight(1f)) {
-                        PartySection(next.name, next.address, next.email, next.phone, "Bill To")
+                        PartySection(next.contact, "Bill To")
                     }
                 }
                 Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
@@ -75,8 +75,8 @@ public fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: Stri
 public fun InvoiceSectionContent(section: InvoiceSection, currency: String) {
     when (section) {
         is InvoiceSection.Header -> HeaderSection(section)
-        is InvoiceSection.BillFrom -> PartySection(section.name, section.address, section.email, section.phone, "From")
-        is InvoiceSection.BillTo -> PartySection(section.name, section.address, section.email, section.phone, "Bill To")
+        is InvoiceSection.BillFrom -> PartySection(section.contact, "From")
+        is InvoiceSection.BillTo -> PartySection(section.contact, "Bill To")
         is InvoiceSection.LineItems -> LineItemsSection(section, currency)
         is InvoiceSection.Summary -> SummarySection(section, currency)
         is InvoiceSection.PaymentInfo -> PaymentInfoSection(section)

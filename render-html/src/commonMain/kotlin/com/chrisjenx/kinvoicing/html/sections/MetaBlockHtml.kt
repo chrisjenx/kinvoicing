@@ -1,7 +1,6 @@
 package com.chrisjenx.kinvoicing.html.sections
 
 import com.chrisjenx.kinvoicing.*
-import com.chrisjenx.kinvoicing.html.toHexColor
 import kotlinx.html.*
 
 internal fun FlowContent.renderMetaBlock(metaBlock: InvoiceSection.MetaBlock, style: InvoiceStyle) {

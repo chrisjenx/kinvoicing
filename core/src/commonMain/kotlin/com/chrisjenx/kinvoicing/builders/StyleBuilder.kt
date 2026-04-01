@@ -22,36 +22,36 @@ public class StyleBuilder {
 
     /** Apply a pre-built [InvoiceStyle] as the base, then override individual properties. */
     public fun theme(base: InvoiceStyle) {
-        primaryColor = base.primaryColor
-        secondaryColor = base.secondaryColor
-        textColor = base.textColor
-        backgroundColor = base.backgroundColor
+        primaryColor = base.primaryColor.value
+        secondaryColor = base.secondaryColor.value
+        textColor = base.textColor.value
+        backgroundColor = base.backgroundColor.value
         fontFamily = base.fontFamily
         logoPlacement = base.logoPlacement
         headerLayout = base.headerLayout
         showGridLines = base.showGridLines
         accentBorder = base.accentBorder
-        negativeColor = base.negativeColor
-        borderColor = base.borderColor
-        dividerColor = base.dividerColor
-        mutedBackgroundColor = base.mutedBackgroundColor
-        surfaceColor = base.surfaceColor
+        negativeColor = base.negativeColor.value
+        borderColor = base.borderColor.value
+        dividerColor = base.dividerColor.value
+        mutedBackgroundColor = base.mutedBackgroundColor.value
+        surfaceColor = base.surfaceColor.value
     }
 
     internal fun build(): InvoiceStyle = InvoiceStyle(
-        primaryColor = primaryColor,
-        secondaryColor = secondaryColor,
-        textColor = textColor,
-        backgroundColor = backgroundColor,
+        primaryColor = ArgbColor(primaryColor),
+        secondaryColor = ArgbColor(secondaryColor),
+        textColor = ArgbColor(textColor),
+        backgroundColor = ArgbColor(backgroundColor),
         fontFamily = fontFamily,
         logoPlacement = logoPlacement,
         headerLayout = headerLayout,
         showGridLines = showGridLines,
         accentBorder = accentBorder,
-        negativeColor = negativeColor,
-        borderColor = borderColor,
-        dividerColor = dividerColor,
-        mutedBackgroundColor = mutedBackgroundColor,
-        surfaceColor = surfaceColor,
+        negativeColor = ArgbColor(negativeColor),
+        borderColor = ArgbColor(borderColor),
+        dividerColor = ArgbColor(dividerColor),
+        mutedBackgroundColor = ArgbColor(mutedBackgroundColor),
+        surfaceColor = ArgbColor(surfaceColor),
     )
 }

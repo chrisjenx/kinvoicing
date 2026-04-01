@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.chrisjenx.kinvoicing.ArgbColor
 import com.chrisjenx.kinvoicing.InvoiceStyle
 
 public val LocalInvoiceStyle: ProvidableCompositionLocal<InvoiceStyle> = compositionLocalOf { InvoiceStyle() }
@@ -19,12 +20,14 @@ public fun InvoiceStyleProvider(
     }
 }
 
-public fun Long.toComposeColor(): Color {
+/** Convert an [ArgbColor] to a Compose [Color]. */
+public fun ArgbColor.toComposeColor(): Color {
+    val v = value
     return Color(
-        red = ((this shr 16) and 0xFF).toInt(),
-        green = ((this shr 8) and 0xFF).toInt(),
-        blue = (this and 0xFF).toInt(),
-        alpha = ((this shr 24) and 0xFF).toInt(),
+        red = ((v shr 16) and 0xFF).toInt(),
+        green = ((v shr 8) and 0xFF).toInt(),
+        blue = (v and 0xFF).toInt(),
+        alpha = ((v shr 24) and 0xFF).toInt(),
     )
 }
 

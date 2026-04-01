@@ -1,7 +1,6 @@
 package com.chrisjenx.kinvoicing.html.sections
 
 import com.chrisjenx.kinvoicing.*
-import com.chrisjenx.kinvoicing.html.toHexColor
 import com.chrisjenx.kinvoicing.util.CurrencyFormatter
 import com.chrisjenx.kinvoicing.util.displayAmount
 import com.chrisjenx.kinvoicing.util.labelWithPercent

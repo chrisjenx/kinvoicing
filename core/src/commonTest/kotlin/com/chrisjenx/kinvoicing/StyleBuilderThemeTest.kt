@@ -37,11 +37,11 @@ class StyleBuilderThemeTest {
     @Test
     fun newSemanticColorPropertiesHaveCorrectDefaults() {
         val style = InvoiceStyle()
-        assertEquals(0xFFDC2626, style.negativeColor)
-        assertEquals(0xFFE2E8F0, style.borderColor)
-        assertEquals(0xFFF1F5F9, style.dividerColor)
-        assertEquals(0xFFF8FAFC, style.mutedBackgroundColor)
-        assertEquals(0xFFFFFFFF, style.surfaceColor)
+        assertEquals(ArgbColor(0xFFDC2626), style.negativeColor)
+        assertEquals(ArgbColor(0xFFE2E8F0), style.borderColor)
+        assertEquals(ArgbColor(0xFFF1F5F9), style.dividerColor)
+        assertEquals(ArgbColor(0xFFF8FAFC), style.mutedBackgroundColor)
+        assertEquals(ArgbColor(0xFFFFFFFF), style.surfaceColor)
     }
 
     @Test
@@ -58,11 +58,11 @@ class StyleBuilderThemeTest {
             lineItems { item("Item", amount = 1.0) }
             summary {}
         }
-        assertEquals(0xFFFF0000, doc.style.negativeColor)
-        assertEquals(0xFF111111, doc.style.borderColor)
-        assertEquals(0xFF222222, doc.style.dividerColor)
-        assertEquals(0xFF333333, doc.style.mutedBackgroundColor)
-        assertEquals(0xFF444444, doc.style.surfaceColor)
+        assertEquals(ArgbColor(0xFFFF0000), doc.style.negativeColor)
+        assertEquals(ArgbColor(0xFF111111), doc.style.borderColor)
+        assertEquals(ArgbColor(0xFF222222), doc.style.dividerColor)
+        assertEquals(ArgbColor(0xFF333333), doc.style.mutedBackgroundColor)
+        assertEquals(ArgbColor(0xFF444444), doc.style.surfaceColor)
     }
 
     @Test
@@ -77,7 +77,7 @@ class StyleBuilderThemeTest {
             summary {}
         }
         // negativeColor overridden
-        assertEquals(0xFFAA0000, doc.style.negativeColor)
+        assertEquals(ArgbColor(0xFFAA0000), doc.style.negativeColor)
         // rest from Fresh theme
         assertEquals(InvoiceThemes.Fresh.primaryColor, doc.style.primaryColor)
         assertEquals(InvoiceThemes.Fresh.borderColor, doc.style.borderColor)

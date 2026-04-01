@@ -5,16 +5,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import com.chrisjenx.kinvoicing.ContactInfo
 import com.chrisjenx.kinvoicing.compose.*
 
 @Composable
-internal fun PartySection(
-    name: String,
-    address: List<String>,
-    email: String?,
-    phone: String?,
-    label: String,
-) {
+internal fun PartySection(contact: ContactInfo, label: String) {
     val style = LocalInvoiceStyle.current
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.sm)) {
@@ -26,18 +21,18 @@ internal fun PartySection(
         )
         Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
         Text(
-            text = name,
+            text = contact.name,
             fontSize = InvoiceTypography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = style.textComposeColor,
         )
-        address.forEach { line ->
+        contact.address.forEach { line ->
             Text(text = line, fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
-        email?.let {
+        contact.email?.let {
             Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
         }
-        phone?.let {
+        contact.phone?.let {
             Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
         }
     }
