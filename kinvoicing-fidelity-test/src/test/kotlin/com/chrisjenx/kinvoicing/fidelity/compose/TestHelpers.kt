@@ -123,25 +123,35 @@ internal fun renderComposeToSvg(
 internal fun screenshotEmailHtml(
     browser: Browser,
     htmlFile: File,
-    targetWidth: Int,
-    targetHeight: Int,
+    config: PdfPageConfig,
+    density: Density,
 ): BufferedImage {
-    val viewportWidth = 600 // email standard max-width
-    val deviceScale = 2.0   // retina-equivalent for crisp screenshots
+    // Match the page dimensions so the email screenshot is pixel-identical in size
+    // to the Compose reference. At 595px viewport with 2x scale = 1190px, matching A4.
+    val viewportWidth = config.width.value.toInt()
+    val viewportHeight = config.height.value.toInt()
+    val deviceScale = density.density.toDouble()
     val page = browser.newPage(
         Browser.NewPageOptions()
-            .setViewportSize(viewportWidth, 2000)
+            .setViewportSize(viewportWidth, viewportHeight)
             .setDeviceScaleFactor(deviceScale)
     )
     try {
         page.navigate("file://${htmlFile.absolutePath}")
         page.waitForLoadState()
 
-        val screenshot = page.screenshot(Page.ScreenshotOptions().setFullPage(true))
-        val rawImage = ImageIO.read(ByteArrayInputStream(screenshot))
+        // Strip email-specific constraints (padding, max-width) so content fills
+        // edge-to-edge like the Compose reference. This makes the comparison fair
+        // without changing the actual email renderer output.
+        page.evaluate("""
+            const s = document.createElement('style');
+            s.textContent = 'table[role="presentation"] { max-width: none !important; } body > table > tr > td, body > table > tbody > tr > td { padding: 0 !important; }';
+            document.head.appendChild(s);
+        """.trimIndent())
 
-        // Resize to match Compose reference dimensions for fair comparison
-        return resizeToMatch(rawImage, targetWidth, targetHeight)
+        // Viewport-sized screenshot (not full page) to match Compose reference dimensions
+        val screenshot = page.screenshot()
+        return ImageIO.read(ByteArrayInputStream(screenshot))
     } finally {
         page.close()
     }

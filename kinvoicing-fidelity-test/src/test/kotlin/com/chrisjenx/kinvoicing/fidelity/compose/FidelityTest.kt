@@ -2,21 +2,17 @@
 
 package com.chrisjenx.kinvoicing.fidelity.compose
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.InternalComposeUiApi
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.compose.InvoiceContent
-import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
+import com.chrisjenx.kinvoicing.compose.InvoiceSections
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
 import com.chrisjenx.kinvoicing.html.PdfFontFamily
 import com.chrisjenx.kinvoicing.html.renderToHtml
@@ -208,7 +204,7 @@ class FidelityTest {
             emailHtmlFile.writeText(emailHtml)
             emailHtmlFilePath = "images/${fixture.name}-email.html"
 
-            val emailHtmlImage = screenshotEmailHtml(b, emailHtmlFile, pageW, pageH)
+            val emailHtmlImage = screenshotEmailHtml(b, emailHtmlFile, fixtureConfig, density)
             saveImage(emailHtmlImage, imagesDir, "${fixture.name}-email-html.png")
             emailHtmlPath = "images/${fixture.name}-email-html.png"
 
@@ -263,10 +259,7 @@ class FidelityTest {
     @Composable
     private fun renderInvoiceSections(document: InvoiceDocument) {
         InvoiceStyleProvider(document.style) {
-            for (section in document.sections) {
-                InvoiceSectionContent(section, document.currency)
-                Spacer(Modifier.height(8.dp))
-            }
+            InvoiceSections(document.sections, document.currency)
         }
     }
 }

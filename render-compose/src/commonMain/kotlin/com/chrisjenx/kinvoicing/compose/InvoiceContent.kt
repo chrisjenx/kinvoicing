@@ -40,29 +40,31 @@ public fun InvoiceContent(
  */
 @Composable
 public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
-    var i = 0
-    while (i < sections.size) {
-        val section = sections[i]
-        if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
-            val next = sections[i + 1]
-            if (next is InvoiceSection.BillTo) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        PartySection(section.contact, "From")
+    PdfColumn(modifier = Modifier.fillMaxWidth()) {
+        var i = 0
+        while (i < sections.size) {
+            val section = sections[i]
+            if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
+                val next = sections[i + 1]
+                if (next is InvoiceSection.BillTo) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            PartySection(section.contact, "From")
+                        }
+                        Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
+                        Box(modifier = Modifier.weight(1f)) {
+                            PartySection(next.contact, "Bill To")
+                        }
                     }
-                    Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
-                    Box(modifier = Modifier.weight(1f)) {
-                        PartySection(next.contact, "Bill To")
-                    }
+                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                    i += 2
+                    continue
                 }
-                Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                i += 2
-                continue
             }
+            InvoiceSectionContent(section, currency)
+            Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+            i++
         }
-        InvoiceSectionContent(section, currency)
-        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-        i++
     }
 }
 
