@@ -30,10 +30,11 @@ internal fun FlowContent.renderLineItems(
 
         thead {
             tr {
-                lineItems.columnHeaders.forEach { header ->
+                lineItems.columns.forEach { col ->
                     th {
-                        attributes["style"] = "text-align: left; font-size: 12px; font-weight: bold; text-transform: uppercase; color: $secondaryHex; background-color: ${primaryHex}10; padding: 10px 8px; $cellBorder"
-                        +header
+                        val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right;" else "text-align: left;"
+                        attributes["style"] = "$align font-size: 12px; font-weight: bold; text-transform: uppercase; color: $secondaryHex; background-color: ${primaryHex}10; padding: 10px 8px; $cellBorder"
+                        +col.label
                     }
                 }
             }
@@ -43,50 +44,37 @@ internal fun FlowContent.renderLineItems(
             lineItems.rows.forEachIndexed { rowIdx, item ->
                 val bgColor = if (rowIdx % 2 == 1) "background-color: $bgMutedHex;" else ""
                 tr {
-                    td {
-                        attributes["style"] = "font-size: 14px; color: $textHex; padding: 10px 8px; $cellBorder $bgColor"
-                        +item.description
-                    }
-                    if (lineItems.columnHeaders.size >= 3) {
+                    lineItems.columns.forEach { col ->
                         td {
-                            attributes["style"] = "font-size: 14px; color: $textHex; padding: 10px 8px; $cellBorder $bgColor"
-                            +(item.quantity?.formatAsQuantity() ?: "")
+                            val text = when (col.column) {
+                                LineItemColumn.DESCRIPTION -> item.description
+                                LineItemColumn.QUANTITY -> item.quantity?.formatAsQuantity() ?: ""
+                                LineItemColumn.UNIT_PRICE -> item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
+                                LineItemColumn.AMOUNT -> CurrencyFormatter.format(item.amount, currency)
+                            }
+                            val amountColor = if (col.column == LineItemColumn.AMOUNT && item.amount < 0) negativeHex else textHex
+                            val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right; " else ""
+                            attributes["style"] = "font-size: 14px; color: $amountColor; ${align}padding: 10px 8px; $cellBorder $bgColor"
+                            +text
                         }
-                    }
-                    if (lineItems.columnHeaders.size >= 4) {
-                        td {
-                            attributes["style"] = "font-size: 14px; color: $textHex; padding: 10px 8px; $cellBorder $bgColor"
-                            +(item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "")
-                        }
-                    }
-                    td {
-                        val amountColor = if (item.amount < 0) negativeHex else textHex
-                        attributes["style"] = "font-size: 14px; color: $amountColor; text-align: right; padding: 10px 8px; $cellBorder $bgColor"
-                        +CurrencyFormatter.format(item.amount, currency)
                     }
                 }
 
                 item.subItems.forEach { sub ->
                     tr {
-                        td {
-                            attributes["style"] = "font-size: 12px; color: $secondaryHex; padding: 4px 8px 4px 24px; $cellBorder"
-                            +sub.description
-                        }
-                        if (lineItems.columnHeaders.size >= 3) {
+                        lineItems.columns.forEach { col ->
                             td {
-                                attributes["style"] = "font-size: 12px; color: $secondaryHex; padding: 4px 8px; $cellBorder"
-                                +(sub.quantity?.formatAsQuantity() ?: "")
+                                val text = when (col.column) {
+                                    LineItemColumn.DESCRIPTION -> sub.description
+                                    LineItemColumn.QUANTITY -> sub.quantity?.formatAsQuantity() ?: ""
+                                    LineItemColumn.UNIT_PRICE -> sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
+                                    LineItemColumn.AMOUNT -> CurrencyFormatter.format(sub.amount, currency)
+                                }
+                                val padding = if (col.column == LineItemColumn.DESCRIPTION) "padding: 4px 8px 4px 24px;" else "padding: 4px 8px;"
+                                val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right; " else ""
+                                attributes["style"] = "font-size: 12px; color: $secondaryHex; $align$padding $cellBorder"
+                                +text
                             }
-                        }
-                        if (lineItems.columnHeaders.size >= 4) {
-                            td {
-                                attributes["style"] = "font-size: 12px; color: $secondaryHex; padding: 4px 8px; $cellBorder"
-                                +(sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "")
-                            }
-                        }
-                        td {
-                            attributes["style"] = "font-size: 12px; color: $secondaryHex; text-align: right; padding: 4px 8px; $cellBorder"
-                            +CurrencyFormatter.format(sub.amount, currency)
                         }
                     }
                 }
@@ -94,7 +82,7 @@ internal fun FlowContent.renderLineItems(
                 item.discounts.forEach { disc ->
                     tr {
                         td {
-                            attributes["colspan"] = (lineItems.columnHeaders.size - 1).toString()
+                            attributes["colspan"] = (lineItems.columns.size - 1).toString()
                             attributes["style"] = "font-size: 12px; color: $negativeHex; padding: 2px 8px 2px 24px; $cellBorder"
                             +disc.labelWithPercent
                         }

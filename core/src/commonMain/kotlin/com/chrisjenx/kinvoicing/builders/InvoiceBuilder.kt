@@ -11,6 +11,7 @@ import com.chrisjenx.kinvoicing.*
 @InvoiceDsl
 public class InvoiceBuilder {
     private var style: InvoiceStyle = InvoiceStyle()
+    private var currencyCode: String = "USD"
     private var header: InvoiceSection.Header? = null
     private var billFrom: InvoiceSection.BillFrom? = null
     private var billTo: InvoiceSection.BillTo? = null
@@ -20,6 +21,14 @@ public class InvoiceBuilder {
     private var footer: InvoiceSection.Footer? = null
     private val metaEntries: MutableList<MetaEntry> = mutableListOf()
     private val customSections: MutableList<InvoiceSection.Custom> = mutableListOf()
+
+    /** Set the document currency code (e.g., "USD", "EUR"). Must be a 3-letter uppercase code. */
+    public fun currency(value: String) {
+        require(value.length == 3 && value.all { it.isUpperCase() }) {
+            "Currency code must be a 3-letter uppercase code (e.g., 'USD'), got: '$value'"
+        }
+        currencyCode = value
+    }
 
     /** Configure the visual style (colors, fonts, layout options). */
     public fun style(init: StyleBuilder.() -> Unit) {
@@ -94,16 +103,17 @@ public class InvoiceBuilder {
             sections.add(InvoiceSection.MetaBlock(metaEntries.toList()))
         }
         val li = lineItems
-        if (li != null) {
+        val summary = if (li != null) {
             sections.add(li)
-            summaryBuilder?.let { sections.add(it.build(li.rows)) }
+            summaryBuilder?.build(li.rows, currencyCode)?.also { sections.add(it) }
         } else {
-            summaryBuilder?.let { sections.add(it.build(emptyList())) }
+            summaryBuilder?.build(emptyList(), currencyCode)?.also { sections.add(it) }
         }
         paymentInfo?.let { sections.add(it) }
         footer?.let { sections.add(it) }
         customSections.forEach { sections.add(it) }
 
-        return InvoiceDocument(sections = sections, style = style)
+        val effectiveCurrency = summary?.currency ?: currencyCode
+        return InvoiceDocument(sections = sections, style = style, currency = effectiveCurrency)
     }
 }

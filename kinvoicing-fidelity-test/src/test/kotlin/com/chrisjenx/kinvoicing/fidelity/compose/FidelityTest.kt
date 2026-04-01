@@ -20,7 +20,7 @@ import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
 import com.chrisjenx.kinvoicing.composehtml.PdfFontFamily
 import com.chrisjenx.kinvoicing.composehtml.renderToHtml
-import com.chrisjenx.kinvoicing.currency
+
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Playwright

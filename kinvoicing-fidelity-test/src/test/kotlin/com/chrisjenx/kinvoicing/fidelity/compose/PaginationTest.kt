@@ -11,7 +11,7 @@ import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
-import com.chrisjenx.kinvoicing.currency
+
 import com.chrisjenx.kinvoicing.examples.InvoiceExamples
 import org.apache.pdfbox.Loader
 import kotlin.test.Test

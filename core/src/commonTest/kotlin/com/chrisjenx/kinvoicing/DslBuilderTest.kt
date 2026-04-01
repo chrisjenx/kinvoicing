@@ -2,6 +2,7 @@ package com.chrisjenx.kinvoicing
 
 import kotlinx.datetime.LocalDate
 import kotlin.test.*
+import kotlin.test.assertFailsWith
 
 class DslBuilderTest {
 
@@ -302,6 +303,50 @@ class DslBuilderTest {
         assertEquals("****4242", payment.accountNumber)
         assertEquals("021000021", payment.routingNumber)
         assertEquals("https://pay.example.com", payment.paymentLink)
+    }
+
+    @Test
+    fun lineItemWithoutAmountSourceFails() {
+        assertFailsWith<IllegalArgumentException> {
+            invoice {
+                billTo { name("Test") }
+                lineItems { item("No amount") }
+                summary {}
+            }
+        }
+    }
+
+    @Test
+    fun invalidCurrencyCodeFails() {
+        assertFailsWith<IllegalArgumentException> {
+            invoice {
+                billTo { name("Test") }
+                lineItems { item("Item", amount = 1.0) }
+                summary { currency("usd") }
+            }
+        }
+    }
+
+    @Test
+    fun documentLevelCurrency() {
+        val doc = invoice {
+            currency("EUR")
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary {}
+        }
+        assertEquals("EUR", doc.currency)
+    }
+
+    @Test
+    fun summaryCurrencyOverridesDocumentLevel() {
+        val doc = invoice {
+            currency("USD")
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary { currency("GBP") }
+        }
+        assertEquals("GBP", doc.currency)
     }
 
     @Test

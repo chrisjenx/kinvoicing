@@ -1,5 +1,7 @@
 package com.chrisjenx.kinvoicing
 
+import com.chrisjenx.kinvoicing.util.roundToScale
+
 /**
  * A monetary adjustment applied to a line item or summary (discount, tax, fee, credit).
  *
@@ -48,7 +50,7 @@ public sealed class AdjustmentValue {
      * Sign handling is done by [Adjustment.displayAmount] based on [AdjustmentType].
      */
     public fun applyTo(base: Double): Double = when (this) {
-        is Percent -> base * rate / 100.0
+        is Percent -> (base * rate / 100.0).roundToScale()
         is Fixed -> amount
         is Absolute -> amount
     }

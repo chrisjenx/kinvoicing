@@ -6,11 +6,5 @@ package com.chrisjenx.kinvoicing
 public data class InvoiceDocument(
     val sections: List<InvoiceSection>,
     val style: InvoiceStyle = InvoiceStyle(),
+    val currency: String = "USD",
 )
-
-/**
- * The currency code from the [Summary][InvoiceSection.Summary] section, or "USD" if none.
- */
-public val InvoiceDocument.currency: String
-    get() = (sections.firstOrNull { it is InvoiceSection.Summary } as? InvoiceSection.Summary)
-        ?.currency ?: "USD"

@@ -1,6 +1,7 @@
 package com.chrisjenx.kinvoicing.builders
 
 import com.chrisjenx.kinvoicing.*
+import com.chrisjenx.kinvoicing.util.roundToScale
 
 /**
  * Builder for the summary section. Collects adjustments (discounts, taxes, fees, credits)
@@ -10,11 +11,16 @@ import com.chrisjenx.kinvoicing.*
  */
 @InvoiceDsl
 public class SummaryBuilder {
-    private var currency: String = "USD"
+    private var currency: String? = null
     private val adjustments: MutableList<Adjustment> = mutableListOf()
 
-    /** Set the currency code (e.g., "USD", "EUR", "GBP"). */
-    public fun currency(value: String) { currency = value }
+    /** Set the currency code (e.g., "USD", "EUR", "GBP"). Must be a 3-letter uppercase code. */
+    public fun currency(value: String) {
+        require(value.length == 3 && value.all { it.isUpperCase() }) {
+            "Currency code must be a 3-letter uppercase code (e.g., 'USD'), got: '$value'"
+        }
+        currency = value
+    }
 
     /** Add a discount adjustment (reduces the total). */
     public fun discount(label: String, percent: Double? = null, fixed: Double? = null) {
@@ -40,7 +46,7 @@ public class SummaryBuilder {
      * Build the summary, auto-computing subtotal from [lineItems] and total from adjustments.
      * Adjustments are sorted and applied: discounts → credits → fees → taxes.
      */
-    internal fun build(lineItems: List<LineItem>): InvoiceSection.Summary {
+    internal fun build(lineItems: List<LineItem>, fallbackCurrency: String = "USD"): InvoiceSection.Summary {
         val subtotal = lineItems.sumOf { it.amount }
 
         val sortedAdjustments = adjustments.sortedBy { adj ->
@@ -62,14 +68,14 @@ public class SummaryBuilder {
                 }
                 is AdjustmentValue.Fixed -> acc + delta
                 is AdjustmentValue.Absolute -> delta
-            }
+            }.roundToScale()
         }
 
         return InvoiceSection.Summary(
             subtotal = subtotal,
             adjustments = sortedAdjustments,
             total = total,
-            currency = currency,
+            currency = currency ?: fallbackCurrency,
         )
     }
 }

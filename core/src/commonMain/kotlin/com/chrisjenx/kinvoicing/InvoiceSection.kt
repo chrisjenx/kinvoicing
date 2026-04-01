@@ -32,11 +32,15 @@ public sealed class InvoiceSection {
         val phone: String? = null,
     ) : InvoiceSection()
 
-    /** Table of billable line items with configurable column headers. */
+    /** Table of billable line items with typed column descriptors. */
     public data class LineItems(
-        val columnHeaders: List<String>,
+        val columns: List<ColumnHeader>,
         val rows: List<LineItem>,
-    ) : InvoiceSection()
+    ) : InvoiceSection() {
+        /** Column labels in order, for backward compatibility. */
+        @Deprecated("Use columns instead", replaceWith = ReplaceWith("columns.map { it.label }"))
+        val columnHeaders: List<String> get() = columns.map { it.label }
+    }
 
     /** Financial summary with subtotal, adjustments (taxes, discounts, fees), and total. */
     public data class Summary(

@@ -18,6 +18,7 @@ import com.chrisjenx.kinvoicing.util.labelWithPercent
 @Composable
 internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: String) {
     val style = LocalInvoiceStyle.current
+    val hasColumn = lineItems.columns.map { it.column }.toSet()
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.lg)) {
         // Header row
@@ -27,14 +28,14 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                 .background(style.primaryComposeColor.copy(alpha = 0.06f))
                 .padding(vertical = InvoiceSpacing.sm, horizontal = InvoiceSpacing.sm)
         ) {
-            lineItems.columnHeaders.forEachIndexed { i, header ->
+            lineItems.columns.forEachIndexed { i, col ->
                 Text(
-                    text = header.uppercase(),
+                    text = col.label.uppercase(),
                     fontSize = InvoiceTypography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = style.secondaryComposeColor,
-                    textAlign = if (i == lineItems.columnHeaders.lastIndex) TextAlign.End else TextAlign.Start,
-                    modifier = Modifier.weight(if (i == 0) 2f else 1f),
+                    textAlign = if (col.column == LineItemColumn.AMOUNT) TextAlign.End else TextAlign.Start,
+                    modifier = Modifier.weight(if (col.column == LineItemColumn.DESCRIPTION) 2f else 1f),
                 )
             }
         }
@@ -53,35 +54,26 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                     .background(bgColor)
                     .padding(vertical = InvoiceSpacing.sm, horizontal = InvoiceSpacing.sm)
             ) {
-                Text(
-                    text = item.description,
-                    fontSize = InvoiceTypography.bodyLarge,
-                    color = style.textComposeColor,
-                    modifier = Modifier.weight(2f),
-                )
-                if (lineItems.columnHeaders.size >= 3) {
+                lineItems.columns.forEach { col ->
+                    val text = when (col.column) {
+                        LineItemColumn.DESCRIPTION -> item.description
+                        LineItemColumn.QUANTITY -> item.quantity?.formatAsQuantity() ?: ""
+                        LineItemColumn.UNIT_PRICE -> item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
+                        LineItemColumn.AMOUNT -> CurrencyFormatter.format(item.amount, currency)
+                    }
+                    val color = if (col.column == LineItemColumn.AMOUNT && item.amount < 0) {
+                        style.negativeComposeColor
+                    } else {
+                        style.textComposeColor
+                    }
                     Text(
-                        text = item.quantity?.formatAsQuantity() ?: "",
+                        text = text,
                         fontSize = InvoiceTypography.bodyLarge,
-                        color = style.textComposeColor,
-                        modifier = Modifier.weight(1f),
+                        color = color,
+                        textAlign = if (col.column == LineItemColumn.AMOUNT) TextAlign.End else TextAlign.Start,
+                        modifier = Modifier.weight(if (col.column == LineItemColumn.DESCRIPTION) 2f else 1f),
                     )
                 }
-                if (lineItems.columnHeaders.size >= 4) {
-                    Text(
-                        text = item.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "",
-                        fontSize = InvoiceTypography.bodyLarge,
-                        color = style.textComposeColor,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Text(
-                    text = CurrencyFormatter.format(item.amount, currency),
-                    fontSize = InvoiceTypography.bodyLarge,
-                    color = if (item.amount < 0) style.negativeComposeColor else style.textComposeColor,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.weight(1f),
-                )
             }
 
             if (style.showGridLines) {
@@ -98,35 +90,21 @@ internal fun LineItemsSection(lineItems: InvoiceSection.LineItems, currency: Str
                         .padding(vertical = InvoiceSpacing.xs, horizontal = InvoiceSpacing.sm)
                         .padding(start = InvoiceSpacing.lg)
                 ) {
-                    Text(
-                        text = sub.description,
-                        fontSize = InvoiceTypography.bodySmall,
-                        color = style.secondaryComposeColor,
-                        modifier = Modifier.weight(2f),
-                    )
-                    if (lineItems.columnHeaders.size >= 3) {
+                    lineItems.columns.forEach { col ->
+                        val text = when (col.column) {
+                            LineItemColumn.DESCRIPTION -> sub.description
+                            LineItemColumn.QUANTITY -> sub.quantity?.formatAsQuantity() ?: ""
+                            LineItemColumn.UNIT_PRICE -> sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: ""
+                            LineItemColumn.AMOUNT -> CurrencyFormatter.format(sub.amount, currency)
+                        }
                         Text(
-                            text = sub.quantity?.formatAsQuantity() ?: "",
+                            text = text,
                             fontSize = InvoiceTypography.bodySmall,
                             color = style.secondaryComposeColor,
-                            modifier = Modifier.weight(1f),
+                            textAlign = if (col.column == LineItemColumn.AMOUNT) TextAlign.End else TextAlign.Start,
+                            modifier = Modifier.weight(if (col.column == LineItemColumn.DESCRIPTION) 2f else 1f),
                         )
                     }
-                    if (lineItems.columnHeaders.size >= 4) {
-                        Text(
-                            text = sub.unitPrice?.let { CurrencyFormatter.format(it, currency) } ?: "",
-                            fontSize = InvoiceTypography.bodySmall,
-                            color = style.secondaryComposeColor,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    Text(
-                        text = CurrencyFormatter.format(sub.amount, currency),
-                        fontSize = InvoiceTypography.bodySmall,
-                        color = style.secondaryComposeColor,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f),
-                    )
                 }
             }
 

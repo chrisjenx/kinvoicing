@@ -12,7 +12,10 @@ class InvoiceSectionTest {
             InvoiceSection.BillFrom(name = "Seller"),
             InvoiceSection.BillTo(name = "Buyer"),
             InvoiceSection.LineItems(
-                columnHeaders = listOf("Desc", "Amount"),
+                columns = listOf(
+                    ColumnHeader(LineItemColumn.DESCRIPTION, "Desc"),
+                    ColumnHeader(LineItemColumn.AMOUNT, "Amount"),
+                ),
                 rows = listOf(LineItem(description = "Item", amount = 100.0))
             ),
             InvoiceSection.Summary(

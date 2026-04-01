@@ -7,7 +7,11 @@ package com.chrisjenx.kinvoicing
 public sealed class InvoiceElement {
     /** Styled text content. [styleRef] is an optional renderer-defined style key. */
     public data class Text(val value: String, val styleRef: String? = null) : InvoiceElement()
-    /** Vertical whitespace of the given [height] in dp/px (renderer-dependent). */
+    /**
+     * Vertical whitespace of the given [height] in logical points.
+     * Compose renders as dp (density-independent pixels), HTML renders as px.
+     * Default value of 16 produces visually similar results across renderers.
+     */
     public data class Spacer(val height: Int = 16) : InvoiceElement()
     /** Horizontal divider line. */
     public data object Divider : InvoiceElement()

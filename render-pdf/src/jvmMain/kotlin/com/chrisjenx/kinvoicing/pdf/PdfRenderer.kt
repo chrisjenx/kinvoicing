@@ -5,7 +5,6 @@ import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceRenderer
 import com.chrisjenx.kinvoicing.compose.InvoiceSectionsContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
-import com.chrisjenx.kinvoicing.currency
 import java.io.OutputStream
 
 /**

@@ -1,16 +1,22 @@
 package com.chrisjenx.kinvoicing.builders
 
 import com.chrisjenx.kinvoicing.*
+import com.chrisjenx.kinvoicing.util.roundToScale
 
-/** Builder for the line items section, collecting items and column headers. */
+/** Builder for the line items section, collecting items and typed column descriptors. */
 @InvoiceDsl
 public class LineItemsBuilder {
-    private var columnHeaders: List<String> = listOf("Description", "Qty", "Rate", "Amount")
+    private var columns: List<ColumnHeader> = defaultColumns
     private val items: MutableList<LineItem> = mutableListOf()
 
-    /** Set the column headers displayed in the line items table. */
+    /** Set columns with typed descriptors for type-safe column-to-field mapping. */
+    public fun columns(vararg cols: ColumnHeader) {
+        columns = cols.toList()
+    }
+
+    /** Set column labels for standard layouts. Maps positionally to [LineItemColumn] types. */
     public fun columns(vararg headers: String) {
-        columnHeaders = headers.toList()
+        columns = mapToColumnHeaders(headers.toList())
     }
 
     /**
@@ -36,9 +42,36 @@ public class LineItemsBuilder {
     }
 
     internal fun build(): InvoiceSection.LineItems = InvoiceSection.LineItems(
-        columnHeaders = columnHeaders,
+        columns = columns,
         rows = items.toList(),
     )
+
+    internal companion object {
+        val defaultColumns = listOf(
+            ColumnHeader(LineItemColumn.DESCRIPTION, "Description"),
+            ColumnHeader(LineItemColumn.QUANTITY, "Qty"),
+            ColumnHeader(LineItemColumn.UNIT_PRICE, "Rate"),
+            ColumnHeader(LineItemColumn.AMOUNT, "Amount"),
+        )
+
+        fun mapToColumnHeaders(headers: List<String>): List<ColumnHeader> {
+            val columnTypes = when (headers.size) {
+                2 -> listOf(LineItemColumn.DESCRIPTION, LineItemColumn.AMOUNT)
+                3 -> listOf(LineItemColumn.DESCRIPTION, LineItemColumn.QUANTITY, LineItemColumn.AMOUNT)
+                4 -> listOf(LineItemColumn.DESCRIPTION, LineItemColumn.QUANTITY, LineItemColumn.UNIT_PRICE, LineItemColumn.AMOUNT)
+                else -> headers.indices.map { i ->
+                    when {
+                        i == 0 -> LineItemColumn.DESCRIPTION
+                        i == headers.lastIndex -> LineItemColumn.AMOUNT
+                        i == 1 -> LineItemColumn.QUANTITY
+                        i == 2 -> LineItemColumn.UNIT_PRICE
+                        else -> LineItemColumn.DESCRIPTION
+                    }
+                }
+            }
+            return headers.zip(columnTypes) { label, col -> ColumnHeader(col, label) }
+        }
+    }
 }
 
 /** Builder scope for a single line item — add sub-items and discounts here. */
@@ -89,13 +122,16 @@ public class LineItemBuilder internal constructor(
     }
 
     internal fun build(): LineItem {
+        require(explicitAmount != null || (quantity != null && unitPrice != null) || subItems.isNotEmpty()) {
+            "Line item '$description' must specify amount, quantity+unitPrice, or sub-items"
+        }
+
         // Calculate amount: explicit > qty*unitPrice > sum of subItems
         val computedAmount = explicitAmount ?: run {
             val q = quantity
             val p = unitPrice
-            if (q != null && p != null) q * p
-            else if (subItems.isNotEmpty()) subItems.sumOf { it.amount }
-            else 0.0
+            if (q != null && p != null) (q * p).roundToScale()
+            else subItems.sumOf { it.amount }.roundToScale()
         }
 
         // Apply item-level discounts to get effective amount
@@ -105,7 +141,7 @@ public class LineItemBuilder internal constructor(
                 is AdjustmentValue.Percent -> acc - delta
                 is AdjustmentValue.Fixed -> acc + delta
                 is AdjustmentValue.Absolute -> delta
-            }
+            }.roundToScale()
         }
 
         return LineItem(

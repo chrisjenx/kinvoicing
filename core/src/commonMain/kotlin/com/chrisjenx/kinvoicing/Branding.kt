@@ -53,6 +53,18 @@ public data class BrandIdentity(
         result = 31 * result + (tagline?.hashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String = buildString {
+        append("BrandIdentity(name=").append(name)
+        append(", logo=").append(logo?.let { "[${it.size} bytes]" } ?: "null")
+        append(", logoContentType=").append(logoContentType)
+        append(", address=").append(address)
+        append(", email=").append(email)
+        append(", phone=").append(phone)
+        append(", website=").append(website)
+        append(", tagline=").append(tagline)
+        append(")")
+    }
 }
 
 /** Controls the placement of primary and secondary brand identities in the header. */
