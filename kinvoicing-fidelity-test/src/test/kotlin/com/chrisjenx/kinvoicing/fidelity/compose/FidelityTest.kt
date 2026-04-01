@@ -20,6 +20,7 @@ import com.chrisjenx.kinvoicing.compose.InvoiceSectionContent
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
 import com.chrisjenx.kinvoicing.html.PdfFontFamily
 import com.chrisjenx.kinvoicing.html.renderToHtml
+import com.chrisjenx.kinvoicing.html.email.toHtml as toEmailHtml
 
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserType
@@ -66,21 +67,22 @@ class FidelityTest {
             println(
                 "${"Fixture".padEnd(25)} " +
                     "${"Vector".padEnd(50)} " +
-                    "HTML",
+                    "${"HTML".padEnd(50)} " +
+                    "Email HTML",
             )
-            println("-".repeat(130))
+            println("-".repeat(180))
             for (result in results) {
                 val vStatus = result.vectorStatus.label
                 val hStatus = result.htmlStatus?.label ?: "Skipped"
-                println(
-                    "${result.name.padEnd(25)} " +
-                        "$vStatus RMSE=${"%.4f".format(result.vectorRmse)} SSIM=${"%.4f".format(result.vectorSsim)} Match=${"%.1f".format(result.vectorExactMatch * 100)}%".padEnd(50) + " " +
-                        if (result.htmlRmse != null) {
-                            "$hStatus RMSE=${"%.4f".format(result.htmlRmse)} SSIM=${"%.4f".format(result.htmlSsim!!)}"
-                        } else {
-                            hStatus
-                        },
-                )
+                val eStatus = result.emailHtmlStatus?.label ?: "Skipped"
+                val vectorCol = "$vStatus RMSE=${"%.4f".format(result.vectorRmse)} SSIM=${"%.4f".format(result.vectorSsim)} Match=${"%.1f".format(result.vectorExactMatch * 100)}%"
+                val htmlCol = if (result.htmlRmse != null) {
+                    "$hStatus RMSE=${"%.4f".format(result.htmlRmse)} SSIM=${"%.4f".format(result.htmlSsim!!)}"
+                } else hStatus
+                val emailCol = if (result.emailHtmlRmse != null) {
+                    "$eStatus RMSE=${"%.4f".format(result.emailHtmlRmse)} SSIM=${"%.4f".format(result.emailHtmlSsim!!)}"
+                } else eStatus
+                println("${result.name.padEnd(25)} ${vectorCol.padEnd(50)} ${htmlCol.padEnd(50)} $emailCol")
             }
             println()
 
@@ -97,6 +99,13 @@ class FidelityTest {
                 val fixture = fidelityFixtures.first { it.name == result.name }
                 if (result.htmlStatus == Status.FAIL) {
                     failures.add("${result.name}: HTML structural FAIL (RMSE=${"%.4f".format(result.htmlRmse)}, threshold=${fixture.htmlThreshold})")
+                }
+            }
+            for (result in results) {
+                if (result.emailHtmlRmse == null) continue
+                val fixture = fidelityFixtures.first { it.name == result.name }
+                if (result.emailHtmlStatus == Status.FAIL) {
+                    failures.add("${result.name}: Email HTML structural FAIL (RMSE=${"%.4f".format(result.emailHtmlRmse)}, threshold=${fixture.emailHtmlThreshold})")
                 }
             }
 
@@ -183,6 +192,37 @@ class FidelityTest {
             htmlDiffPath = "images/${fixture.name}-html-diff.png"
         }
 
+        // 6. Email HTML comparison (if Playwright available)
+        var emailHtmlRmse: Double? = null
+        var emailHtmlSsim: Double? = null
+        var emailHtmlExactMatch: Double? = null
+        var emailHtmlMaxError: Double? = null
+        var emailHtmlStatusResult: Status? = null
+        var emailHtmlPath: String? = null
+        var emailHtmlDiffPath: String? = null
+        var emailHtmlFilePath: String? = null
+
+        if (b != null) {
+            val emailHtml = document.toEmailHtml()
+            val emailHtmlFile = File(imagesDir, "${fixture.name}-email.html")
+            emailHtmlFile.writeText(emailHtml)
+            emailHtmlFilePath = "images/${fixture.name}-email.html"
+
+            val emailHtmlImage = screenshotEmailHtml(b, emailHtmlFile, pageW, pageH)
+            saveImage(emailHtmlImage, imagesDir, "${fixture.name}-email-html.png")
+            emailHtmlPath = "images/${fixture.name}-email-html.png"
+
+            emailHtmlSsim = ImageMetrics.computeSsim(composeImage, emailHtmlImage)
+            emailHtmlExactMatch = ImageMetrics.computeExactMatchPercent(composeImage, emailHtmlImage)
+            emailHtmlMaxError = ImageMetrics.computeMaxPixelError(composeImage, emailHtmlImage)
+            emailHtmlRmse = ImageMetrics.computeStructuralRmse(composeImage, emailHtmlImage)
+            emailHtmlStatusResult = emailHtmlStatus(emailHtmlRmse!!, fixture.emailHtmlThreshold)
+
+            val emailDiff = ImageMetrics.generateDiffImage(composeImage, emailHtmlImage)
+            saveImage(emailDiff, imagesDir, "${fixture.name}-email-html-diff.png")
+            emailHtmlDiffPath = "images/${fixture.name}-email-html-diff.png"
+        }
+
         return FidelityResult(
             name = fixture.name,
             category = fixture.category,
@@ -204,6 +244,14 @@ class FidelityTest {
             htmlPath = htmlPath,
             htmlDiffPath = htmlDiffPath,
             htmlFilePath = htmlFilePath,
+            emailHtmlRmse = emailHtmlRmse,
+            emailHtmlSsim = emailHtmlSsim,
+            emailHtmlExactMatch = emailHtmlExactMatch,
+            emailHtmlMaxError = emailHtmlMaxError,
+            emailHtmlStatus = emailHtmlStatusResult,
+            emailHtmlPath = emailHtmlPath,
+            emailHtmlDiffPath = emailHtmlDiffPath,
+            emailHtmlFilePath = emailHtmlFilePath,
         )
     }
 

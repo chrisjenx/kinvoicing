@@ -120,6 +120,48 @@ internal fun renderComposeToSvg(
     return baos.toString(Charsets.UTF_8)
 }
 
+internal fun screenshotEmailHtml(
+    browser: Browser,
+    htmlFile: File,
+    targetWidth: Int,
+    targetHeight: Int,
+): BufferedImage {
+    val viewportWidth = 600 // email standard max-width
+    val deviceScale = 2.0   // retina-equivalent for crisp screenshots
+    val page = browser.newPage(
+        Browser.NewPageOptions()
+            .setViewportSize(viewportWidth, 2000)
+            .setDeviceScaleFactor(deviceScale)
+    )
+    try {
+        page.navigate("file://${htmlFile.absolutePath}")
+        page.waitForLoadState()
+
+        val screenshot = page.screenshot(Page.ScreenshotOptions().setFullPage(true))
+        val rawImage = ImageIO.read(ByteArrayInputStream(screenshot))
+
+        // Resize to match Compose reference dimensions for fair comparison
+        return resizeToMatch(rawImage, targetWidth, targetHeight)
+    } finally {
+        page.close()
+    }
+}
+
+internal fun resizeToMatch(src: BufferedImage, targetW: Int, targetH: Int): BufferedImage {
+    val result = BufferedImage(targetW, targetH, BufferedImage.TYPE_INT_ARGB)
+    val g = result.createGraphics()
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+    g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+    g.color = java.awt.Color.WHITE
+    g.fillRect(0, 0, targetW, targetH)
+    // Scale source to fit target width, maintaining aspect ratio, top-aligned
+    val scale = targetW.toDouble() / src.width
+    val scaledH = (src.height * scale).toInt().coerceAtMost(targetH)
+    g.drawImage(src, 0, 0, targetW, scaledH, null)
+    g.dispose()
+    return result
+}
+
 internal fun screenshotHtml(
     browser: Browser,
     htmlFile: File,

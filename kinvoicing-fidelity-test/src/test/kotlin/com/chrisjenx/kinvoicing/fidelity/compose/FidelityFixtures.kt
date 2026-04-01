@@ -11,6 +11,7 @@ data class Fixture(
     val document: InvoiceDocument,
     val vectorThreshold: Double = 0.30,
     val htmlThreshold: Double = 0.35,
+    val emailHtmlThreshold: Double = 0.35,
     val config: PdfPageConfig = PdfPageConfig.A4,
 )
 

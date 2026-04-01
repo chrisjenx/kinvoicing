@@ -30,10 +30,20 @@ data class FidelityResult(
     val htmlPath: String? = null,
     val htmlDiffPath: String? = null,
     val htmlFilePath: String? = null,
+    // Email HTML metrics (null when Playwright unavailable)
+    val emailHtmlRmse: Double? = null,
+    val emailHtmlSsim: Double? = null,
+    val emailHtmlExactMatch: Double? = null,
+    val emailHtmlMaxError: Double? = null,
+    val emailHtmlStatus: Status? = null,
+    // Email HTML paths
+    val emailHtmlPath: String? = null,
+    val emailHtmlDiffPath: String? = null,
+    val emailHtmlFilePath: String? = null,
 ) {
     val rowStatus: Status
         get() {
-            val statuses = listOfNotNull(vectorStatus, htmlStatus)
+            val statuses = listOfNotNull(vectorStatus, htmlStatus, emailHtmlStatus)
             return when {
                 statuses.any { it == Status.FAIL } -> Status.FAIL
                 statuses.any { it == Status.WARN } -> Status.WARN
@@ -57,6 +67,12 @@ fun vectorStatus(rmse: Double, threshold: Double): Status = when {
 
 fun htmlStatus(rmse: Double, threshold: Double): Status = when {
     rmse <= 0.02 -> Status.PASS
+    rmse <= threshold -> Status.WARN
+    else -> Status.FAIL
+}
+
+fun emailHtmlStatus(rmse: Double, threshold: Double): Status = when {
+    rmse <= 0.10 -> Status.PASS
     rmse <= threshold -> Status.WARN
     else -> Status.FAIL
 }
@@ -93,6 +109,12 @@ fun generateFidelityReport(results: List<FidelityResult>, outputFile: File) {
     val htmlMeanRmse = if (htmlAvailable) htmlResults.map { it.htmlRmse!! }.average() else 0.0
     val htmlMeanSsim = if (htmlAvailable) htmlResults.map { it.htmlSsim!! }.average() else 0.0
     val htmlMeanMatch = if (htmlAvailable) htmlResults.map { it.htmlExactMatch!! }.average() else 0.0
+
+    val emailHtmlResults = results.filter { it.emailHtmlRmse != null }
+    val emailHtmlAvailable = emailHtmlResults.isNotEmpty()
+    val emailHtmlMeanRmse = if (emailHtmlAvailable) emailHtmlResults.map { it.emailHtmlRmse!! }.average() else 0.0
+    val emailHtmlMeanSsim = if (emailHtmlAvailable) emailHtmlResults.map { it.emailHtmlSsim!! }.average() else 0.0
+    val emailHtmlMeanMatch = if (emailHtmlAvailable) emailHtmlResults.map { it.emailHtmlExactMatch!! }.average() else 0.0
 
     val categories = results.map { it.category }.distinct().sorted()
 
@@ -213,16 +235,32 @@ table#fidelity-table {
         appendLine("<span class='badge total'>${results.size} total</span>")
         appendLine("</div>")
         appendLine("<table class='stats-table'>")
-        if (htmlAvailable) {
-            appendLine("<tr><th></th><th>Vector</th><th>HTML</th></tr>")
-            appendLine("<tr><td>Mean RMSE</td><td>${"%.4f".format(vectorMeanRmse)}</td><td>${"%.4f".format(htmlMeanRmse)}</td></tr>")
-            appendLine("<tr><td>Mean SSIM</td><td>${"%.4f".format(vectorMeanSsim)}</td><td>${"%.4f".format(htmlMeanSsim)}</td></tr>")
-            appendLine("<tr><td>Mean Match%</td><td>${"%.2f".format(vectorMeanMatch * 100)}%</td><td>${"%.2f".format(htmlMeanMatch * 100)}%</td></tr>")
-        } else {
-            appendLine("<tr><th></th><th>Vector</th></tr>")
-            appendLine("<tr><td>Mean RMSE</td><td>${"%.4f".format(vectorMeanRmse)}</td></tr>")
-            appendLine("<tr><td>Mean SSIM</td><td>${"%.4f".format(vectorMeanSsim)}</td></tr>")
-            appendLine("<tr><td>Mean Match%</td><td>${"%.2f".format(vectorMeanMatch * 100)}%</td></tr>")
+        run {
+            val headers = buildString {
+                append("<tr><th></th><th>Vector</th>")
+                if (htmlAvailable) append("<th>HTML</th>")
+                if (emailHtmlAvailable) append("<th>Email HTML</th>")
+                append("</tr>")
+            }
+            appendLine(headers)
+            appendLine(buildString {
+                append("<tr><td>Mean RMSE</td><td>${"%.4f".format(vectorMeanRmse)}</td>")
+                if (htmlAvailable) append("<td>${"%.4f".format(htmlMeanRmse)}</td>")
+                if (emailHtmlAvailable) append("<td>${"%.4f".format(emailHtmlMeanRmse)}</td>")
+                append("</tr>")
+            })
+            appendLine(buildString {
+                append("<tr><td>Mean SSIM</td><td>${"%.4f".format(vectorMeanSsim)}</td>")
+                if (htmlAvailable) append("<td>${"%.4f".format(htmlMeanSsim)}</td>")
+                if (emailHtmlAvailable) append("<td>${"%.4f".format(emailHtmlMeanSsim)}</td>")
+                append("</tr>")
+            })
+            appendLine(buildString {
+                append("<tr><td>Mean Match%</td><td>${"%.2f".format(vectorMeanMatch * 100)}%</td>")
+                if (htmlAvailable) append("<td>${"%.2f".format(htmlMeanMatch * 100)}%</td>")
+                if (emailHtmlAvailable) append("<td>${"%.2f".format(emailHtmlMeanMatch * 100)}%</td>")
+                append("</tr>")
+            })
         }
         appendLine("</table>")
         appendLine("</div>")
@@ -259,11 +297,14 @@ table#fidelity-table {
         appendLine("<th>HTML</th>")
         appendLine("<th>HTML Diff</th>")
         appendLine("<th>HTML Metrics</th>")
+        appendLine("<th>Email HTML</th>")
+        appendLine("<th>Email Diff</th>")
+        appendLine("<th>Email Metrics</th>")
         appendLine("</tr></thead>")
         appendLine("<tbody>")
 
         for (result in results) {
-            val worstMetric = maxOf(result.vectorRmse, result.htmlRmse ?: 0.0)
+            val worstMetric = maxOf(result.vectorRmse, result.htmlRmse ?: 0.0, result.emailHtmlRmse ?: 0.0)
             val rowClass = "row-${result.rowStatus.cssClass}"
             val catColor = categoryColors[result.category] ?: "#607D8B"
 
@@ -326,6 +367,38 @@ table#fidelity-table {
                 appendLine("<tr><td>Match</td><td>${"%.2f".format(result.htmlExactMatch!! * 100)}%</td></tr>")
                 appendLine("<tr><td>MaxErr</td><td>${"%.4f".format(result.htmlMaxError!!)}</td></tr>")
                 appendLine("<tr><td>Status</td><td class='$hStatusClass'>${(result.htmlStatus ?: Status.SKIPPED).label}</td></tr>")
+                appendLine("</table></td>")
+            } else {
+                appendLine("<td><span class='badge skipped'>Skipped</span></td>")
+            }
+
+            // Email HTML image
+            if (result.emailHtmlPath != null) {
+                appendLine("<td><img class='thumb' src='${escapeHtml(result.emailHtmlPath)}' alt='${escapeHtml(result.name)} email html' onclick='openModal(this.src)'>")
+                if (result.emailHtmlFilePath != null) {
+                    appendLine("<a href='${escapeHtml(result.emailHtmlFilePath)}' class='html-link' target='_blank'>Open Email HTML</a>")
+                }
+                appendLine("</td>")
+            } else {
+                appendLine("<td><span class='badge skipped'>Skipped</span></td>")
+            }
+
+            // Email HTML diff
+            if (result.emailHtmlDiffPath != null) {
+                appendLine("<td><img class='thumb' src='${escapeHtml(result.emailHtmlDiffPath)}' alt='${escapeHtml(result.name)} email html diff' onclick='openModal(this.src)'></td>")
+            } else {
+                appendLine("<td><span class='badge skipped'>Skipped</span></td>")
+            }
+
+            // Email HTML metrics
+            if (result.emailHtmlRmse != null) {
+                val eStatusClass = "${(result.emailHtmlStatus ?: Status.SKIPPED).cssClass}-text"
+                appendLine("<td class='metrics'><table>")
+                appendLine("<tr><td>RMSE</td><td>${"%.4f".format(result.emailHtmlRmse)}</td></tr>")
+                appendLine("<tr><td>SSIM</td><td>${"%.4f".format(result.emailHtmlSsim!!)}</td></tr>")
+                appendLine("<tr><td>Match</td><td>${"%.2f".format(result.emailHtmlExactMatch!! * 100)}%</td></tr>")
+                appendLine("<tr><td>MaxErr</td><td>${"%.4f".format(result.emailHtmlMaxError!!)}</td></tr>")
+                appendLine("<tr><td>Status</td><td class='$eStatusClass'>${(result.emailHtmlStatus ?: Status.SKIPPED).label}</td></tr>")
                 appendLine("</table></td>")
             } else {
                 appendLine("<td><span class='badge skipped'>Skipped</span></td>")

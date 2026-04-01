@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
-import com.chrisjenx.kinvoicing.composehtml.PdfFontFamily
+import com.chrisjenx.kinvoicing.html.PdfFontFamily
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.PDFRenderer
 import java.awt.RenderingHints
