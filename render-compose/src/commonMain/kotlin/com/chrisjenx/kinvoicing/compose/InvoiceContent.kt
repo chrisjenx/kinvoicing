@@ -28,7 +28,7 @@ public fun InvoiceContent(
                 .background(style.backgroundComposeColor)
                 .padding(InvoiceSpacing.xl)
         ) {
-            InvoiceSectionsContent(document.sections, currency)
+            InvoiceSections(document.sections, currency)
         }
     }
 }
@@ -39,7 +39,7 @@ public fun InvoiceContent(
  * suitable for compose2pdf's auto-pagination.
  */
 @Composable
-public fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: String) {
+public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
     var i = 0
     while (i < sections.size) {
         val section = sections[i]
@@ -69,7 +69,7 @@ public fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: Stri
 /**
  * Renders a single [InvoiceSection] to its corresponding composable.
  *
- * For grouped rendering with side-by-side parties, use [InvoiceSectionsContent] instead.
+ * For grouped rendering with side-by-side parties, use [InvoiceSections] instead.
  */
 @Composable
 public fun InvoiceSectionContent(section: InvoiceSection, currency: String) {

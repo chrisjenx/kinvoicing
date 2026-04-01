@@ -11,4 +11,9 @@ public data class HtmlRenderConfig(
     val embedImages: Boolean = true,
     val includeDoctype: Boolean = true,
     val wrapInBody: Boolean = true,
-)
+) {
+    public companion object {
+        /** Default configuration: embed images, include doctype, wrap in body. */
+        public val Default: HtmlRenderConfig = HtmlRenderConfig()
+    }
+}

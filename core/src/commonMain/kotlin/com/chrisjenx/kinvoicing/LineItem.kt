@@ -18,12 +18,12 @@ public data class LineItem(
     val unitPrice: Double? = null,
     val amount: Double,
     val metadata: Map<String, String> = emptyMap(),
-    val subItems: List<SubItem> = emptyList(),
+    val subItems: List<LineSubItem> = emptyList(),
     val discounts: List<Adjustment> = emptyList(),
 )
 
 /** A detail row nested under a [LineItem], typically rendered indented. */
-public data class SubItem(
+public data class LineSubItem(
     val description: String,
     val quantity: Double? = null,
     val unitPrice: Double? = null,

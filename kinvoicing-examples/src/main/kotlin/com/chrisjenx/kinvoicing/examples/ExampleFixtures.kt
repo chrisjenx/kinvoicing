@@ -260,7 +260,7 @@ object InvoiceExamples {
             name("Government Agency")
             address("1 Federal Plaza", "Washington, DC 20001")
         }
-        meta {
+        metaBlock {
             entry("Purchase Order", "PO-2026-1138")
             entry("Project", "Digital Transformation Phase 2")
             entry("Contract Ref", "GSA-2025-007")
@@ -415,7 +415,7 @@ object InvoiceExamples {
                 sub("Ground transport", amount = 70.0)
             }
         }
-        meta {
+        metaBlock {
             entry("PO Number", "PO-2026-1138")
             entry("Project", "Website Redesign")
         }

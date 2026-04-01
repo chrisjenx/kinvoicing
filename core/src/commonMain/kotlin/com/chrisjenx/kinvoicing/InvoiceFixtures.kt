@@ -96,7 +96,7 @@ public object InvoiceFixtures {
             }
             item("Unused retainer credit", amount = -500.0)
         }
-        meta {
+        metaBlock {
             entry("PO Number", "PO-2026-1138")
             entry("Project", "Website Redesign")
             entry("Contract Ref", "MSA-2025-007")

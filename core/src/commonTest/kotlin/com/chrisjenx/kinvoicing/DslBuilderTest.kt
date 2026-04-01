@@ -159,10 +159,10 @@ class DslBuilderTest {
     fun metaBlocksMerge() {
         val doc = invoice {
             billTo { name("Test") }
-            meta {
+            metaBlock {
                 entry("PO", "PO-001")
             }
-            meta {
+            metaBlock {
                 entry("Project", "Alpha")
             }
             lineItems { item("Item", amount = 1.0) }
@@ -187,7 +187,7 @@ class DslBuilderTest {
             lineItems { item("Item", amount = 100.0) }
             summary {}
             billFrom { name("Seller") }
-            meta { entry("Key", "Val") }
+            metaBlock { entry("Key", "Val") }
             paymentInfo { bankName("Bank") }
         }
 

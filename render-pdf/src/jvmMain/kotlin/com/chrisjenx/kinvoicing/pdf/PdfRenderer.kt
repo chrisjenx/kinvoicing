@@ -3,14 +3,14 @@ package com.chrisjenx.kinvoicing.pdf
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceRenderer
-import com.chrisjenx.kinvoicing.compose.InvoiceSectionsContent
+import com.chrisjenx.kinvoicing.compose.InvoiceSections
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
 import java.io.OutputStream
 
 /**
  * Renders an [InvoiceDocument] to PDF bytes via compose2pdf.
  *
- * Uses [InvoiceSectionsContent] for intelligent section grouping (e.g.,
+ * Uses [InvoiceSections] for intelligent section grouping (e.g.,
  * adjacent BillFrom + BillTo rendered side-by-side). Each logical group is
  * a direct child of the `renderToPdf` lambda, enabling auto-pagination.
  */
@@ -26,7 +26,7 @@ public class PdfRenderer(
             pagination = config.pagination,
         ) {
             InvoiceStyleProvider(document.style) {
-                InvoiceSectionsContent(document.sections, document.currency)
+                InvoiceSections(document.sections, document.currency)
             }
         }
     }

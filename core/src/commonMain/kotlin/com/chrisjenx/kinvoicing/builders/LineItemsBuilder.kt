@@ -83,7 +83,7 @@ public class LineItemBuilder internal constructor(
     private val explicitAmount: Double?,
     private val metadata: Map<String, String>,
 ) {
-    private val subItems: MutableList<SubItem> = mutableListOf()
+    private val subItems: MutableList<LineSubItem> = mutableListOf()
     private val discounts: MutableList<Adjustment> = mutableListOf()
 
     /** Add a nested sub-item (rendered indented under the parent). */
@@ -100,7 +100,7 @@ public class LineItemBuilder internal constructor(
             if (q != null && p != null) q * p else 0.0
         }
         subItems.add(
-            SubItem(
+            LineSubItem(
                 description = description,
                 quantity = qty?.toDouble(),
                 unitPrice = unitPrice,

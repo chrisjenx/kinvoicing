@@ -15,7 +15,7 @@ import kotlinx.html.stream.appendHTML
  * each handling one [InvoiceSection] variant with exhaustive `when` matching.
  */
 public class HtmlRenderer(
-    private val config: HtmlRenderConfig = HtmlRenderConfig(),
+    private val config: HtmlRenderConfig = HtmlRenderConfig.Default,
 ) : InvoiceRenderer<String> {
 
     override fun render(document: InvoiceDocument): String {

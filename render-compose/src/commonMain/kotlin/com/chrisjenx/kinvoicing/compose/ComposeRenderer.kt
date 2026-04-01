@@ -17,6 +17,6 @@ public class ComposeRenderer : InvoiceRenderer<@Composable () -> Unit> {
 /**
  * Convenience extension to get a composable lambda from an [InvoiceDocument].
  */
-public fun InvoiceDocument.toComposable(): @Composable () -> Unit = {
+public fun InvoiceDocument.toCompose(): @Composable () -> Unit = {
     InvoiceContent(this)
 }

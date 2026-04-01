@@ -54,8 +54,8 @@ public class InvoiceBuilder {
     }
 
     /** Add key-value metadata entries (e.g., PO number, project name). */
-    public fun meta(init: MetaBuilder.() -> Unit) {
-        metaEntries.addAll(MetaBuilder().apply(init).build())
+    public fun metaBlock(init: MetaBlockBuilder.() -> Unit) {
+        metaEntries.addAll(MetaBlockBuilder().apply(init).build())
     }
 
     /** Configure the financial summary (currency, discounts, taxes, fees). */

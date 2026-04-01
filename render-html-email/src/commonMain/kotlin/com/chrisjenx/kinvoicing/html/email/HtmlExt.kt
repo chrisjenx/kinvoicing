@@ -7,7 +7,7 @@ import com.chrisjenx.kinvoicing.InvoiceStyle
 /**
  * Convenience extension to render an InvoiceDocument to HTML.
  */
-public fun InvoiceDocument.toHtml(config: HtmlRenderConfig = HtmlRenderConfig()): String {
+public fun InvoiceDocument.toHtml(config: HtmlRenderConfig = HtmlRenderConfig.Default): String {
     return HtmlRenderer(config).render(this)
 }
 

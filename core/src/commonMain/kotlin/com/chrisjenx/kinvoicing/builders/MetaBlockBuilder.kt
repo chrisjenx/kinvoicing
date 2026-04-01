@@ -5,7 +5,7 @@ import com.chrisjenx.kinvoicing.MetaEntry
 
 /** DSL builder for [InvoiceSection.MetaBlock] key-value entries. */
 @InvoiceDsl
-public class MetaBuilder {
+public class MetaBlockBuilder {
     private val entries: MutableList<MetaEntry> = mutableListOf()
 
     /** Add a metadata entry with the given [label] and [value]. */

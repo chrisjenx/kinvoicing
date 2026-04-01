@@ -71,7 +71,7 @@ class InvoiceSectionTest {
             unitPrice = 10.0,
             amount = 50.0,
             metadata = mapOf("category" to "services"),
-            subItems = listOf(SubItem("Sub", amount = 25.0)),
+            subItems = listOf(LineSubItem("Sub", amount = 25.0)),
             discounts = listOf(
                 Adjustment("Disc", AdjustmentType.DISCOUNT, AdjustmentValue.Percent(10.0))
             ),
