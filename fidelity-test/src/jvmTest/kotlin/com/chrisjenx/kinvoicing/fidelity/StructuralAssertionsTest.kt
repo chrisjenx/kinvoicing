@@ -2,7 +2,7 @@ package com.chrisjenx.kinvoicing.fidelity
 
 import com.chrisjenx.kinvoicing.InvoiceFixtures
 import com.chrisjenx.kinvoicing.InvoiceSection
-import com.chrisjenx.kinvoicing.html.toHtml
+import com.chrisjenx.kinvoicing.html.email.toHtml
 import com.chrisjenx.kinvoicing.pdf.toPdf
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper

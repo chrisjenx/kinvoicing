@@ -1,4 +1,4 @@
-package com.chrisjenx.kinvoicing.html.sections
+package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.ContactInfo
 import com.chrisjenx.kinvoicing.InvoiceStyle

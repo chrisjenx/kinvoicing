@@ -1,7 +1,7 @@
 package com.chrisjenx.kinvoicing.fidelity
 
 import com.chrisjenx.kinvoicing.InvoiceDocument
-import com.chrisjenx.kinvoicing.html.toHtml
+import com.chrisjenx.kinvoicing.html.email.toHtml
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright

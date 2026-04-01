@@ -1,4 +1,4 @@
-package com.chrisjenx.kinvoicing.html
+package com.chrisjenx.kinvoicing.html.email
 
 /**
  * Configuration for [HtmlRenderer] output.

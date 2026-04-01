@@ -1,4 +1,4 @@
-package com.chrisjenx.kinvoicing.html
+package com.chrisjenx.kinvoicing.html.email
 
 import com.chrisjenx.kinvoicing.ArgbColor
 import com.chrisjenx.kinvoicing.InvoiceDocument

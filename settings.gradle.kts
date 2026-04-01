@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 rootProject.name = "kinvoicing"
 
 include(":core")
-include(":render-html")
+include(":render-html-email")
 include(":render-compose")
 include(":render-pdf")
 include(":fidelity-test")

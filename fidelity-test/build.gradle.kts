@@ -12,7 +12,7 @@ kotlin {
             dependencies {
                 implementation(project(":core"))
                 implementation(project(":render-compose"))
-                implementation(project(":render-html"))
+                implementation(project(":render-html-email"))
                 implementation(project(":render-pdf"))
                 implementation(libs.kotlin.test)
                 implementation(libs.pdfbox)

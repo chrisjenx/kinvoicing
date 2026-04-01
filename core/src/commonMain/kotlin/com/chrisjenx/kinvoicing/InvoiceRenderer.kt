@@ -3,7 +3,7 @@ package com.chrisjenx.kinvoicing
 /**
  * Platform-agnostic renderer that converts an [InvoiceDocument] into output type [T].
  *
- * Implementations include [com.chrisjenx.kinvoicing.html.HtmlRenderer] (HTML string),
+ * Implementations include [com.chrisjenx.kinvoicing.html.email.HtmlRenderer] (HTML string),
  * [com.chrisjenx.kinvoicing.compose.ComposeRenderer] (composable lambda), and
  * [com.chrisjenx.kinvoicing.pdf.PdfRenderer] (PDF bytes).
  */

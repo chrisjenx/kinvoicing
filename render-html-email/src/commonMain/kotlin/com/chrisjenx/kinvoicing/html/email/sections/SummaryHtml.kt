@@ -1,4 +1,4 @@
-package com.chrisjenx.kinvoicing.html.sections
+package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.util.CurrencyFormatter

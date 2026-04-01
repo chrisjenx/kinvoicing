@@ -1,7 +1,7 @@
-package com.chrisjenx.kinvoicing.html
+package com.chrisjenx.kinvoicing.html.email
 
 import com.chrisjenx.kinvoicing.*
-import com.chrisjenx.kinvoicing.html.sections.*
+import com.chrisjenx.kinvoicing.html.email.sections.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 

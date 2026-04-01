@@ -1,7 +1,7 @@
 package com.chrisjenx.kinvoicing.fidelity
 
 import com.chrisjenx.kinvoicing.InvoiceFixtures
-import com.chrisjenx.kinvoicing.html.toHtml
+import com.chrisjenx.kinvoicing.html.email.toHtml
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.test.Test
