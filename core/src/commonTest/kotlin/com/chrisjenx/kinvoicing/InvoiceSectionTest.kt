@@ -110,18 +110,54 @@ class InvoiceSectionTest {
             InvoiceElement.Divider,
             InvoiceElement.Row(listOf(InvoiceElement.Text("A")), listOf(1f)),
             InvoiceElement.Image(byteArrayOf(1, 2, 3), "image/png", 100, 50),
+            InvoiceElement.Link("Example", "https://example.com"),
         )
 
-        assertEquals(5, elements.size)
+        assertEquals(6, elements.size)
         elements.forEach { el ->
             when (el) {
                 is InvoiceElement.Text -> assertEquals("Hello", el.value)
                 is InvoiceElement.Spacer -> assertEquals(24, el.height)
                 is InvoiceElement.Divider -> {} // singleton
                 is InvoiceElement.Row -> assertEquals(1, el.children.size)
-                is InvoiceElement.Image -> assertEquals("image/png", el.contentType)
+                is InvoiceElement.Image -> assertEquals("image/png", el.source.contentType)
+                is InvoiceElement.Link -> assertEquals("https://example.com", el.href)
             }
         }
+    }
+
+    @Test
+    fun imageSourceBytesHoldsData() {
+        val data = byteArrayOf(1, 2, 3)
+        val source = ImageSource.Bytes(data, "image/png")
+        assertTrue(source.bytes.contentEquals(data))
+        assertEquals("image/png", source.contentType)
+    }
+
+    @Test
+    fun imageSourceBytesEquality() {
+        val a = ImageSource.Bytes(byteArrayOf(1, 2, 3), "image/png")
+        val b = ImageSource.Bytes(byteArrayOf(1, 2, 3), "image/png")
+        val c = ImageSource.Bytes(byteArrayOf(4, 5, 6), "image/png")
+        assertEquals(a, b)
+        assertNotEquals(a, c)
+    }
+
+    @Test
+    fun invoiceElementImageWithSource() {
+        val source = ImageSource.Bytes(byteArrayOf(1, 2, 3), "image/png")
+        val image = InvoiceElement.Image(source, width = 100, height = 50)
+        assertEquals(source, image.source)
+        assertEquals(100, image.width)
+        assertEquals(50, image.height)
+    }
+
+    @Test
+    fun brandIdentityWithImageSource() {
+        val source = ImageSource.Bytes(byteArrayOf(1, 2, 3), "image/png")
+        val identity = BrandIdentity(name = "Test", logo = source)
+        assertEquals(source, identity.logo)
+        assertEquals("image/png", identity.logo?.contentType)
     }
 
     @Test

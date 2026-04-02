@@ -96,6 +96,18 @@ private fun InvoiceDetailsColumn(header: InvoiceSection.Header, style: InvoiceSt
 
 @Composable
 private fun BrandingContent(branding: Branding, style: InvoiceStyle) {
+    val linkWrapper = LocalLinkWrapper.current
+    val imageRenderer = LocalImageRenderer.current
+
+    branding.primary.logo?.let { logoSource ->
+        imageRenderer(
+            logoSource,
+            null,
+            null,
+            "${branding.primary.name} logo",
+        )
+        Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
+    }
     Text(
         text = branding.primary.name,
         fontSize = InvoiceTypography.titleMedium,
@@ -105,14 +117,20 @@ private fun BrandingContent(branding: Branding, style: InvoiceStyle) {
     branding.primary.address.forEach { line ->
         Text(text = line, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
     }
-    branding.primary.email?.let {
-        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+    branding.primary.email?.let { email ->
+        linkWrapper("mailto:$email") {
+            Text(text = email, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+        }
     }
-    branding.primary.phone?.let {
-        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+    branding.primary.phone?.let { phone ->
+        linkWrapper("tel:$phone") {
+            Text(text = phone, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+        }
     }
-    branding.primary.website?.let {
-        Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.primaryComposeColor)
+    branding.primary.website?.let { website ->
+        linkWrapper(website) {
+            Text(text = website, fontSize = InvoiceTypography.bodyMedium, color = style.primaryComposeColor)
+        }
     }
 
     branding.poweredBy?.let { pb ->

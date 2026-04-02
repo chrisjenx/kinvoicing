@@ -25,30 +25,30 @@ public sealed class InvoiceElement {
     ) : InvoiceElement()
 
     /**
-     * Inline image from raw bytes.
-     * @property contentType MIME type (e.g., "image/png").
+     * Hyperlink with display text.
+     * @property text The visible label (e.g., "Visit Our Site").
+     * @property href The link URL (e.g., "https://example.com").
+     */
+    public data class Link(val text: String, val href: String) : InvoiceElement()
+
+    /**
+     * Inline image from an [ImageSource].
+     *
+     * Construct with [ImageSource.Bytes] for raw byte arrays, or with a CMP
+     * `DrawableResource` via render-compose's `DrawableImageSource`.
      */
     public data class Image(
-        val data: ByteArray,
-        val contentType: String,
+        val source: ImageSource,
         val width: Int? = null,
         val height: Int? = null,
     ) : InvoiceElement() {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Image) return false
-            return data.contentEquals(other.data) &&
-                contentType == other.contentType &&
-                width == other.width &&
-                height == other.height
-        }
 
-        override fun hashCode(): Int {
-            var result = data.contentHashCode()
-            result = 31 * result + contentType.hashCode()
-            result = 31 * result + (width ?: 0)
-            result = 31 * result + (height ?: 0)
-            return result
-        }
+        /** Backwards-compatible constructor accepting raw bytes. */
+        public constructor(
+            data: ByteArray,
+            contentType: String,
+            width: Int? = null,
+            height: Int? = null,
+        ) : this(ImageSource.Bytes(data, contentType), width, height)
     }
 }

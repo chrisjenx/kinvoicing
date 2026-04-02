@@ -11,6 +11,7 @@ import com.chrisjenx.kinvoicing.compose.*
 @Composable
 internal fun PartySection(contact: ContactInfo, label: String) {
     val style = LocalInvoiceStyle.current
+    val linkWrapper = LocalLinkWrapper.current
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = InvoiceSpacing.sm)) {
         Text(
@@ -29,11 +30,15 @@ internal fun PartySection(contact: ContactInfo, label: String) {
         contact.address.forEach { line ->
             Text(text = line, fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
-        contact.email?.let {
-            Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+        contact.email?.let { email ->
+            linkWrapper("mailto:$email") {
+                Text(text = email, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+            }
         }
-        contact.phone?.let {
-            Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+        contact.phone?.let { phone ->
+            linkWrapper("tel:$phone") {
+                Text(text = phone, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+            }
         }
     }
 }

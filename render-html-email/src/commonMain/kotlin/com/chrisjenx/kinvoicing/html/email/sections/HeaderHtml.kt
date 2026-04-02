@@ -1,6 +1,7 @@
 package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.*
+import com.chrisjenx.kinvoicing.html.email.toDataUri
 import kotlinx.html.*
 
 internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
@@ -66,6 +67,13 @@ private fun FlowContent.renderInvoiceDetails(header: InvoiceSection.Header, styl
 }
 
 private fun FlowContent.renderBranding(branding: Branding, style: InvoiceStyle) {
+    branding.primary.logo?.let { logoSource ->
+        img {
+            src = logoSource.toDataUri()
+            alt = "${branding.primary.name} logo"
+            attributes["style"] = "display: block; max-height: 60px; margin-bottom: 8px;"
+        }
+    }
     div {
         attributes["style"] = "font-size: 18px; font-weight: bold; color: ${style.textColor.toHexColor()};"
         +branding.primary.name
@@ -76,14 +84,32 @@ private fun FlowContent.renderBranding(branding: Branding, style: InvoiceStyle) 
             +line
         }
     }
-    branding.primary.email?.let {
-        div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+    branding.primary.email?.let { email ->
+        div {
+            a {
+                href = "mailto:$email"
+                attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; text-decoration: none;"
+                +email
+            }
+        }
     }
-    branding.primary.phone?.let {
-        div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+    branding.primary.phone?.let { phone ->
+        div {
+            a {
+                href = "tel:$phone"
+                attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; text-decoration: none;"
+                +phone
+            }
+        }
     }
-    branding.primary.website?.let {
-        div { attributes["style"] = "font-size: 13px; color: ${style.primaryColor.toHexColor()};" ; +it }
+    branding.primary.website?.let { website ->
+        div {
+            a {
+                href = website
+                attributes["style"] = "font-size: 13px; color: ${style.primaryColor.toHexColor()}; text-decoration: none;"
+                +website
+            }
+        }
     }
     branding.poweredBy?.let { pb ->
         when (branding.layout) {

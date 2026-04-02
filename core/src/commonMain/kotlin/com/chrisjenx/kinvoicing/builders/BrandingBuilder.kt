@@ -31,8 +31,7 @@ public class BrandingBuilder {
 @InvoiceDsl
 public class BrandIdentityBuilder {
     private var name: String? = null
-    private var logo: ByteArray? = null
-    private var logoContentType: String? = null
+    private var logo: ImageSource? = null
     private var address: List<String> = emptyList()
     private var email: String? = null
     private var phone: String? = null
@@ -43,8 +42,11 @@ public class BrandIdentityBuilder {
     public fun name(value: String) { name = value }
     /** Set the brand logo from raw image bytes with the given MIME [contentType]. */
     public fun logo(data: ByteArray, contentType: String = "image/png") {
-        logo = data
-        logoContentType = contentType
+        logo = ImageSource.Bytes(data, contentType)
+    }
+    /** Set the brand logo from an [ImageSource]. */
+    public fun logo(source: ImageSource) {
+        logo = source
     }
     /** Set the brand address as one or more lines. */
     public fun address(vararg lines: String) { address = lines.toList() }
@@ -60,7 +62,6 @@ public class BrandIdentityBuilder {
     internal fun build(): BrandIdentity = BrandIdentity(
         name = requireNotNull(name) { "BrandIdentity requires a name" },
         logo = logo,
-        logoContentType = logoContentType,
         address = address,
         email = email,
         phone = phone,

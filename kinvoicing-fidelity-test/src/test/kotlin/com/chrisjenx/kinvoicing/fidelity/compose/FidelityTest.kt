@@ -4,16 +4,18 @@ package com.chrisjenx.kinvoicing.fidelity.compose
 
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
+import com.chrisjenx.compose2pdf.PdfLink
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
-import com.chrisjenx.kinvoicing.compose.InvoiceContent
 import com.chrisjenx.kinvoicing.compose.InvoiceSections
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
+import com.chrisjenx.kinvoicing.compose.LocalLinkWrapper
 import com.chrisjenx.kinvoicing.html.PdfFontFamily
 import com.chrisjenx.kinvoicing.html.renderToHtml
 import com.chrisjenx.kinvoicing.html.email.toHtml as toEmailHtml
@@ -258,8 +260,14 @@ class FidelityTest {
      */
     @Composable
     private fun renderInvoiceSections(document: InvoiceDocument) {
-        InvoiceStyleProvider(document.style) {
-            InvoiceSections(document.sections, document.currency)
+        CompositionLocalProvider(
+            LocalLinkWrapper provides { href, content ->
+                PdfLink(href = href) { content() }
+            },
+        ) {
+            InvoiceStyleProvider(document.style) {
+                InvoiceSections(document.sections, document.currency)
+            }
         }
     }
 }

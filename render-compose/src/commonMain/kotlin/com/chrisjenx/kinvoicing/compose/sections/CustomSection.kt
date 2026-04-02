@@ -51,12 +51,19 @@ private fun ElementContent(element: InvoiceElement) {
                 }
             }
         }
+        is InvoiceElement.Link -> {
+            val linkWrapper = LocalLinkWrapper.current
+            linkWrapper(element.href) {
+                Text(
+                    text = element.text,
+                    fontSize = InvoiceTypography.bodyLarge,
+                    color = style.primaryComposeColor,
+                )
+            }
+        }
         is InvoiceElement.Image -> {
-            Text(
-                text = "[Image: ${element.contentType}]",
-                fontSize = InvoiceTypography.bodySmall,
-                color = style.secondaryComposeColor,
-            )
+            val imageRenderer = LocalImageRenderer.current
+            imageRenderer(element.source, element.width, element.height, null)
         }
     }
 }

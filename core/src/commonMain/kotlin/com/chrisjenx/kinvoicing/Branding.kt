@@ -16,56 +16,17 @@ public data class Branding(
 /**
  * Visual and contact identity for a brand.
  *
- * @property logo Raw image bytes for the brand logo.
- * @property logoContentType MIME type of [logo] (e.g., "image/png").
+ * @property logo Image source for the brand logo, or null if none.
  */
 public data class BrandIdentity(
     val name: String,
-    val logo: ByteArray? = null,
-    val logoContentType: String? = null,
+    val logo: ImageSource? = null,
     val address: List<String> = emptyList(),
     val email: String? = null,
     val phone: String? = null,
     val website: String? = null,
     val tagline: String? = null,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is BrandIdentity) return false
-        return name == other.name &&
-            logo.contentEquals(other.logo) &&
-            logoContentType == other.logoContentType &&
-            address == other.address &&
-            email == other.email &&
-            phone == other.phone &&
-            website == other.website &&
-            tagline == other.tagline
-    }
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + (logo?.contentHashCode() ?: 0)
-        result = 31 * result + (logoContentType?.hashCode() ?: 0)
-        result = 31 * result + address.hashCode()
-        result = 31 * result + (email?.hashCode() ?: 0)
-        result = 31 * result + (phone?.hashCode() ?: 0)
-        result = 31 * result + (website?.hashCode() ?: 0)
-        result = 31 * result + (tagline?.hashCode() ?: 0)
-        return result
-    }
-
-    override fun toString(): String = buildString {
-        append("BrandIdentity(name=").append(name)
-        append(", logo=").append(logo?.let { "[${it.size} bytes]" } ?: "null")
-        append(", logoContentType=").append(logoContentType)
-        append(", address=").append(address)
-        append(", email=").append(email)
-        append(", phone=").append(phone)
-        append(", website=").append(website)
-        append(", tagline=").append(tagline)
-        append(")")
-    }
-}
+)
 
 /** Controls the placement of primary and secondary brand identities in the header. */
 public enum class BrandLayout {

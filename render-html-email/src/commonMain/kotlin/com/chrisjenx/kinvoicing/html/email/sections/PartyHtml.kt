@@ -18,11 +18,23 @@ internal fun FlowContent.renderParty(contact: ContactInfo, label: String, style:
         contact.address.forEach { line ->
             div { attributes["style"] = "font-size: 13px; color: ${style.textColor.toHexColor()};" ; +line }
         }
-        contact.email?.let {
-            div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+        contact.email?.let { email ->
+            div {
+                a {
+                    href = "mailto:$email"
+                    attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; text-decoration: none;"
+                    +email
+                }
+            }
         }
-        contact.phone?.let {
-            div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+        contact.phone?.let { phone ->
+            div {
+                a {
+                    href = "tel:$phone"
+                    attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; text-decoration: none;"
+                    +phone
+                }
+            }
         }
     }
 }

@@ -38,14 +38,17 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
         payment.routingNumber?.let {
             Text(text = "Routing: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
-        payment.paymentLink?.let {
+        payment.paymentLink?.let { link ->
+            val linkWrapper = LocalLinkWrapper.current
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            Text(
-                text = "Pay Online: $it",
-                fontSize = InvoiceTypography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = style.primaryComposeColor,
-            )
+            linkWrapper(link) {
+                Text(
+                    text = "Pay Online: $link",
+                    fontSize = InvoiceTypography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = style.primaryComposeColor,
+                )
+            }
         }
         payment.notes?.let {
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))

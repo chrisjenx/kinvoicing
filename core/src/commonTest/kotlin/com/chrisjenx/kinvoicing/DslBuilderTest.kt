@@ -350,6 +350,82 @@ class DslBuilderTest {
     }
 
     @Test
+    fun customSectionImage() {
+        val doc = invoice {
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary {}
+            custom("img") {
+                image(InvoiceFixtures.TEST_LOGO_PNG, "image/png", width = 50, height = 50)
+            }
+        }
+
+        val custom = doc.sections.filterIsInstance<InvoiceSection.Custom>().single()
+        val image = custom.content.single() as InvoiceElement.Image
+        assertEquals("image/png", image.source.contentType)
+        assertEquals(50, image.width)
+        assertEquals(50, image.height)
+        assertTrue(image.source.bytes.contentEquals(InvoiceFixtures.TEST_LOGO_PNG))
+    }
+
+    @Test
+    fun customSectionImageSource() {
+        val source = ImageSource.Bytes(InvoiceFixtures.TEST_LOGO_PNG, "image/jpeg")
+        val doc = invoice {
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary {}
+            custom("img") {
+                image(source, width = 80, height = 40)
+            }
+        }
+
+        val custom = doc.sections.filterIsInstance<InvoiceSection.Custom>().single()
+        val image = custom.content.single() as InvoiceElement.Image
+        assertEquals(source, image.source)
+        assertEquals(80, image.width)
+        assertEquals(40, image.height)
+    }
+
+    @Test
+    fun brandingLogoImageSource() {
+        val source = ImageSource.Bytes(InvoiceFixtures.TEST_LOGO_PNG, "image/png")
+        val doc = invoice {
+            header {
+                branding {
+                    primary {
+                        name("Test Corp")
+                        logo(source)
+                    }
+                }
+            }
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary {}
+        }
+
+        val header = doc.sections.filterIsInstance<InvoiceSection.Header>().single()
+        assertEquals(source, header.branding!!.primary.logo)
+    }
+
+    @Test
+    fun customSectionLink() {
+        val doc = invoice {
+            billTo { name("Test") }
+            lineItems { item("Item", amount = 1.0) }
+            summary {}
+            custom("links") {
+                link("Visit Our Site", "https://example.com")
+            }
+        }
+
+        val custom = doc.sections.filterIsInstance<InvoiceSection.Custom>().single()
+        val link = custom.content.single() as InvoiceElement.Link
+        assertEquals("Visit Our Site", link.text)
+        assertEquals("https://example.com", link.href)
+    }
+
+    @Test
     fun allFixturesBuildWithoutError() {
         InvoiceFixtures.all.forEachIndexed { i, doc ->
             assertTrue(doc.sections.isNotEmpty(), "Fixture $i has no sections")

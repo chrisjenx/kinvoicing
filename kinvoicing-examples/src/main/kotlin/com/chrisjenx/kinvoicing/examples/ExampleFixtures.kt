@@ -3,6 +3,7 @@ package com.chrisjenx.kinvoicing.examples
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.HeaderLayout
 import com.chrisjenx.kinvoicing.InvoiceDocument
+import com.chrisjenx.kinvoicing.InvoiceFixtures
 import com.chrisjenx.kinvoicing.InvoiceThemes
 import com.chrisjenx.kinvoicing.LogoPlacement
 import com.chrisjenx.kinvoicing.invoice
@@ -39,6 +40,7 @@ object InvoiceExamples {
             "theme-minimal" to themeMinimal,
             "theme-elegant" to themeElegant,
             "theme-fresh" to themeFresh,
+            "links-and-images" to linksAndImages,
         )
     }
 
@@ -587,6 +589,11 @@ object InvoiceExamples {
             tax("State Tax", percent = 8.0)
         }
     }
+
+    // ── Links & Images ──
+
+    /** Exercises every link type (website, email, phone, payment) and image path (logo, custom). */
+    val linksAndImages: InvoiceDocument = InvoiceFixtures.linksAndImages
 
     // ── Built-in Theme Showcase ──
 

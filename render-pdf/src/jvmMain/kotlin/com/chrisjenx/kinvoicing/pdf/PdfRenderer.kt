@@ -1,10 +1,13 @@
 package com.chrisjenx.kinvoicing.pdf
 
+import androidx.compose.runtime.CompositionLocalProvider
+import com.chrisjenx.compose2pdf.PdfLink
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceRenderer
 import com.chrisjenx.kinvoicing.compose.InvoiceSections
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
+import com.chrisjenx.kinvoicing.compose.LocalLinkWrapper
 import java.io.OutputStream
 
 /**
@@ -25,8 +28,14 @@ public class PdfRenderer(
             mode = config.renderMode,
             pagination = config.pagination,
         ) {
-            InvoiceStyleProvider(document.style) {
-                InvoiceSections(document.sections, document.currency)
+            CompositionLocalProvider(
+                LocalLinkWrapper provides { href, content ->
+                    PdfLink(href = href) { content() }
+                },
+            ) {
+                InvoiceStyleProvider(document.style) {
+                    InvoiceSections(document.sections, document.currency)
+                }
             }
         }
     }

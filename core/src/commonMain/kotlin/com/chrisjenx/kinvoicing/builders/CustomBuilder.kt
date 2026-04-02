@@ -35,6 +35,30 @@ public class CustomBuilder(private val key: String) {
         elements.add(InvoiceElement.Divider)
     }
 
+    /** Add a hyperlink with display [text] pointing to [href]. */
+    public fun link(text: String, href: String) {
+        elements.add(InvoiceElement.Link(text, href))
+    }
+
+    /** Add an inline image from raw bytes. */
+    public fun image(
+        data: ByteArray,
+        contentType: String = "image/png",
+        width: Int? = null,
+        height: Int? = null,
+    ) {
+        elements.add(InvoiceElement.Image(ImageSource.Bytes(data, contentType), width, height))
+    }
+
+    /** Add an inline image from an [ImageSource]. */
+    public fun image(
+        source: ImageSource,
+        width: Int? = null,
+        height: Int? = null,
+    ) {
+        elements.add(InvoiceElement.Image(source, width, height))
+    }
+
     /** Add a horizontal row of child elements. [weights] controls relative column widths. */
     public fun row(vararg weights: Float, init: CustomBuilder.() -> Unit) {
         val children = CustomBuilder(key).apply(init).elements.toList()

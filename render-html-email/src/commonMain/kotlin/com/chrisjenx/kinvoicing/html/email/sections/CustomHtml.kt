@@ -1,9 +1,8 @@
 package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.*
+import com.chrisjenx.kinvoicing.html.email.toDataUri
 import kotlinx.html.*
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal fun FlowContent.renderCustom(custom: InvoiceSection.Custom, style: InvoiceStyle) {
     div {
@@ -13,7 +12,6 @@ internal fun FlowContent.renderCustom(custom: InvoiceSection.Custom, style: Invo
     }
 }
 
-@OptIn(ExperimentalEncodingApi::class)
 internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceStyle) {
     when (element) {
         is InvoiceElement.Text -> {
@@ -42,13 +40,26 @@ internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceSt
                 }
             }
         }
+        is InvoiceElement.Link -> {
+            div {
+                a {
+                    href = element.href
+                    attributes["style"] = "font-size: 14px; color: ${style.primaryColor.toHexColor()}; text-decoration: none; font-weight: bold;"
+                    +element.text
+                }
+            }
+        }
         is InvoiceElement.Image -> {
-            val src = "data:${element.contentType};base64,${Base64.Default.encode(element.data)}"
+            val w = element.width
+            val h = element.height
+            val sizeStyle = buildString {
+                append("display: block;")
+                if (w != null) append(" max-width: ${w}px;")
+                if (h != null) append(" max-height: ${h}px;")
+            }
             img {
-                this.src = src
-                element.width?.let { width = it.toString() }
-                element.height?.let { height = it.toString() }
-                attributes["style"] = "display: block;"
+                src = element.source.toDataUri()
+                attributes["style"] = sizeStyle
             }
         }
     }
