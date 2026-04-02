@@ -1,0 +1,7 @@
+{% capture raw_html %}{% include examples/{{ include.name }}.html %}{% endcapture %}
+<div class="example-preview" style="border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin: 1rem 0; background: #fff;">
+  <iframe srcdoc="{{ raw_html | escape }}"
+          style="width: 100%; height: {{ include.height | default: '500px' }}; border: none;"
+          loading="lazy">
+  </iframe>
+</div>

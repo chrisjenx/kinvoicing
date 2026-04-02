@@ -8,6 +8,7 @@ compose2pdf = "1.0.0"
 pdfbox = "3.0.4"
 playwright = "1.49.0"
 jsoup = "1.18.3"
+dokka = "2.0.0"
 maven-publish = "0.30.0"
 
 [libraries]
@@ -26,4 +27,5 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }

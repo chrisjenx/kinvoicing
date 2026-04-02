@@ -35,6 +35,11 @@ kotlin-js-store/
 # Generated docs (CI regenerates these)
 docs/comparison/
 docs/index.html
+docs/_includes/examples/
+docs/api/
+docs/_site/
+docs/.jekyll-cache/
+docs/Gemfile.lock
 
 # Claude Code
 .claude/settings.json
