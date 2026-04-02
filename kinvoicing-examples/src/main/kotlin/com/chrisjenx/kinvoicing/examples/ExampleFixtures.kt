@@ -313,7 +313,7 @@ object InvoiceExamples {
         paymentInfo {
             bankName("First International Bank")
             accountNumber("****4242")
-            routingNumber("021000089")
+            routingNumber("000000000")
             paymentLink("https://pay.globalexports.com/inv-pay-001")
             notes("Wire transfers preferred for international orders.")
         }

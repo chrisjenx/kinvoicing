@@ -21,6 +21,7 @@ public class HtmlRenderer(
     override fun render(document: InvoiceDocument): String {
         val style = document.style
         val currency = document.currency
+        val bgColor = style.backgroundColor.toHexColor()
 
         return buildString {
             if (config.includeDoctype) appendLine("<!DOCTYPE html>")
@@ -33,13 +34,13 @@ public class HtmlRenderer(
                     }
                 }
                 body {
-                    attributes["style"] = "margin: 0; padding: 0; background-color: ${style.backgroundColor.toHexColor()}; font-family: ${style.fontFamily}, Arial, sans-serif;"
+                    attributes["style"] = "margin: 0; padding: 0; background-color: $bgColor; font-family: ${style.fontFamily}, Arial, sans-serif;"
                     table {
                         attributes["role"] = "presentation"
                         attributes["width"] = "100%"
                         attributes["cellpadding"] = "0"
                         attributes["cellspacing"] = "0"
-                        attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: ${style.backgroundColor.toHexColor()};"
+                        attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: $bgColor;"
                         tr {
                             td {
                                 attributes["style"] = "padding: 24px;"

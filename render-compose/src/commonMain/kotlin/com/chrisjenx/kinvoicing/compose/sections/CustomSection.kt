@@ -40,11 +40,7 @@ private fun ElementContent(element: InvoiceElement) {
         is InvoiceElement.Row -> {
             Row(modifier = Modifier.fillMaxWidth()) {
                 element.children.forEachIndexed { i, child ->
-                    val weight = if (element.weights.isNotEmpty() && i < element.weights.size) {
-                        element.weights[i]
-                    } else {
-                        1f
-                    }
+                    val weight = if (i < element.weights.size) element.weights[i] else 1f
                     Box(modifier = Modifier.weight(weight)) {
                         ElementContent(child)
                     }

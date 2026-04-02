@@ -37,4 +37,5 @@ docs/comparison/
 docs/index.html
 
 # Claude Code
+.claude/settings.json
 .claude/settings.local.json
