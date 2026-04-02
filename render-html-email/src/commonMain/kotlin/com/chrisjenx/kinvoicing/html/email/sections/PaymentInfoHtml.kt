@@ -5,7 +5,7 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-bottom: 24px; padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
+        attributes["style"] = "padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
         div {
             attributes["style"] = "font-size: 13px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;"
             +"Payment Information"
@@ -24,8 +24,8 @@ internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, 
                 attributes["style"] = "margin-top: 8px;"
                 a {
                     href = link
-                    attributes["style"] = "color: ${style.primaryColor.toHexColor()}; font-size: 14px; font-weight: bold;"
-                    +"Pay Online"
+                    attributes["style"] = "color: ${style.primaryColor.toHexColor()}; font-size: 14px; font-weight: bold; text-decoration: none;"
+                    +"Pay Online: $link"
                 }
             }
         }

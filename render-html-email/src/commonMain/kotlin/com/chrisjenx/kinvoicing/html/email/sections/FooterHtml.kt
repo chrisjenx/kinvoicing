@@ -5,7 +5,7 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderFooter(footer: InvoiceSection.Footer, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-top: 24px; padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
+        attributes["style"] = "padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
         footer.notes?.let {
             div {
                 attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"

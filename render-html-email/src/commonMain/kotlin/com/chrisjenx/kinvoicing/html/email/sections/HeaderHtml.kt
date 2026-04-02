@@ -4,7 +4,8 @@ import com.chrisjenx.kinvoicing.*
 import kotlinx.html.*
 
 internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
-    val borderStyle = if (style.accentBorder) "border-bottom: 3px solid ${style.primaryColor.toHexColor()};" else ""
+    // Compose: accent border has Spacer(md=12dp) then HorizontalDivider(3dp)
+    val borderStyle = if (style.accentBorder) "padding-bottom: 12px; border-bottom: 3px solid ${style.primaryColor.toHexColor()};" else ""
 
     when (style.headerLayout) {
         HeaderLayout.HORIZONTAL -> {
@@ -12,14 +13,14 @@ internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: Invo
                 attributes["width"] = "100%"
                 attributes["cellpadding"] = "0"
                 attributes["cellspacing"] = "0"
-                attributes["style"] = "margin-bottom: 24px; $borderStyle"
+                attributes["style"] = borderStyle
                 tr {
                     td {
-                        attributes["style"] = "vertical-align: top; padding-bottom: 16px;"
+                        attributes["style"] = "vertical-align: top;"
                         header.branding?.let { renderBranding(it, style) }
                     }
                     td {
-                        attributes["style"] = "vertical-align: top; text-align: right; padding-bottom: 16px;"
+                        attributes["style"] = "vertical-align: top; text-align: right;"
                         renderInvoiceDetails(header, style)
                     }
                 }
@@ -32,7 +33,7 @@ internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: Invo
                 LogoPlacement.RIGHT -> "right"
             }
             div {
-                attributes["style"] = "margin-bottom: 24px; text-align: $textAlign; $borderStyle"
+                attributes["style"] = "text-align: $textAlign; $borderStyle"
                 header.branding?.let { renderBranding(it, style) }
                 div {
                     attributes["style"] = "margin-top: 16px; text-align: right;"

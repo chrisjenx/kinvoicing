@@ -19,18 +19,26 @@ internal fun FlowContent.renderLineItems(
     val borderStyle = if (style.accentBorder) "border-left: 4px solid $primaryHex;" else ""
     val cellBorder = if (style.showGridLines) "border: 1px solid ${style.borderColor.toHexColor()};" else "border-bottom: 1px solid ${style.dividerColor.toHexColor()};"
 
+    // Compute column width percentages: DESCRIPTION gets weight 2, others get weight 1
+    val totalWeight = lineItems.columns.sumOf { if (it.column == LineItemColumn.DESCRIPTION) 2 else 1 }
+    val columnWidths = lineItems.columns.map { col ->
+        val weight = if (col.column == LineItemColumn.DESCRIPTION) 2 else 1
+        "${(weight * 100 / totalWeight)}%"
+    }
+
     table {
         attributes["width"] = "100%"
-        attributes["cellpadding"] = "8"
+        attributes["cellpadding"] = "0"
         attributes["cellspacing"] = "0"
-        attributes["style"] = "margin-bottom: 24px; border-collapse: collapse; $borderStyle"
+        attributes["style"] = "border-collapse: collapse; $borderStyle"
 
         thead {
             tr {
-                lineItems.columns.forEach { col ->
+                lineItems.columns.forEachIndexed { i, col ->
                     th {
                         val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right;" else "text-align: left;"
-                        attributes["style"] = "$align font-size: 12px; font-weight: bold; text-transform: uppercase; color: $secondaryHex; background-color: ${primaryHex}10; padding: 10px 8px; $cellBorder"
+                        attributes["width"] = columnWidths[i]
+                        attributes["style"] = "$align font-size: 12px; font-weight: bold; text-transform: uppercase; color: $secondaryHex; background-color: ${primaryHex}10; padding: 8px; $cellBorder"
                         +col.label
                     }
                 }
@@ -46,7 +54,7 @@ internal fun FlowContent.renderLineItems(
                             val text = col.column.textFor(item.description, item.quantity, item.unitPrice, item.amount, currency)
                             val amountColor = if (col.column == LineItemColumn.AMOUNT && item.amount < 0) negativeHex else textHex
                             val align = if (col.column == LineItemColumn.AMOUNT) "text-align: right; " else ""
-                            attributes["style"] = "font-size: 14px; color: $amountColor; ${align}padding: 10px 8px; $cellBorder $bgColor"
+                            attributes["style"] = "font-size: 14px; color: $amountColor; ${align}padding: 8px; $cellBorder $bgColor"
                             +text
                         }
                     }

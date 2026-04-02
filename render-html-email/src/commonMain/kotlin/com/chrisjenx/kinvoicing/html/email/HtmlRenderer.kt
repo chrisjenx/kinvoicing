@@ -39,7 +39,7 @@ public class HtmlRenderer(
                         attributes["width"] = "100%"
                         attributes["cellpadding"] = "0"
                         attributes["cellspacing"] = "0"
-                        attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: #FFFFFF;"
+                        attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: ${style.backgroundColor.toHexColor()};"
                         tr {
                             td {
                                 attributes["style"] = "padding: 24px;"
@@ -51,11 +51,15 @@ public class HtmlRenderer(
                                         val next = sections[i + 1]
                                         if (next is InvoiceSection.BillTo) {
                                             renderPartiesSideBySide(section, next, style)
+                                            // 16px spacer matching Compose's Spacer(lg)
+                                            div { attributes["style"] = "height: 16px;" }
                                             i += 2
                                             continue
                                         }
                                     }
                                     renderSection(section, style, currency)
+                                    // 16px spacer matching Compose's Spacer(lg)
+                                    div { attributes["style"] = "height: 16px;" }
                                     i++
                                 }
                             }
@@ -75,16 +79,16 @@ public class HtmlRenderer(
             attributes["width"] = "100%"
             attributes["cellpadding"] = "0"
             attributes["cellspacing"] = "0"
-            attributes["style"] = "margin-bottom: 16px;"
             tr {
                 td {
-                    attributes["width"] = "50%"
-                    attributes["style"] = "vertical-align: top;"
+                    attributes["style"] = "vertical-align: top; width: 50%;"
                     renderParty(from.contact, "From", style)
                 }
                 td {
-                    attributes["width"] = "50%"
-                    attributes["style"] = "vertical-align: top;"
+                    attributes["style"] = "width: 16px;"
+                }
+                td {
+                    attributes["style"] = "vertical-align: top; width: 50%;"
                     renderParty(to.contact, "Bill To", style)
                 }
             }

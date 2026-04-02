@@ -6,7 +6,7 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderParty(contact: ContactInfo, label: String, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-bottom: 16px;"
+        attributes["style"] = "padding-bottom: 8px;"
         div {
             attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"
             +label

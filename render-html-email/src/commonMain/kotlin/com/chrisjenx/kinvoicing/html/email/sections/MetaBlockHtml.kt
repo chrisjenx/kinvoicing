@@ -5,7 +5,7 @@ import kotlinx.html.*
 
 internal fun FlowContent.renderMetaBlock(metaBlock: InvoiceSection.MetaBlock, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-bottom: 16px; padding: 12px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
+        attributes["style"] = "padding: 12px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
         metaBlock.entries.forEach { entry ->
             div {
                 attributes["style"] = "font-size: 13px; margin-bottom: 4px;"

@@ -7,7 +7,6 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal fun FlowContent.renderCustom(custom: InvoiceSection.Custom, style: InvoiceStyle) {
     div {
-        attributes["style"] = "margin-bottom: 16px;"
         custom.content.forEach { element ->
             renderElement(element, style)
         }
@@ -27,6 +26,7 @@ internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceSt
             hr { attributes["style"] = "border: none; border-top: 1px solid ${style.borderColor.toHexColor()}; margin: 8px 0;" }
         }
         is InvoiceElement.Row -> {
+            val totalWeight = if (element.weights.isNotEmpty()) element.weights.sum() else element.children.size.toFloat()
             table {
                 attributes["width"] = "100%"
                 attributes["cellpadding"] = "0"
@@ -34,9 +34,8 @@ internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceSt
                 tr {
                     element.children.forEachIndexed { i, child ->
                         td {
-                            if (element.weights.isNotEmpty() && i < element.weights.size) {
-                                attributes["width"] = "${(element.weights[i] * 100).toInt()}%"
-                            }
+                            val weight = if (element.weights.isNotEmpty() && i < element.weights.size) element.weights[i] else 1f
+                            attributes["width"] = "${(weight / totalWeight * 100).toInt()}%"
                             renderElement(child, style)
                         }
                     }
