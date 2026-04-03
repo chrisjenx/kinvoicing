@@ -2,6 +2,7 @@
 
 Kotlin Multiplatform invoicing library with a sealed IR, type-safe DSL builder, and four renderers (Compose, PDF, HTML, Email HTML).
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.chrisjenx.kinvoicing/core.svg)](https://central.sonatype.com/namespace/com.chrisjenx.kinvoicing)
 [![Build](https://github.com/chrisjenx/kinvoicing/actions/workflows/build.yml/badge.svg)](https://github.com/chrisjenx/kinvoicing/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org)
@@ -13,13 +14,20 @@ Kotlin Multiplatform invoicing library with a sealed IR, type-safe DSL builder, 
 
 ```kotlin
 dependencies {
-    implementation("com.chrisjenx.kinvoicing:core:<version>")
+    // Core IR + DSL (all KMP targets)
+    implementation("com.chrisjenx.kinvoicing:core:1.0.0")
 
-    // Pick your renderer(s):
-    implementation("com.chrisjenx.kinvoicing:render-compose:<version>")
-    implementation("com.chrisjenx.kinvoicing:render-html-email:<version>")  // Email-safe HTML
-    implementation("com.chrisjenx.kinvoicing:render-html:<version>")        // Compose → HTML (via compose2pdf)
-    implementation("com.chrisjenx.kinvoicing:render-pdf:<version>")
+    // Renderers — pick the ones you need:
+
+    // Compose UI (JVM, Android, iOS, wasmJs)
+    implementation("com.chrisjenx.kinvoicing:render-compose:1.0.0")
+
+    // Email-safe HTML — inline styles, table layout (all KMP targets)
+    implementation("com.chrisjenx.kinvoicing:render-html-email:1.0.0")
+
+    // JVM only:
+    implementation("com.chrisjenx.kinvoicing:render-pdf:1.0.0")   // PDF via compose2pdf
+    implementation("com.chrisjenx.kinvoicing:render-html:1.0.0")  // Print-quality HTML via compose2pdf
 }
 ```
 

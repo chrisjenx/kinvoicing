@@ -10,14 +10,20 @@ Add the core module and the renderer(s) you need:
 
 ```kotlin
 dependencies {
-    // Required
-    implementation("com.chrisjenx.kinvoicing:core:<version>")
+    // Core IR + DSL (all KMP targets)
+    implementation("com.chrisjenx.kinvoicing:core:1.0.0")
 
-    // Pick your renderer(s):
-    implementation("com.chrisjenx.kinvoicing:render-pdf:<version>")
-    implementation("com.chrisjenx.kinvoicing:render-html-email:<version>")
-    implementation("com.chrisjenx.kinvoicing:render-compose:<version>")
-    implementation("com.chrisjenx.kinvoicing:render-html:<version>")
+    // Renderers — pick the ones you need:
+
+    // Compose UI (JVM, Android, iOS, wasmJs)
+    implementation("com.chrisjenx.kinvoicing:render-compose:1.0.0")
+
+    // Email-safe HTML — inline styles, table layout (all KMP targets)
+    implementation("com.chrisjenx.kinvoicing:render-html-email:1.0.0")
+
+    // JVM only:
+    implementation("com.chrisjenx.kinvoicing:render-pdf:1.0.0")   // PDF via compose2pdf
+    implementation("com.chrisjenx.kinvoicing:render-html:1.0.0")  // Print-quality HTML via compose2pdf
 }
 ```
 
