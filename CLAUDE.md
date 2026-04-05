@@ -17,6 +17,7 @@ Kotlin Multiplatform invoicing library with sealed IR, DSL builder, and four ren
 ./gradlew :kinvoicing-fidelity-test:test     # compose2pdf fidelity tests (JVM only)
 ./gradlew :kinvoicing-docs:run               # Generate docs site assets (section preview HTML)
 cd docs && bundle exec jekyll serve           # Run docs site locally
+gh workflow run release.yml -f version=X.Y.Z  # Trigger Maven Central release + GitHub Release + version bump
 ```
 
 Fidelity report after tests: `kinvoicing-fidelity-test/build/reports/fidelity/index.html`
@@ -39,6 +40,8 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 
 **Dependency flow:** core → render-compose → render-pdf / render-html (both via compose2pdf) ; core → render-html-email (standalone)
 
+**⚠ render-html does NOT depend on core.** Shared utilities from core must be duplicated in render-html or made `public`. render-html-email DOES depend on core.
+
 ### Platform Targets
 
 | Module | Targets |
@@ -58,6 +61,7 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - **compose2pdf** (`com.chrisjenx:compose2pdf:1.0.0`) is an external dependency providing `renderToPdf`, `PdfPageConfig`, `RenderMode`, `PdfLink`. Its `PdfLinkAnnotation` is `internal` — render-html defines its own link types for the HTML pipeline.
 - **Image decoding expect/actual:** `decodeImageBytes()` in render-compose uses Skia on JVM/iOS/wasmJs and `BitmapFactory` on Android. Actuals live in `jvmMain`, `nativeMain`, `wasmJsMain`, `androidMain`.
 - **runBlockingCompat expect/actual:** Wraps `runBlocking` for JVM/native/Android; throws on wasmJs (wasmJs consumers use Compose renderer path via `painterResource`, not `bytes`).
+- **URL/CSS sanitization:** `core/.../util/Sanitize.kt` provides `requireSafeUrl` (public), `sanitizeFontFamily` (internal), `requireFinite` (internal). render-html has its own `sanitizeUrl` in `SvgToSemanticHtmlConverter.kt` since it can't import from core.
 
 ## Code Style
 
@@ -65,6 +69,7 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - render-compose has platform-specific source sets: `jvmMain`, `nativeMain`, `wasmJsMain`, `androidMain` for image decoding and blocking compat
 - render-html/examples/fidelity-test are JVM-only modules
 - `explicitApi()` enabled on published modules (core, render-*)
+- `explicitApi()` + KMP module boundaries: `internal` functions in core are NOT visible to render-* modules. Cross-module utilities must be `public`.
 - Test fixtures in `core`: `InvoiceFixtures.all` → `List<InvoiceDocument>` (unnamed, 7 fixtures)
 - Example fixtures in `kinvoicing-examples`: `InvoiceExamples.all` → `List<Pair<String, InvoiceDocument>>` (named, 15 fixtures)
 - Dependencies managed via `gradle/libs.versions.toml` version catalog; reference as `libs.<name>`
