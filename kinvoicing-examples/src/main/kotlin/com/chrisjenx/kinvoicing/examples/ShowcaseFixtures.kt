@@ -1,9 +1,11 @@
 package com.chrisjenx.kinvoicing.examples
 
+import com.chrisjenx.kinvoicing.ArgbColor
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.HeaderLayout
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceFixtures
+import com.chrisjenx.kinvoicing.InvoiceStatus
 import com.chrisjenx.kinvoicing.InvoiceThemes
 import com.chrisjenx.kinvoicing.LogoPlacement
 import com.chrisjenx.kinvoicing.invoice
@@ -46,6 +48,12 @@ object InvoiceShowcases {
             "branding-logo" to brandingLogo,
             "branding-dual-logo" to brandingDualLogo,
             "branding-stacked-logo" to brandingStackedLogo,
+            // Status display modes
+            "status-badge" to statusBadge,
+            "status-banner" to statusBanner,
+            "status-watermark" to statusWatermark,
+            "status-stamp" to statusStamp,
+            "status-custom" to statusCustom,
             // Material3-style color schemes
             "m3-purple" to m3Purple,
             "m3-blue" to m3Blue,
@@ -586,6 +594,100 @@ object InvoiceShowcases {
         lineItems {
             columns("Description", "Qty", "Rate", "Amount")
             item("Consulting Services", qty = 10, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    // ── Status Display Modes ──
+
+    /** Paid invoice with badge pill in header. */
+    val statusBadge: InvoiceDocument = invoice {
+        status(InvoiceStatus.Paid)
+        header {
+            branding { primary { name("Acme Corp") } }
+            invoiceNumber("INV-2026-0001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Consulting", qty = 10, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    /** Overdue invoice with full-width banner. */
+    val statusBanner: InvoiceDocument = invoice {
+        status {
+            overdue()
+            banner()
+        }
+        header {
+            branding { primary { name("Acme Corp") } }
+            invoiceNumber("INV-2026-0001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Consulting", qty = 10, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    /** Voided invoice with diagonal watermark overlay. */
+    val statusWatermark: InvoiceDocument = invoice {
+        status {
+            voided()
+            watermark()
+        }
+        header {
+            branding { primary { name("Acme Corp") } }
+            invoiceNumber("INV-2026-0001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Consulting", qty = 10, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    /** Draft invoice with rotated stamp overlay. */
+    val statusStamp: InvoiceDocument = invoice {
+        status {
+            draft()
+            stamp()
+        }
+        header {
+            branding { primary { name("Acme Corp") } }
+            invoiceNumber("INV-2026-0001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Consulting", qty = 10, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    /** Custom status with banner display. */
+    val statusCustom: InvoiceDocument = invoice {
+        status {
+            custom("PENDING APPROVAL", 0xFFF59E0B)
+            banner()
+        }
+        header {
+            branding { primary { name("Acme Corp") } }
+            invoiceNumber("INV-2026-0001")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Consulting", qty = 10, unitPrice = 150.0)
         }
         summary { currency("USD") }
     }

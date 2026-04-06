@@ -251,6 +251,42 @@ doc.toHtml(HtmlRenderConfig(
 
 Output uses inline styles and table layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, etc.).
 
+## Invoice Status
+
+Show the invoice's state visually with 7 predefined statuses and 5 display modes:
+
+```kotlin
+// Simple — badge pill in header
+val doc = invoice {
+    status(InvoiceStatus.Paid)
+    // ... sections
+}
+
+// With display mode — diagonal watermark
+val doc = invoice {
+    status {
+        voided()
+        watermark()
+    }
+    // ... sections
+}
+
+// Custom status
+val doc = invoice {
+    status {
+        custom("PENDING APPROVAL", 0xFFF59E0B)
+        banner()
+    }
+    // ... sections
+}
+```
+
+**Predefined statuses:** `Draft` (gray), `Sent` (blue), `Paid` (green), `Overdue` (red), `Void` (gray), `Uncollectable` (stone), `Refunded` (violet), `Custom(label, color)`.
+
+**Display modes:** `Badge` (default pill), `Banner` (full-width bar), `Watermark` (diagonal text), `Stamp` (rotated seal), `None` (data only).
+
+All display modes work across Compose, PDF, HTML, and email HTML renderers.
+
 ## Advanced Features
 
 ### Adjustments
