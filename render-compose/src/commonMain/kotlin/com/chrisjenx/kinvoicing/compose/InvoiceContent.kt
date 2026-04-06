@@ -53,17 +53,7 @@ public fun InvoiceSections(document: InvoiceDocument) {
         LocalInvoiceStatus provides status,
         LocalStatusDisplay provides display,
     ) {
-        Box {
-            InvoiceSectionsColumn(document)
-            // Watermark/Stamp overlay on top of content
-            if (status != null) {
-                when (display) {
-                    is StatusDisplay.Watermark -> StatusWatermark(status, display)
-                    is StatusDisplay.Stamp -> StatusStamp(status, display)
-                    else -> {} // Badge/Banner/None handled inside column or header
-                }
-            }
-        }
+        InvoiceSectionsColumn(document)
     }
 }
 
@@ -80,11 +70,25 @@ public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
 @Composable
 private fun InvoiceSectionsColumn(document: InvoiceDocument) {
     val status = document.status
+    val display = document.statusDisplay
     PdfColumn(modifier = Modifier.fillMaxWidth()) {
-        // Banner as first child in layout flow
-        if (status != null && document.statusDisplay is StatusDisplay.Banner) {
-            StatusBanner(status, document.style)
-            Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+        // Banner / Watermark / Stamp as first child in layout flow
+        if (status != null) {
+            when (display) {
+                is StatusDisplay.Banner -> {
+                    StatusBanner(status, document.style)
+                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                }
+                is StatusDisplay.Watermark -> {
+                    StatusWatermark(status, display)
+                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                }
+                is StatusDisplay.Stamp -> {
+                    StatusStamp(status, display)
+                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                }
+                else -> {} // Badge/None handled in header or not at all
+            }
         }
         InvoiceSectionsContent(document.sections, document.currency)
     }
