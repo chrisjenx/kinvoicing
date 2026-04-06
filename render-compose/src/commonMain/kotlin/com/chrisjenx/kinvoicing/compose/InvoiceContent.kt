@@ -71,24 +71,19 @@ public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
 private fun InvoiceSectionsColumn(document: InvoiceDocument) {
     val status = document.status
     val display = document.statusDisplay
-    PdfColumn(modifier = Modifier.fillMaxWidth()) {
-        // Banner / Watermark / Stamp as first child in layout flow
-        if (status != null) {
-            when (display) {
-                is StatusDisplay.Banner -> {
-                    StatusBanner(status, document.style)
-                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                }
-                is StatusDisplay.Watermark -> {
-                    StatusWatermark(status, display)
-                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                }
-                is StatusDisplay.Stamp -> {
-                    StatusStamp(status, display)
-                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                }
-                else -> {} // Badge/None handled in header or not at all
-            }
+
+    // Watermark/Stamp draw on top of content via drawWithContent modifier
+    val overlayModifier = when {
+        status != null && display is StatusDisplay.Watermark -> statusWatermarkModifier(status, display)
+        status != null && display is StatusDisplay.Stamp -> statusStampModifier(status, display)
+        else -> Modifier
+    }
+
+    PdfColumn(modifier = Modifier.fillMaxWidth().then(overlayModifier)) {
+        // Banner as first child in layout flow
+        if (status != null && display is StatusDisplay.Banner) {
+            StatusBanner(status, document.style)
+            Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
         }
         InvoiceSectionsContent(document.sections, document.currency)
     }

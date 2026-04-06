@@ -1,6 +1,5 @@
 package com.chrisjenx.kinvoicing.compose.sections
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,7 +7,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -70,12 +72,14 @@ public fun StatusBanner(status: InvoiceStatus, style: InvoiceStyle) {
 }
 
 /**
- * Large diagonal text drawn across a full-width Canvas.
- * Uses [Canvas] + [drawText] with rotation so it renders correctly
- * in both interactive Compose and compose2pdf's vector SVG pipeline.
+ * Returns a [Modifier] that draws large diagonal watermark text on top of the element's content.
+ *
+ * Uses [drawWithContent] so the watermark is drawn AFTER child content (sections),
+ * appearing as a true overlay. Works in compose2pdf's vector SVG pipeline because
+ * it uses canvas draw operations (not graphicsLayer).
  */
 @Composable
-public fun StatusWatermark(status: InvoiceStatus, display: StatusDisplay.Watermark) {
+public fun statusWatermarkModifier(status: InvoiceStatus, display: StatusDisplay.Watermark): Modifier {
     val color = status.color.toComposeColor().copy(alpha = display.opacity)
     val textMeasurer = rememberTextMeasurer()
     val textStyle = TextStyle(
@@ -84,13 +88,10 @@ public fun StatusWatermark(status: InvoiceStatus, display: StatusDisplay.Waterma
         color = color,
         letterSpacing = 8.sp,
     )
+    val measured = textMeasurer.measure(status.label, textStyle)
 
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-    ) {
-        val measured = textMeasurer.measure(status.label, textStyle)
+    return Modifier.drawWithContent {
+        drawContent()
         rotate(degrees = -30f, pivot = Offset(size.width / 2, size.height / 2)) {
             drawText(
                 textLayoutResult = measured,
@@ -104,11 +105,13 @@ public fun StatusWatermark(status: InvoiceStatus, display: StatusDisplay.Waterma
 }
 
 /**
- * Rotated stamp/seal drawn via [Canvas] in the upper-right area.
- * Uses canvas rotation so it renders in compose2pdf's vector SVG pipeline.
+ * Returns a [Modifier] that draws a rotated stamp/seal in the top-right of the element.
+ *
+ * Uses [drawWithContent] so the stamp is drawn AFTER child content (sections),
+ * appearing as a true overlay. Works in compose2pdf's vector SVG pipeline.
  */
 @Composable
-public fun StatusStamp(status: InvoiceStatus, display: StatusDisplay.Stamp) {
+public fun statusStampModifier(status: InvoiceStatus, display: StatusDisplay.Stamp): Modifier {
     val color = status.color.toComposeColor().copy(alpha = display.opacity)
     val textMeasurer = rememberTextMeasurer()
     val textStyle = TextStyle(
@@ -117,41 +120,34 @@ public fun StatusStamp(status: InvoiceStatus, display: StatusDisplay.Stamp) {
         color = color,
         letterSpacing = 2.sp,
     )
+    val measured = textMeasurer.measure(status.label, textStyle)
+    val borderPadH = 20f
+    val borderPadV = 10f
 
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.TopEnd,
-    ) {
-        Canvas(
-            modifier = Modifier
-                .padding(top = 8.dp, end = 16.dp)
-                .width(200.dp)
-                .height(60.dp),
-        ) {
-            val measured = textMeasurer.measure(status.label, textStyle)
-            val borderPadH = 20.dp.toPx()
-            val borderPadV = 10.dp.toPx()
-            val rectW = measured.size.width + borderPadH * 2
-            val rectH = measured.size.height + borderPadV * 2
+    return Modifier.drawWithContent {
+        drawContent()
+        val rectW = measured.size.width + borderPadH * 2 * density
+        val rectH = measured.size.height + borderPadV * 2 * density
+        val stampX = size.width - rectW - 32 * density
+        val stampY = 8 * density
+        val cx = stampX + rectW / 2
+        val cy = stampY + rectH / 2
 
-            rotate(degrees = -15f, pivot = Offset(size.width / 2, size.height / 2)) {
-                val left = (size.width - rectW) / 2
-                val top = (size.height - rectH) / 2
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(left, top),
-                    size = androidx.compose.ui.geometry.Size(rectW, rectH),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx()),
-                    style = Stroke(width = 3.dp.toPx()),
-                )
-                drawText(
-                    textLayoutResult = measured,
-                    topLeft = Offset(
-                        x = left + borderPadH,
-                        y = top + borderPadV,
-                    ),
-                )
-            }
+        rotate(degrees = -15f, pivot = Offset(cx, cy)) {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(stampX, stampY),
+                size = Size(rectW, rectH),
+                cornerRadius = CornerRadius(8 * density),
+                style = Stroke(width = 3 * density),
+            )
+            drawText(
+                textLayoutResult = measured,
+                topLeft = Offset(
+                    x = stampX + borderPadH * density,
+                    y = stampY + borderPadV * density,
+                ),
+            )
         }
     }
 }
