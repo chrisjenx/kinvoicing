@@ -7,4 +7,6 @@ public data class InvoiceDocument(
     val sections: List<InvoiceSection>,
     val style: InvoiceStyle = InvoiceStyle(),
     val currency: String = "USD",
+    val status: InvoiceStatus? = null,
+    val statusDisplay: StatusDisplay = StatusDisplay.Badge,
 )

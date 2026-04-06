@@ -3,6 +3,8 @@ package com.chrisjenx.kinvoicing.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.sections.*
@@ -23,12 +25,33 @@ public fun InvoiceContent(
     val currency = document.currency
 
     InvoiceStyleProvider(style) {
-        Column(
-            modifier = modifier
-                .background(style.backgroundComposeColor)
-                .padding(InvoiceSpacing.xl)
+        CompositionLocalProvider(
+            LocalInvoiceStatus provides document.status,
+            LocalStatusDisplay provides document.statusDisplay,
         ) {
-            InvoiceSections(document.sections, currency)
+            Box(
+                modifier = modifier
+                    .background(style.backgroundComposeColor),
+            ) {
+                Column(
+                    modifier = Modifier.padding(InvoiceSpacing.xl),
+                ) {
+                    // Banner renders before sections
+                    if (document.status != null && document.statusDisplay is StatusDisplay.Banner) {
+                        StatusBanner(document.status!!, style)
+                        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                    }
+                    InvoiceSections(document.sections, currency)
+                }
+                // Watermark/Stamp overlay on top of content
+                if (document.status != null) {
+                    when (val display = document.statusDisplay) {
+                        is StatusDisplay.Watermark -> StatusWatermark(document.status!!, display)
+                        is StatusDisplay.Stamp -> StatusStamp(document.status!!, display)
+                        else -> {} // Badge/Banner/None handled elsewhere
+                    }
+                }
+            }
         }
     }
 }

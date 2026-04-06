@@ -12,6 +12,8 @@ import com.chrisjenx.kinvoicing.*
 public class InvoiceBuilder {
     private var style: InvoiceStyle = InvoiceStyle()
     private var currencyCode: String = "USD"
+    private var status: InvoiceStatus? = null
+    private var statusDisplay: StatusDisplay = StatusDisplay.Badge
     private var header: InvoiceSection.Header? = null
     private var billFrom: InvoiceSection.BillFrom? = null
     private var billTo: InvoiceSection.BillTo? = null
@@ -26,6 +28,18 @@ public class InvoiceBuilder {
     public fun currency(value: String) {
         requireValidCurrencyCode(value)
         currencyCode = value
+    }
+
+    /** Set the invoice status directly (uses default [StatusDisplay.Badge] display). */
+    public fun status(value: InvoiceStatus) {
+        status = value
+    }
+
+    /** Configure the invoice status and its visual display mode. */
+    public fun status(init: StatusBuilder.() -> Unit) {
+        val builder = StatusBuilder().apply(init)
+        status = builder.buildStatus()
+        statusDisplay = builder.buildDisplay()
     }
 
     /** Configure the visual style (colors, fonts, layout options). */
@@ -100,6 +114,12 @@ public class InvoiceBuilder {
         customSections.forEach { sections.add(it) }
 
         val effectiveCurrency = summary?.currency ?: currencyCode
-        return InvoiceDocument(sections = sections, style = style, currency = effectiveCurrency)
+        return InvoiceDocument(
+            sections = sections,
+            style = style,
+            currency = effectiveCurrency,
+            status = status,
+            statusDisplay = statusDisplay,
+        )
     }
 }

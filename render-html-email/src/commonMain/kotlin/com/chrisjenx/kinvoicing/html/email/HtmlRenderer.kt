@@ -6,6 +6,16 @@ import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 
 /**
+ * Checks whether [StatusDisplay] requires a top-of-document banner.
+ * Watermark and Stamp fall back to Banner in HTML email because
+ * CSS transforms are unreliable across email clients.
+ */
+private fun StatusDisplay.rendersBanner(): Boolean = when (this) {
+    is StatusDisplay.Banner, is StatusDisplay.Watermark, is StatusDisplay.Stamp -> true
+    is StatusDisplay.Badge, is StatusDisplay.None -> false
+}
+
+/**
  * Renders an [InvoiceDocument] to email-safe HTML.
  *
  * All styling is inline (no `<style>` blocks). Layout is table-based for
@@ -45,6 +55,11 @@ public class HtmlRenderer(
                         tr {
                             td {
                                 attributes["style"] = "padding: 24px;"
+                                val status = document.status
+                                if (status != null && document.statusDisplay.rendersBanner()) {
+                                    renderStatusBanner(status, style)
+                                    div { attributes["style"] = "height: 16px;" }
+                                }
                                 val sections = document.sections
                                 val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
                                 var i = 0
@@ -60,7 +75,7 @@ public class HtmlRenderer(
                                             continue
                                         }
                                     }
-                                    renderSection(section, style, currency, branding)
+                                    renderSection(section, style, currency, branding, document.status, document.statusDisplay)
                                     // 16px spacer matching Compose's Spacer(lg)
                                     div { attributes["style"] = "height: 16px;" }
                                     i++
@@ -103,9 +118,11 @@ public class HtmlRenderer(
         style: InvoiceStyle,
         currency: String,
         branding: Branding? = null,
+        status: InvoiceStatus? = null,
+        statusDisplay: StatusDisplay = StatusDisplay.Badge,
     ) {
         when (section) {
-            is InvoiceSection.Header -> renderHeader(section, style)
+            is InvoiceSection.Header -> renderHeader(section, style, status, statusDisplay)
             is InvoiceSection.BillFrom -> renderParty(section.contact, "From", style)
             is InvoiceSection.BillTo -> renderParty(section.contact, "Bill To", style)
             is InvoiceSection.LineItems -> renderLineItems(section, style, currency)

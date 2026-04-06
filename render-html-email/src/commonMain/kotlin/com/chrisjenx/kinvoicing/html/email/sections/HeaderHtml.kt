@@ -5,7 +5,12 @@ import com.chrisjenx.kinvoicing.html.email.toDataUri
 import com.chrisjenx.kinvoicing.util.requireSafeUrl
 import kotlinx.html.*
 
-internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
+internal fun FlowContent.renderHeader(
+    header: InvoiceSection.Header,
+    style: InvoiceStyle,
+    status: InvoiceStatus? = null,
+    statusDisplay: StatusDisplay = StatusDisplay.Badge,
+) {
     // Compose: accent border has Spacer(md=12dp) then HorizontalDivider(3dp)
     val borderStyle = if (style.accentBorder) "padding-bottom: 12px; border-bottom: 3px solid ${style.primaryColor.toHexColor()};" else ""
 
@@ -23,7 +28,7 @@ internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: Invo
                     }
                     td {
                         attributes["style"] = "vertical-align: top; text-align: right;"
-                        renderInvoiceDetails(header, style)
+                        renderInvoiceDetails(header, style, status, statusDisplay)
                     }
                 }
             }
@@ -39,19 +44,31 @@ internal fun FlowContent.renderHeader(header: InvoiceSection.Header, style: Invo
                 header.branding?.let { renderBranding(it, style) }
                 div {
                     attributes["style"] = "margin-top: 16px; text-align: right;"
-                    renderInvoiceDetails(header, style)
+                    renderInvoiceDetails(header, style, status, statusDisplay)
                 }
             }
         }
     }
 }
 
-private fun FlowContent.renderInvoiceDetails(header: InvoiceSection.Header, style: InvoiceStyle) {
+private fun FlowContent.renderInvoiceDetails(
+    header: InvoiceSection.Header,
+    style: InvoiceStyle,
+    status: InvoiceStatus?,
+    statusDisplay: StatusDisplay,
+) {
     header.invoiceNumber?.let {
         div {
             attributes["style"] = "font-size: 20px; font-weight: bold; color: ${style.primaryColor.toHexColor()};"
             +it
+            if (status != null && statusDisplay is StatusDisplay.Badge) {
+                renderStatusBadge(status)
+            }
         }
+    }
+    // Badge without invoice number: render standalone
+    if (header.invoiceNumber == null && status != null && statusDisplay is StatusDisplay.Badge) {
+        div { renderStatusBadge(status) }
     }
     header.issueDate?.let {
         div {
