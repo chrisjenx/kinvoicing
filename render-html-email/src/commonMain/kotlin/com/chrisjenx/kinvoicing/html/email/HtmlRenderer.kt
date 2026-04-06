@@ -5,15 +5,12 @@ import com.chrisjenx.kinvoicing.html.email.sections.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 
-/**
- * Checks whether [StatusDisplay] requires a top-of-document banner.
- * Watermark and Stamp fall back to Banner in HTML email because
- * CSS transforms are unreliable across email clients.
- */
-private fun StatusDisplay.rendersBanner(): Boolean = when (this) {
-    is StatusDisplay.Banner, is StatusDisplay.Watermark, is StatusDisplay.Stamp -> true
-    is StatusDisplay.Badge, is StatusDisplay.None -> false
-}
+/** Whether this display mode renders as a top-of-document banner. */
+private fun StatusDisplay.isBanner(): Boolean = this is StatusDisplay.Banner
+
+/** Whether this display mode renders as an overlay (watermark or stamp). */
+private fun StatusDisplay.isOverlay(): Boolean =
+    this is StatusDisplay.Watermark || this is StatusDisplay.Stamp
 
 /**
  * Renders an [InvoiceDocument] to email-safe HTML.
@@ -54,11 +51,24 @@ public class HtmlRenderer(
                         attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: $bgColor;"
                         tr {
                             td {
-                                attributes["style"] = "padding: 24px;"
                                 val status = document.status
-                                if (status != null && document.statusDisplay.rendersBanner()) {
+                                val statusDisplay = document.statusDisplay
+                                val needsRelative = status != null && statusDisplay.isOverlay()
+                                attributes["style"] = buildString {
+                                    append("padding: 24px;")
+                                    if (needsRelative) append(" position: relative;")
+                                }
+                                if (status != null && statusDisplay.isBanner()) {
                                     renderStatusBanner(status, style)
                                     div { attributes["style"] = "height: 16px;" }
+                                }
+                                // Render watermark/stamp SVG overlay
+                                if (status != null) {
+                                    when (statusDisplay) {
+                                        is StatusDisplay.Watermark -> renderStatusWatermark(status, statusDisplay)
+                                        is StatusDisplay.Stamp -> renderStatusStamp(status, statusDisplay)
+                                        else -> {}
+                                    }
                                 }
                                 val sections = document.sections
                                 val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding

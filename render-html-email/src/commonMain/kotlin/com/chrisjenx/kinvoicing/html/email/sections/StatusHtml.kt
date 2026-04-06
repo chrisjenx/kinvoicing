@@ -2,11 +2,11 @@ package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.InvoiceStatus
 import com.chrisjenx.kinvoicing.InvoiceStyle
+import com.chrisjenx.kinvoicing.StatusDisplay
 import kotlinx.html.*
 
 /**
  * Full-width colored banner at the top of the invoice.
- * Also used as the fallback for Watermark/Stamp in HTML email (CSS transforms are unreliable).
  */
 internal fun FlowContent.renderStatusBanner(status: InvoiceStatus, style: InvoiceStyle) {
     div {
@@ -42,5 +42,112 @@ internal fun FlowContent.renderStatusBadge(status: InvoiceStatus) {
             append(" margin-left: 8px;")
         }
         +status.label
+    }
+}
+
+/**
+ * Generates an inline SVG data URI containing rotated watermark text.
+ * SVG is widely supported in email clients as an `<img>` source.
+ */
+private fun watermarkSvgDataUri(label: String, hexColor: String, opacity: Float): String {
+    val svg = buildString {
+        append("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'>")
+        append("<text x='300' y='200' text-anchor='middle' dominant-baseline='central'")
+        append(" font-size='72' font-weight='800' letter-spacing='8'")
+        append(" fill='$hexColor' fill-opacity='$opacity'")
+        append(" transform='rotate(-30, 300, 200)'>")
+        append(label)
+        append("</text></svg>")
+    }
+    val escaped = svg
+        .replace("'", "%27")
+        .replace("#", "%23")
+        .replace("<", "%3C")
+        .replace(">", "%3E")
+    return "data:image/svg+xml,$escaped"
+}
+
+/**
+ * Generates an inline SVG data URI containing a rotated stamp/seal.
+ */
+private fun stampSvgDataUri(label: String, hexColor: String, opacity: Float): String {
+    // Estimate text width: ~16px per character at font-size 28
+    val textW = label.length * 16
+    val rectW = textW + 40
+    val rectH = 50
+    val svgW = rectW + 60
+    val svgH = rectH + 40
+    val cx = svgW / 2
+    val cy = svgH / 2
+
+    val svg = buildString {
+        append("<svg xmlns='http://www.w3.org/2000/svg' width='$svgW' height='$svgH'>")
+        append("<g transform='rotate(-15, $cx, $cy)' opacity='$opacity'>")
+        append("<rect x='${(svgW - rectW) / 2}' y='${(svgH - rectH) / 2}'")
+        append(" width='$rectW' height='$rectH' rx='8' ry='8'")
+        append(" fill='none' stroke='$hexColor' stroke-width='3'/>")
+        append("<text x='$cx' y='$cy' text-anchor='middle' dominant-baseline='central'")
+        append(" font-size='28' font-weight='800' letter-spacing='2'")
+        append(" fill='$hexColor'>")
+        append(label)
+        append("</text></g></svg>")
+    }
+    val escaped = svg
+        .replace("'", "%27")
+        .replace("#", "%23")
+        .replace("<", "%3C")
+        .replace(">", "%3E")
+    return "data:image/svg+xml,$escaped"
+}
+
+/**
+ * Renders a watermark overlay as an absolutely positioned SVG image
+ * over the invoice content area. Uses a wrapper div with position:relative
+ * on the parent and position:absolute on the watermark.
+ *
+ * Compatibility: Works in Apple Mail, Gmail (web), Outlook (web/365),
+ * Yahoo Mail, and most modern email clients. Degrades gracefully in
+ * clients that strip position styles (image simply won't appear).
+ */
+internal fun FlowContent.renderStatusWatermark(status: InvoiceStatus, display: StatusDisplay.Watermark) {
+    val hexColor = status.color.toHexColor()
+    val uri = watermarkSvgDataUri(status.label, hexColor, display.opacity)
+    div {
+        attributes["style"] = buildString {
+            append("position: absolute;")
+            append(" top: 50%;")
+            append(" left: 50%;")
+            append(" transform: translate(-50%, -50%);")
+            append(" pointer-events: none;")
+            append(" z-index: 1;")
+        }
+        img {
+            src = uri
+            alt = ""
+            attributes["style"] = "display: block; width: 100%; max-width: 600px; height: auto;"
+        }
+    }
+}
+
+/**
+ * Renders a stamp overlay as an absolutely positioned SVG image
+ * in the right side of the invoice, below the header area.
+ */
+internal fun FlowContent.renderStatusStamp(status: InvoiceStatus, display: StatusDisplay.Stamp) {
+    val hexColor = status.color.toHexColor()
+    val uri = stampSvgDataUri(status.label, hexColor, display.opacity)
+    div {
+        attributes["style"] = buildString {
+            append("position: absolute;")
+            append(" top: 120px;")
+            append(" right: 24px;")
+            append(" pointer-events: none;")
+            append(" z-index: 1;")
+        }
+        img {
+            src = uri
+            alt = ""
+            attributes["style"] = "display: block; height: auto;"
+        }
     }
 }
