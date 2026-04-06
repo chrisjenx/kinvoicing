@@ -13,9 +13,13 @@ import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
 import com.chrisjenx.kinvoicing.InvoiceDocument
+import com.chrisjenx.kinvoicing.StatusDisplay
 import com.chrisjenx.kinvoicing.compose.InvoiceSections
 import com.chrisjenx.kinvoicing.compose.InvoiceStyleProvider
+import com.chrisjenx.kinvoicing.compose.LocalInvoiceStatus
 import com.chrisjenx.kinvoicing.compose.LocalLinkWrapper
+import com.chrisjenx.kinvoicing.compose.LocalStatusDisplay
+import com.chrisjenx.kinvoicing.compose.sections.StatusBanner
 import com.chrisjenx.kinvoicing.html.PdfFontFamily
 import com.chrisjenx.kinvoicing.html.renderToHtml
 import com.chrisjenx.kinvoicing.html.email.toHtml as toEmailHtml
@@ -264,8 +268,14 @@ class FidelityTest {
             LocalLinkWrapper provides { href, content ->
                 PdfLink(href = href) { content() }
             },
+            LocalInvoiceStatus provides document.status,
+            LocalStatusDisplay provides document.statusDisplay,
         ) {
             InvoiceStyleProvider(document.style) {
+                val status = document.status
+                if (status != null && document.statusDisplay is StatusDisplay.Banner) {
+                    StatusBanner(status, document.style)
+                }
                 InvoiceSections(document.sections, document.currency)
             }
         }
