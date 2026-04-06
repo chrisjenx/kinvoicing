@@ -17,8 +17,8 @@ public sealed class StatusDisplay {
     public data object Banner : StatusDisplay()
 
     /** Large diagonal text overlaid across the invoice body. */
-    public data class Watermark(val opacity: Float = 0.08f) : StatusDisplay()
+    public data class Watermark(val opacity: Float = 0.15f) : StatusDisplay()
 
     /** Rotated stamp/seal overlay, typically in the upper-right area. */
-    public data class Stamp(val opacity: Float = 0.15f) : StatusDisplay()
+    public data class Stamp(val opacity: Float = 0.35f) : StatusDisplay()
 }

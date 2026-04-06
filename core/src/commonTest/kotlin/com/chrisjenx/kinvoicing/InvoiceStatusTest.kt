@@ -152,7 +152,7 @@ class InvoiceStatusTest {
 
     @Test
     fun statusDisplayDefaultOpacities() {
-        assertEquals(0.08f, StatusDisplay.Watermark().opacity)
-        assertEquals(0.15f, StatusDisplay.Stamp().opacity)
+        assertEquals(0.15f, StatusDisplay.Watermark().opacity)
+        assertEquals(0.35f, StatusDisplay.Stamp().opacity)
     }
 }

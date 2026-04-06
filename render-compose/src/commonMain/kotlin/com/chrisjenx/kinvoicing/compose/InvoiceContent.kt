@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.sections.*
@@ -25,31 +24,43 @@ public fun InvoiceContent(
     val currency = document.currency
 
     InvoiceStyleProvider(style) {
-        CompositionLocalProvider(
-            LocalInvoiceStatus provides document.status,
-            LocalStatusDisplay provides document.statusDisplay,
+        Column(
+            modifier = modifier
+                .background(style.backgroundComposeColor)
+                .padding(InvoiceSpacing.xl),
         ) {
-            Box(
-                modifier = modifier
-                    .background(style.backgroundComposeColor),
-            ) {
-                Column(
-                    modifier = Modifier.padding(InvoiceSpacing.xl),
-                ) {
-                    // Banner renders before sections
-                    if (document.status != null && document.statusDisplay is StatusDisplay.Banner) {
-                        StatusBanner(document.status!!, style)
-                        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                    }
-                    InvoiceSections(document.sections, currency)
-                }
-                // Watermark/Stamp overlay on top of content
-                if (document.status != null) {
-                    when (val display = document.statusDisplay) {
-                        is StatusDisplay.Watermark -> StatusWatermark(document.status!!, display)
-                        is StatusDisplay.Stamp -> StatusStamp(document.status!!, display)
-                        else -> {} // Badge/Banner/None handled elsewhere
-                    }
+            InvoiceSections(document)
+        }
+    }
+}
+
+/**
+ * Renders a full [InvoiceDocument] with status visuals (banner, watermark, stamp, badge).
+ *
+ * Banner is rendered as the first child inside PdfColumn for proper layout flow.
+ * Watermark and Stamp are rendered as Box overlays on top of all sections.
+ * Badge is provided via [LocalInvoiceStatus] and rendered by [HeaderSection].
+ *
+ * Suitable for compose2pdf's auto-pagination — each section is a direct child
+ * of PdfColumn via [LocalPdfColumn].
+ */
+@Composable
+public fun InvoiceSections(document: InvoiceDocument) {
+    val status = document.status
+    val display = document.statusDisplay
+
+    CompositionLocalProvider(
+        LocalInvoiceStatus provides status,
+        LocalStatusDisplay provides display,
+    ) {
+        Box {
+            InvoiceSectionsColumn(document)
+            // Watermark/Stamp overlay on top of content
+            if (status != null) {
+                when (display) {
+                    is StatusDisplay.Watermark -> StatusWatermark(status, display)
+                    is StatusDisplay.Stamp -> StatusStamp(status, display)
+                    else -> {} // Badge/Banner/None handled inside column or header
                 }
             }
         }
@@ -63,32 +74,55 @@ public fun InvoiceContent(
  */
 @Composable
 public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
-    val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
+    InvoiceSectionsColumn(sections, currency)
+}
+
+@Composable
+private fun InvoiceSectionsColumn(document: InvoiceDocument) {
+    val status = document.status
     PdfColumn(modifier = Modifier.fillMaxWidth()) {
-        var i = 0
-        while (i < sections.size) {
-            val section = sections[i]
-            if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
-                val next = sections[i + 1]
-                if (next is InvoiceSection.BillTo) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            PartySection(section.contact, "From")
-                        }
-                        Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
-                        Box(modifier = Modifier.weight(1f)) {
-                            PartySection(next.contact, "Bill To")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                    i += 2
-                    continue
-                }
-            }
-            InvoiceSectionContent(section, currency, branding)
+        // Banner as first child in layout flow
+        if (status != null && document.statusDisplay is StatusDisplay.Banner) {
+            StatusBanner(status, document.style)
             Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-            i++
         }
+        InvoiceSectionsContent(document.sections, document.currency)
+    }
+}
+
+@Composable
+private fun InvoiceSectionsColumn(sections: List<InvoiceSection>, currency: String) {
+    PdfColumn(modifier = Modifier.fillMaxWidth()) {
+        InvoiceSectionsContent(sections, currency)
+    }
+}
+
+@Composable
+private fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: String) {
+    val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
+    var i = 0
+    while (i < sections.size) {
+        val section = sections[i]
+        if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
+            val next = sections[i + 1]
+            if (next is InvoiceSection.BillTo) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(section.contact, "From")
+                    }
+                    Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(next.contact, "Bill To")
+                    }
+                }
+                Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                i += 2
+                continue
+            }
+        }
+        InvoiceSectionContent(section, currency, branding)
+        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+        i++
     }
 }
 

@@ -49,10 +49,10 @@ public class StatusBuilder {
     public fun banner() { display = StatusDisplay.Banner }
 
     /** Render as large diagonal text overlaid on the invoice. */
-    public fun watermark(opacity: Float = 0.08f) { display = StatusDisplay.Watermark(opacity) }
+    public fun watermark(opacity: Float = 0.15f) { display = StatusDisplay.Watermark(opacity) }
 
     /** Render as a rotated stamp/seal overlay. */
-    public fun stamp(opacity: Float = 0.15f) { display = StatusDisplay.Stamp(opacity) }
+    public fun stamp(opacity: Float = 0.35f) { display = StatusDisplay.Stamp(opacity) }
 
     /** Store the status as data only — no visual rendering. */
     public fun hidden() { display = StatusDisplay.None }
