@@ -129,17 +129,17 @@ class InvoiceStatusTest {
     }
 
     @Test
-    fun allStatusBuilderConvenienceMethods() {
+    fun allPredefinedStatusesViaDirectSetter() {
         val statuses = listOf(
-            InvoiceStatus.Draft to "draft",
-            InvoiceStatus.Sent to "sent",
-            InvoiceStatus.Paid to "paid",
-            InvoiceStatus.Overdue to "overdue",
-            InvoiceStatus.Void to "voided",
-            InvoiceStatus.Uncollectable to "uncollectable",
-            InvoiceStatus.Refunded to "refunded",
+            InvoiceStatus.Draft,
+            InvoiceStatus.Sent,
+            InvoiceStatus.Paid,
+            InvoiceStatus.Overdue,
+            InvoiceStatus.Void,
+            InvoiceStatus.Uncollectable,
+            InvoiceStatus.Refunded,
         )
-        for ((expected, _) in statuses) {
+        for (expected in statuses) {
             val doc = invoice {
                 status(expected)
                 header { invoiceNumber("INV-001") }

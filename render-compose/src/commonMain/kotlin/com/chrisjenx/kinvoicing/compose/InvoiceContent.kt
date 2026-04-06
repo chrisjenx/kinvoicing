@@ -38,8 +38,9 @@ public fun InvoiceContent(
  * Renders a full [InvoiceDocument] with status visuals (banner, watermark, stamp, badge).
  *
  * Banner is rendered as the first child inside PdfColumn for proper layout flow.
- * Watermark and Stamp are rendered as Box overlays on top of all sections.
- * Badge is provided via [LocalInvoiceStatus] and rendered by [HeaderSection].
+ * Watermark and Stamp are rendered via [drawWithContent] on PdfColumn's modifier,
+ * drawing on top of all section content.
+ * Badge is provided via [LocalInvoiceStatus] and rendered by HeaderSection.
  *
  * Suitable for compose2pdf's auto-pagination — each section is a direct child
  * of PdfColumn via [LocalPdfColumn].
@@ -55,16 +56,6 @@ public fun InvoiceSections(document: InvoiceDocument) {
     ) {
         InvoiceSectionsColumn(document)
     }
-}
-
-/**
- * Renders all [sections] with intelligent grouping (e.g., adjacent BillFrom + BillTo
- * rendered side-by-side). Each logical group is emitted as a direct child, making this
- * suitable for compose2pdf's auto-pagination.
- */
-@Composable
-public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
-    InvoiceSectionsColumn(sections, currency)
 }
 
 @Composable
@@ -86,13 +77,6 @@ private fun InvoiceSectionsColumn(document: InvoiceDocument) {
             Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
         }
         InvoiceSectionsContent(document.sections, document.currency)
-    }
-}
-
-@Composable
-private fun InvoiceSectionsColumn(sections: List<InvoiceSection>, currency: String) {
-    PdfColumn(modifier = Modifier.fillMaxWidth()) {
-        InvoiceSectionsContent(sections, currency)
     }
 }
 

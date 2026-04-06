@@ -9,8 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chrisjenx.kinvoicing.*
-import com.chrisjenx.kinvoicing.compose.LocalInvoiceStatus
-import com.chrisjenx.kinvoicing.compose.LocalStatusDisplay
 import com.chrisjenx.kinvoicing.compose.*
 
 @Composable

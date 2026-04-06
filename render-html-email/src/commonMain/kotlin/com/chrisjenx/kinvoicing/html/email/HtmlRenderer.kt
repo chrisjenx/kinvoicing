@@ -5,9 +5,6 @@ import com.chrisjenx.kinvoicing.html.email.sections.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 
-/** Whether this display mode renders as a top-of-document banner. */
-private fun StatusDisplay.isBanner(): Boolean = this is StatusDisplay.Banner
-
 /**
  * Renders an [InvoiceDocument] to email-safe HTML.
  *
@@ -58,7 +55,7 @@ public class HtmlRenderer(
                                     else -> ""
                                 }
                                 attributes["style"] = "padding: 24px;$bgStyle"
-                                if (status != null && statusDisplay.isBanner()) {
+                                if (status != null && statusDisplay is StatusDisplay.Banner) {
                                     renderStatusBanner(status, style)
                                     div { attributes["style"] = "height: 16px;" }
                                 }

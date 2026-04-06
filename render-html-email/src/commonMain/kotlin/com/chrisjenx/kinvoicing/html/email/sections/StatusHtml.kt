@@ -45,10 +45,16 @@ internal fun FlowContent.renderStatusBadge(status: InvoiceStatus) {
     }
 }
 
-/**
- * Generates an inline SVG data URI containing rotated watermark text.
- * SVG is widely supported in email clients as an `<img>` source.
- */
+/** URL-encodes an SVG string and wraps it as a `data:image/svg+xml` URI. */
+private fun svgToDataUri(svg: String): String {
+    val escaped = svg
+        .replace("'", "%27")
+        .replace("#", "%23")
+        .replace("<", "%3C")
+        .replace(">", "%3E")
+    return "data:image/svg+xml,$escaped"
+}
+
 private fun watermarkSvgDataUri(label: String, hexColor: String, opacity: Float): String {
     val svg = buildString {
         append("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'>")
@@ -59,12 +65,7 @@ private fun watermarkSvgDataUri(label: String, hexColor: String, opacity: Float)
         append(label)
         append("</text></svg>")
     }
-    val escaped = svg
-        .replace("'", "%27")
-        .replace("#", "%23")
-        .replace("<", "%3C")
-        .replace(">", "%3E")
-    return "data:image/svg+xml,$escaped"
+    return svgToDataUri(svg)
 }
 
 /**
@@ -92,12 +93,7 @@ private fun stampSvgDataUri(label: String, hexColor: String, opacity: Float): St
         append(label)
         append("</text></g></svg>")
     }
-    val escaped = svg
-        .replace("'", "%27")
-        .replace("#", "%23")
-        .replace("<", "%3C")
-        .replace(">", "%3E")
-    return "data:image/svg+xml,$escaped"
+    return svgToDataUri(svg)
 }
 
 /**
