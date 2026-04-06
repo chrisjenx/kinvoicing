@@ -51,11 +51,11 @@ internal fun FlowContent.renderStatusBadge(status: InvoiceStatus) {
  */
 private fun watermarkSvgDataUri(label: String, hexColor: String, opacity: Float): String {
     val svg = buildString {
-        append("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'>")
-        append("<text x='300' y='200' text-anchor='middle' dominant-baseline='central'")
-        append(" font-size='72' font-weight='800' letter-spacing='8'")
+        append("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'>")
+        append("<text x='300' y='400' text-anchor='middle' dominant-baseline='central'")
+        append(" font-size='80' font-weight='800' letter-spacing='8'")
         append(" fill='$hexColor' fill-opacity='$opacity'")
-        append(" transform='rotate(-30, 300, 200)'>")
+        append(" transform='rotate(-30, 300, 400)'>")
         append(label)
         append("</text></svg>")
     }
@@ -71,12 +71,12 @@ private fun watermarkSvgDataUri(label: String, hexColor: String, opacity: Float)
  * Generates an inline SVG data URI containing a rotated stamp/seal.
  */
 private fun stampSvgDataUri(label: String, hexColor: String, opacity: Float): String {
-    // Estimate text width: ~16px per character at font-size 28
-    val textW = label.length * 16
-    val rectW = textW + 40
-    val rectH = 50
-    val svgW = rectW + 60
-    val svgH = rectH + 40
+    // Estimate text width: ~13px per character at font-size 22
+    val textW = label.length * 13
+    val rectW = textW + 32
+    val rectH = 40
+    val svgW = rectW + 40
+    val svgH = rectH + 30
     val cx = svgW / 2
     val cy = svgH / 2
 
@@ -87,7 +87,7 @@ private fun stampSvgDataUri(label: String, hexColor: String, opacity: Float): St
         append(" width='$rectW' height='$rectH' rx='8' ry='8'")
         append(" fill='none' stroke='$hexColor' stroke-width='3'/>")
         append("<text x='$cx' y='$cy' text-anchor='middle' dominant-baseline='central'")
-        append(" font-size='28' font-weight='800' letter-spacing='2'")
+        append(" font-size='22' font-weight='800' letter-spacing='2'")
         append(" fill='$hexColor'>")
         append(label)
         append("</text></g></svg>")
@@ -122,5 +122,5 @@ internal fun watermarkBackgroundStyle(status: InvoiceStatus, display: StatusDisp
 internal fun stampBackgroundStyle(status: InvoiceStatus, display: StatusDisplay.Stamp): String {
     val hexColor = status.color.toHexColor()
     val uri = stampSvgDataUri(status.label, hexColor, display.opacity)
-    return "background: url('$uri') top right / auto no-repeat;"
+    return "background: url('$uri') right 0px top 120px / 180px auto no-repeat;"
 }
