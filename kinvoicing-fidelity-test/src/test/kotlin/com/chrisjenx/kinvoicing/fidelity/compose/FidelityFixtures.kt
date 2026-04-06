@@ -31,4 +31,9 @@ val fidelityFixtures: List<Fixture> = listOf(
     Fixture("FullFeatured", "composite", "Every feature: dual branding, sub-items, adjustments, metadata, payment", InvoiceExamples.fullFeatured),
     Fixture("ManyItems", "stress", "15 line items to test dense layout", InvoiceExamples.manyItems),
     Fixture("LinksAndImages", "links", "All link types (website, email, phone, payment) and images (logo, custom)", InvoiceExamples.linksAndImages),
+    Fixture("StatusBadge", "status", "Paid status with badge pill in header", InvoiceExamples.statusBadge),
+    Fixture("StatusBanner", "status", "Overdue status with full-width banner", InvoiceExamples.statusBanner),
+    Fixture("StatusWatermark", "status", "Voided status with diagonal watermark overlay", InvoiceExamples.statusWatermark),
+    Fixture("StatusStamp", "status", "Draft status with rotated stamp overlay", InvoiceExamples.statusStamp),
+    Fixture("StatusCustom", "status", "Custom status (PENDING APPROVAL) with banner", InvoiceExamples.statusCustom),
 )

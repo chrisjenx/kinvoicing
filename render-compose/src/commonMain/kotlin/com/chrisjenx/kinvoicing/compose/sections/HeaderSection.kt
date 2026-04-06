@@ -66,6 +66,8 @@ private fun StackedHeader(header: InvoiceSection.Header, style: InvoiceStyle) {
 
 @Composable
 private fun InvoiceDetailsColumn(header: InvoiceSection.Header, style: InvoiceStyle) {
+    val status = LocalInvoiceStatus.current
+    val statusDisplay = LocalStatusDisplay.current
     Column(horizontalAlignment = Alignment.End) {
         header.invoiceNumber?.let {
             Text(
@@ -74,6 +76,10 @@ private fun InvoiceDetailsColumn(header: InvoiceSection.Header, style: InvoiceSt
                 fontWeight = FontWeight.Bold,
                 color = style.primaryComposeColor,
             )
+        }
+        if (status != null && statusDisplay is StatusDisplay.Badge) {
+            Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
+            StatusBadge(status)
         }
         header.issueDate?.let {
             Spacer(modifier = Modifier.height(InvoiceSpacing.xs))

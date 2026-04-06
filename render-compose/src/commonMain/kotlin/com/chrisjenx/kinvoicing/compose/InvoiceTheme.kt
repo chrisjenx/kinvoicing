@@ -6,9 +6,13 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.chrisjenx.kinvoicing.ArgbColor
+import com.chrisjenx.kinvoicing.InvoiceStatus
 import com.chrisjenx.kinvoicing.InvoiceStyle
+import com.chrisjenx.kinvoicing.StatusDisplay
 
 public val LocalInvoiceStyle: ProvidableCompositionLocal<InvoiceStyle> = compositionLocalOf { InvoiceStyle() }
+public val LocalInvoiceStatus: ProvidableCompositionLocal<InvoiceStatus?> = compositionLocalOf { null }
+public val LocalStatusDisplay: ProvidableCompositionLocal<StatusDisplay> = compositionLocalOf { StatusDisplay.Badge }
 
 @Composable
 public fun InvoiceStyleProvider(

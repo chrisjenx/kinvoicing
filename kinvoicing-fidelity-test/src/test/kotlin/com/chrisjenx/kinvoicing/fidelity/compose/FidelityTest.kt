@@ -266,7 +266,7 @@ class FidelityTest {
             },
         ) {
             InvoiceStyleProvider(document.style) {
-                InvoiceSections(document.sections, document.currency)
+                InvoiceSections(document)
             }
         }
     }

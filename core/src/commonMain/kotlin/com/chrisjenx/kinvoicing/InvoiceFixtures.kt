@@ -88,7 +88,7 @@ public object InvoiceFixtures {
 
     /** All fixtures for parameterized testing. */
     public val all: List<InvoiceDocument> by lazy {
-        listOf(basic, fullFeatured, negativeValues, long, minimal, styled, linksAndImages)
+        listOf(basic, fullFeatured, negativeValues, long, minimal, styled, linksAndImages, paidBadge, voidWatermark)
     }
 
     /** Single brand, 3 line items, no sub-items, no discounts. */
@@ -306,6 +306,51 @@ public object InvoiceFixtures {
         footer {
             notes("Colors and creativity are our passion!")
         }
+    }
+
+    /** Paid invoice with badge display. Tests status badge rendering in header. */
+    public val paidBadge: InvoiceDocument = invoice {
+        status(InvoiceStatus.Paid)
+        header {
+            branding {
+                primary {
+                    name("Acme Corp")
+                    logo(TEST_LOGO_PNG, "image/png")
+                }
+            }
+            invoiceNumber("INV-2026-PAID")
+            issueDate(LocalDate(2026, 3, 1))
+            dueDate(LocalDate(2026, 3, 31))
+        }
+        billTo {
+            name("Jane Smith")
+            address("456 Oak Ave", "Boulder, CO 80301")
+        }
+        lineItems {
+            columns("Description", "Qty", "Rate", "Amount")
+            item("Web Development", qty = 40, unitPrice = 150.0)
+        }
+        summary { currency("USD") }
+    }
+
+    /** Voided invoice with watermark display. Tests watermark overlay rendering. */
+    public val voidWatermark: InvoiceDocument = invoice {
+        status {
+            voided()
+            watermark()
+        }
+        header {
+            invoiceNumber("INV-2026-VOID")
+            issueDate(LocalDate(2026, 3, 1))
+        }
+        billTo {
+            name("Cancelled Customer")
+        }
+        lineItems {
+            columns("Description", "Amount")
+            item("Cancelled Service", amount = 500.0)
+        }
+        summary { currency("USD") }
     }
 
     /** Exercises every link type (website, email, phone, payment) and image path (logo, custom). */

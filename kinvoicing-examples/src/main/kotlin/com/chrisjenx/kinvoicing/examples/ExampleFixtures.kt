@@ -1,9 +1,11 @@
 package com.chrisjenx.kinvoicing.examples
 
+import com.chrisjenx.kinvoicing.ArgbColor
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.HeaderLayout
 import com.chrisjenx.kinvoicing.InvoiceDocument
 import com.chrisjenx.kinvoicing.InvoiceFixtures
+import com.chrisjenx.kinvoicing.InvoiceStatus
 import com.chrisjenx.kinvoicing.InvoiceThemes
 import com.chrisjenx.kinvoicing.LogoPlacement
 import com.chrisjenx.kinvoicing.invoice
@@ -41,6 +43,11 @@ object InvoiceExamples {
             "theme-elegant" to themeElegant,
             "theme-fresh" to themeFresh,
             "links-and-images" to linksAndImages,
+            "status-badge" to statusBadge,
+            "status-banner" to statusBanner,
+            "status-watermark" to statusWatermark,
+            "status-stamp" to statusStamp,
+            "status-custom" to statusCustom,
         )
     }
 
@@ -617,6 +624,35 @@ object InvoiceExamples {
 
     /** Fresh theme: green/teal, eco-feeling. */
     val themeFresh: InvoiceDocument = themedInvoice(InvoiceThemes.Fresh, "FRESH")
+
+    // ── Status Display Modes ──
+
+    /** Paid invoice with Badge display (pill in header). */
+    val statusBadge: InvoiceDocument = statusInvoice(InvoiceStatus.Paid) {
+        badge()
+    }
+
+    /** Overdue invoice with Banner display (full-width bar at top). */
+    val statusBanner: InvoiceDocument = statusInvoice(InvoiceStatus.Overdue) {
+        banner()
+    }
+
+    /** Voided invoice with Watermark display (diagonal text overlay). */
+    val statusWatermark: InvoiceDocument = statusInvoice(InvoiceStatus.Void) {
+        watermark()
+    }
+
+    /** Draft invoice with Stamp display (rotated stamp overlay). */
+    val statusStamp: InvoiceDocument = statusInvoice(InvoiceStatus.Draft) {
+        stamp()
+    }
+
+    /** Custom status with Banner display. */
+    val statusCustom: InvoiceDocument = statusInvoice(
+        InvoiceStatus.Custom("PENDING APPROVAL", ArgbColor(0xFFF59E0B)),
+    ) {
+        banner()
+    }
 }
 
 /**
@@ -671,5 +707,55 @@ private fun themedInvoice(
     footer {
         notes("Thank you for your business!")
         terms("Net 30. 1.5% monthly interest on overdue balances.")
+    }
+}
+
+/**
+ * Creates a representative invoice with a given status and display mode.
+ */
+private fun statusInvoice(
+    invoiceStatus: com.chrisjenx.kinvoicing.InvoiceStatus,
+    displayInit: com.chrisjenx.kinvoicing.builders.StatusBuilder.() -> Unit,
+): InvoiceDocument = invoice {
+    status {
+        state = invoiceStatus
+        displayInit()
+    }
+    header {
+        branding {
+            primary {
+                name("Acme Corp")
+                logo(InvoiceFixtures.TEST_LOGO_PNG, "image/png")
+                address("123 Main St", "Springfield, IL 62701")
+                email("billing@acme.com")
+            }
+        }
+        invoiceNumber("INV-2026-STATUS")
+        issueDate(LocalDate(2026, 3, 1))
+        dueDate(LocalDate(2026, 3, 31))
+    }
+    billFrom {
+        name("Acme Corp")
+        address("123 Main St", "Springfield, IL 62701")
+        email("billing@acme.com")
+    }
+    billTo {
+        name("Jane Smith")
+        address("456 Oak Ave", "Boulder, CO 80301")
+        email("jane@example.com")
+    }
+    lineItems {
+        columns("Description", "Qty", "Rate", "Amount")
+        item("Web Development", qty = 40, unitPrice = 150.0)
+        item("Design Services", qty = 10, unitPrice = 100.0)
+        item("Hosting (Monthly)", qty = 1, unitPrice = 49.99)
+    }
+    summary {
+        currency("USD")
+        tax("Sales Tax", percent = 8.25)
+    }
+    footer {
+        notes("Thank you for your business!")
+        terms("Net 30")
     }
 }

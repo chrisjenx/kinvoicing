@@ -3,6 +3,7 @@ package com.chrisjenx.kinvoicing.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.chrisjenx.kinvoicing.*
 import com.chrisjenx.kinvoicing.compose.sections.*
@@ -26,46 +27,85 @@ public fun InvoiceContent(
         Column(
             modifier = modifier
                 .background(style.backgroundComposeColor)
-                .padding(InvoiceSpacing.xl)
+                .padding(InvoiceSpacing.xl),
         ) {
-            InvoiceSections(document.sections, currency)
+            InvoiceSections(document)
         }
     }
 }
 
 /**
- * Renders all [sections] with intelligent grouping (e.g., adjacent BillFrom + BillTo
- * rendered side-by-side). Each logical group is emitted as a direct child, making this
- * suitable for compose2pdf's auto-pagination.
+ * Renders a full [InvoiceDocument] with status visuals (banner, watermark, stamp, badge).
+ *
+ * Banner is rendered as the first child inside PdfColumn for proper layout flow.
+ * Watermark and Stamp are rendered via [drawWithContent] on PdfColumn's modifier,
+ * drawing on top of all section content.
+ * Badge is provided via [LocalInvoiceStatus] and rendered by HeaderSection.
+ *
+ * Suitable for compose2pdf's auto-pagination — each section is a direct child
+ * of PdfColumn via [LocalPdfColumn].
  */
 @Composable
-public fun InvoiceSections(sections: List<InvoiceSection>, currency: String) {
-    val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
-    PdfColumn(modifier = Modifier.fillMaxWidth()) {
-        var i = 0
-        while (i < sections.size) {
-            val section = sections[i]
-            if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
-                val next = sections[i + 1]
-                if (next is InvoiceSection.BillTo) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            PartySection(section.contact, "From")
-                        }
-                        Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
-                        Box(modifier = Modifier.weight(1f)) {
-                            PartySection(next.contact, "Bill To")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-                    i += 2
-                    continue
-                }
-            }
-            InvoiceSectionContent(section, currency, branding)
+public fun InvoiceSections(document: InvoiceDocument) {
+    val status = document.status
+    val display = document.statusDisplay
+
+    CompositionLocalProvider(
+        LocalInvoiceStatus provides status,
+        LocalStatusDisplay provides display,
+    ) {
+        InvoiceSectionsColumn(document)
+    }
+}
+
+@Composable
+private fun InvoiceSectionsColumn(document: InvoiceDocument) {
+    val status = document.status
+    val display = document.statusDisplay
+
+    // Watermark/Stamp draw on top of content via drawWithContent modifier
+    val overlayModifier = when {
+        status != null && display is StatusDisplay.Watermark -> statusWatermarkModifier(status, display)
+        status != null && display is StatusDisplay.Stamp -> statusStampModifier(status, display)
+        else -> Modifier
+    }
+
+    PdfColumn(modifier = Modifier.fillMaxWidth().then(overlayModifier)) {
+        // Banner as first child in layout flow
+        if (status != null && display is StatusDisplay.Banner) {
+            StatusBanner(status, document.style)
             Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
-            i++
         }
+        InvoiceSectionsContent(document.sections, document.currency)
+    }
+}
+
+@Composable
+private fun InvoiceSectionsContent(sections: List<InvoiceSection>, currency: String) {
+    val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
+    var i = 0
+    while (i < sections.size) {
+        val section = sections[i]
+        if (section is InvoiceSection.BillFrom && i + 1 < sections.size) {
+            val next = sections[i + 1]
+            if (next is InvoiceSection.BillTo) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(section.contact, "From")
+                    }
+                    Spacer(modifier = Modifier.width(InvoiceSpacing.lg))
+                    Box(modifier = Modifier.weight(1f)) {
+                        PartySection(next.contact, "Bill To")
+                    }
+                }
+                Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+                i += 2
+                continue
+            }
+        }
+        InvoiceSectionContent(section, currency, branding)
+        Spacer(modifier = Modifier.height(InvoiceSpacing.lg))
+        i++
     }
 }
 

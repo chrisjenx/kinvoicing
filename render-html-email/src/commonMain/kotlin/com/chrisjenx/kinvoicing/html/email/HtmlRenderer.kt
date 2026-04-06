@@ -44,7 +44,21 @@ public class HtmlRenderer(
                         attributes["style"] = "max-width: 600px; margin: 0 auto; background-color: $bgColor;"
                         tr {
                             td {
-                                attributes["style"] = "padding: 24px;"
+                                val status = document.status
+                                val statusDisplay = document.statusDisplay
+                                // Watermark/Stamp render as background-image on this <td>
+                                val bgStyle = when {
+                                    status != null && statusDisplay is StatusDisplay.Watermark ->
+                                        " ${watermarkBackgroundStyle(status, statusDisplay)}"
+                                    status != null && statusDisplay is StatusDisplay.Stamp ->
+                                        " ${stampBackgroundStyle(status, statusDisplay)}"
+                                    else -> ""
+                                }
+                                attributes["style"] = "padding: 24px;$bgStyle"
+                                if (status != null && statusDisplay is StatusDisplay.Banner) {
+                                    renderStatusBanner(status, style)
+                                    div { attributes["style"] = "height: 16px;" }
+                                }
                                 val sections = document.sections
                                 val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
                                 var i = 0
@@ -60,7 +74,7 @@ public class HtmlRenderer(
                                             continue
                                         }
                                     }
-                                    renderSection(section, style, currency, branding)
+                                    renderSection(section, style, currency, branding, document.status, document.statusDisplay)
                                     // 16px spacer matching Compose's Spacer(lg)
                                     div { attributes["style"] = "height: 16px;" }
                                     i++
@@ -103,9 +117,11 @@ public class HtmlRenderer(
         style: InvoiceStyle,
         currency: String,
         branding: Branding? = null,
+        status: InvoiceStatus? = null,
+        statusDisplay: StatusDisplay = StatusDisplay.Badge,
     ) {
         when (section) {
-            is InvoiceSection.Header -> renderHeader(section, style)
+            is InvoiceSection.Header -> renderHeader(section, style, status, statusDisplay)
             is InvoiceSection.BillFrom -> renderParty(section.contact, "From", style)
             is InvoiceSection.BillTo -> renderParty(section.contact, "Bill To", style)
             is InvoiceSection.LineItems -> renderLineItems(section, style, currency)

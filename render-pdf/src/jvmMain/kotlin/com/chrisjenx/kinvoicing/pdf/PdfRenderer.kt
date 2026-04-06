@@ -34,7 +34,7 @@ public class PdfRenderer(
                 },
             ) {
                 InvoiceStyleProvider(document.style) {
-                    InvoiceSections(document.sections, document.currency)
+                    InvoiceSections(document)
                 }
             }
         }
