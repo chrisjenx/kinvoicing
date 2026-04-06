@@ -105,7 +105,7 @@ public fun statusWatermarkModifier(status: InvoiceStatus, display: StatusDisplay
 }
 
 /**
- * Returns a [Modifier] that draws a rotated stamp/seal in the top-right of the element.
+ * Returns a [Modifier] that draws a rotated stamp/seal below the header in the right area.
  *
  * Uses [drawWithContent] so the stamp is drawn AFTER child content (sections),
  * appearing as a true overlay. Works in compose2pdf's vector SVG pipeline.
@@ -129,7 +129,7 @@ public fun statusStampModifier(status: InvoiceStatus, display: StatusDisplay.Sta
         val rectW = measured.size.width + borderPadH * 2 * density
         val rectH = measured.size.height + borderPadV * 2 * density
         val stampX = size.width - rectW - 32 * density
-        val stampY = 8 * density
+        val stampY = 120 * density
         val cx = stampX + rectW / 2
         val cy = stampY + rectH / 2
 
