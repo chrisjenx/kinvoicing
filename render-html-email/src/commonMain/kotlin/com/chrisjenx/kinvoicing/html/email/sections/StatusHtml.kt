@@ -101,53 +101,26 @@ private fun stampSvgDataUri(label: String, hexColor: String, opacity: Float): St
 }
 
 /**
- * Renders a watermark overlay as an absolutely positioned SVG image
- * over the invoice content area. Uses a wrapper div with position:relative
- * on the parent and position:absolute on the watermark.
+ * Builds inline CSS for a `background` property containing the watermark SVG.
+ * Applied to the content `<td>` so the watermark renders behind all sections.
  *
- * Compatibility: Works in Apple Mail, Gmail (web), Outlook (web/365),
- * Yahoo Mail, and most modern email clients. Degrades gracefully in
- * clients that strip position styles (image simply won't appear).
+ * Uses `background` shorthand with `center/contain no-repeat` so the SVG
+ * scales to fill the cell without tiling. Email-safe: `<td background>` and
+ * inline `background` styles are widely supported (Apple Mail, Gmail, Yahoo,
+ * Outlook with VML fallback).
  */
-internal fun FlowContent.renderStatusWatermark(status: InvoiceStatus, display: StatusDisplay.Watermark) {
+internal fun watermarkBackgroundStyle(status: InvoiceStatus, display: StatusDisplay.Watermark): String {
     val hexColor = status.color.toHexColor()
     val uri = watermarkSvgDataUri(status.label, hexColor, display.opacity)
-    div {
-        attributes["style"] = buildString {
-            append("position: absolute;")
-            append(" top: 50%;")
-            append(" left: 50%;")
-            append(" transform: translate(-50%, -50%);")
-            append(" pointer-events: none;")
-            append(" z-index: 1;")
-        }
-        img {
-            src = uri
-            alt = ""
-            attributes["style"] = "display: block; width: 100%; max-width: 600px; height: auto;"
-        }
-    }
+    return "background: url('$uri') center center / contain no-repeat;"
 }
 
 /**
- * Renders a stamp overlay as an absolutely positioned SVG image
- * in the right side of the invoice, below the header area.
+ * Builds inline CSS for a `background` property containing the stamp SVG.
+ * Positioned in the top-right of the content cell.
  */
-internal fun FlowContent.renderStatusStamp(status: InvoiceStatus, display: StatusDisplay.Stamp) {
+internal fun stampBackgroundStyle(status: InvoiceStatus, display: StatusDisplay.Stamp): String {
     val hexColor = status.color.toHexColor()
     val uri = stampSvgDataUri(status.label, hexColor, display.opacity)
-    div {
-        attributes["style"] = buildString {
-            append("position: absolute;")
-            append(" top: 120px;")
-            append(" right: 24px;")
-            append(" pointer-events: none;")
-            append(" z-index: 1;")
-        }
-        img {
-            src = uri
-            alt = ""
-            attributes["style"] = "display: block; height: auto;"
-        }
-    }
+    return "background: url('$uri') top right / auto no-repeat;"
 }

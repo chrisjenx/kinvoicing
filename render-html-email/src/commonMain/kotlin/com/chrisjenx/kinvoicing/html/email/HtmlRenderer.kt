@@ -8,10 +8,6 @@ import kotlinx.html.stream.appendHTML
 /** Whether this display mode renders as a top-of-document banner. */
 private fun StatusDisplay.isBanner(): Boolean = this is StatusDisplay.Banner
 
-/** Whether this display mode renders as an overlay (watermark or stamp). */
-private fun StatusDisplay.isOverlay(): Boolean =
-    this is StatusDisplay.Watermark || this is StatusDisplay.Stamp
-
 /**
  * Renders an [InvoiceDocument] to email-safe HTML.
  *
@@ -53,22 +49,18 @@ public class HtmlRenderer(
                             td {
                                 val status = document.status
                                 val statusDisplay = document.statusDisplay
-                                val needsRelative = status != null && statusDisplay.isOverlay()
-                                attributes["style"] = buildString {
-                                    append("padding: 24px;")
-                                    if (needsRelative) append(" position: relative;")
+                                // Watermark/Stamp render as background-image on this <td>
+                                val bgStyle = when {
+                                    status != null && statusDisplay is StatusDisplay.Watermark ->
+                                        " ${watermarkBackgroundStyle(status, statusDisplay)}"
+                                    status != null && statusDisplay is StatusDisplay.Stamp ->
+                                        " ${stampBackgroundStyle(status, statusDisplay)}"
+                                    else -> ""
                                 }
+                                attributes["style"] = "padding: 24px;$bgStyle"
                                 if (status != null && statusDisplay.isBanner()) {
                                     renderStatusBanner(status, style)
                                     div { attributes["style"] = "height: 16px;" }
-                                }
-                                // Render watermark/stamp SVG overlay
-                                if (status != null) {
-                                    when (statusDisplay) {
-                                        is StatusDisplay.Watermark -> renderStatusWatermark(status, statusDisplay)
-                                        is StatusDisplay.Stamp -> renderStatusStamp(status, statusDisplay)
-                                        else -> {}
-                                    }
                                 }
                                 val sections = document.sections
                                 val branding = sections.filterIsInstance<InvoiceSection.Header>().firstOrNull()?.branding
