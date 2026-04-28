@@ -58,7 +58,7 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - **Sealed IR:** `InvoiceDocument` contains `List<InvoiceSection>` where `InvoiceSection` is sealed with 9 variants (Header, BillFrom, BillTo, LineItems, Summary, PaymentInfo, Footer, Custom, MetaBlock). Renderers use exhaustive `when` blocks.
 - **DSL entry point:** `invoice { header { ... } lineItems { ... } summary { ... } }`
 - **Shared composable:** `InvoiceContent(document)` is used by both Compose preview and PDF renderer — PDF matches Compose by construction.
-- **compose2pdf** (`com.chrisjenx:compose2pdf:1.0.0`) is an external dependency providing `renderToPdf`, `PdfPageConfig`, `RenderMode`, `PdfLink`. Its `PdfLinkAnnotation` is `internal` — render-html defines its own link types for the HTML pipeline.
+- **compose2pdf** (`com.chrisjenx:compose2pdf:1.1.2`) is an external dependency providing `renderToPdf`, `PdfPageConfig`, `RenderMode`, `PdfLink`. Its `PdfLinkAnnotation` is `internal` — render-html defines its own link types for the HTML pipeline.
 - **Image decoding expect/actual:** `decodeImageBytes()` in render-compose uses Skia on JVM/iOS/wasmJs and `BitmapFactory` on Android. Actuals live in `jvmMain`, `nativeMain`, `wasmJsMain`, `androidMain`.
 - **runBlockingCompat expect/actual:** Wraps `runBlocking` for JVM/native/Android; throws on wasmJs (wasmJs consumers use Compose renderer path via `painterResource`, not `bytes`).
 - **URL/CSS sanitization:** `core/.../util/Sanitize.kt` provides `requireSafeUrl` (public), `sanitizeFontFamily` (internal), `requireFinite` (internal). render-html has its own `sanitizeUrl` in `SvgToSemanticHtmlConverter.kt` since it can't import from core.
