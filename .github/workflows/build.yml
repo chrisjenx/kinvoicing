@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  assemble:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -31,14 +31,47 @@ jobs:
       - name: Build all targets
         run: ./gradlew assemble
 
+  jvm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
       - name: JVM tests
         run: ./gradlew jvmTest
 
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: jvm-test-reports
+          path: '**/build/reports/tests/'
+          retention-days: 7
+
+  apple-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
       - name: iOS simulator tests
         run: ./gradlew iosSimulatorArm64Test
-
-      - name: wasmJs tests
-        run: ./gradlew wasmJsTest
 
       - name: macOS native tests
         run: ./gradlew macosArm64Test
@@ -47,7 +80,32 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: test-reports
+          name: apple-test-reports
+          path: '**/build/reports/tests/'
+          retention-days: 7
+
+  wasm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: wasmJs tests
+        run: ./gradlew wasmJsTest
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wasm-test-reports
           path: '**/build/reports/tests/'
           retention-days: 7
 
