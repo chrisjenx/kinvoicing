@@ -172,3 +172,31 @@ jobs:
           name: fidelity-test-reports
           path: '**/build/reports/tests/'
           retention-days: 7
+
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - assemble
+      - jvm-tests
+      - apple-tests
+      - wasm-tests
+      - linux-tests
+      - fidelity-tests
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          echo "  assemble:       ${{ needs.assemble.result }}"
+          echo "  jvm-tests:      ${{ needs.jvm-tests.result }}"
+          echo "  apple-tests:    ${{ needs.apple-tests.result }}"
+          echo "  wasm-tests:     ${{ needs.wasm-tests.result }}"
+          echo "  linux-tests:    ${{ needs.linux-tests.result }}"
+          echo "  fidelity-tests: ${{ needs.fidelity-tests.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "::error::One or more required jobs did not succeed."
+            exit 1
+          fi
+          echo "All required jobs succeeded."
