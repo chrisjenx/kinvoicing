@@ -88,7 +88,7 @@ public object InvoiceFixtures {
 
     /** All fixtures for parameterized testing. */
     public val all: List<InvoiceDocument> by lazy {
-        listOf(basic, fullFeatured, negativeValues, long, minimal, styled, linksAndImages, paidBadge, voidWatermark)
+        listOf(basic, fullFeatured, negativeValues, long, minimal, styled, linksAndImages, paidBadge, voidWatermark, payButton)
     }
 
     /** Single brand, 3 line items, no sub-items, no discounts. */
@@ -394,6 +394,45 @@ public object InvoiceFixtures {
         }
         footer {
             notes("Links and images test fixture.")
+        }
+    }
+
+    /** Pay-button + rich-notes fixture exercising BUTTON style and inline links in notes/footer. */
+    public val payButton: InvoiceDocument = invoice {
+        header {
+            invoiceNumber("INV-2026-PAYBTN")
+            issueDate(LocalDate(2026, 5, 1))
+            branding {
+                primary { name("Acme Inc."); website("https://acme.com") }
+            }
+        }
+        billTo {
+            name("Test Customer")
+            address("100 Demo St", "Sample City, ZZ 99999")
+        }
+        lineItems {
+            columns("Description", "Amount")
+            item("Consulting", amount = 1000.0)
+        }
+        summary {
+            currency("USD")
+        }
+        paymentInfo {
+            bankName("First National")
+            paymentButton("Pay $1,000 Now", "https://pay.acme.com/inv-paybtn")
+            notes {
+                text("Wire transfer alternative — see ")
+                link("transfer policy", "https://acme.com/wire-policy")
+            }
+        }
+        footer {
+            notes {
+                text("Thanks for your business! Read our ")
+                link("terms", "https://acme.com/terms")
+                text(" or ")
+                link("contact support", "mailto:billing@acme.com")
+                text(".")
+            }
         }
     }
 }
