@@ -12,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.Branding
-import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -35,8 +34,7 @@ internal fun FooterSection(footer: InvoiceSection.Footer, branding: Branding? = 
                 color = style.secondaryComposeColor,
             )
             Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            Text(text = flattened, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+            elements.forEach { ElementContent(it) }
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
         }
         footer.terms?.let { elements ->
@@ -47,13 +45,11 @@ internal fun FooterSection(footer: InvoiceSection.Footer, branding: Branding? = 
                 color = style.secondaryComposeColor,
             )
             Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            elements.forEach { ElementContent(it) }
         }
         footer.customContent?.let { elements ->
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            elements.forEach { ElementContent(it) }
         }
         val pb = branding?.takeIf { it.layout == BrandLayout.POWERED_BY_FOOTER }?.poweredBy
         if (pb != null) {
