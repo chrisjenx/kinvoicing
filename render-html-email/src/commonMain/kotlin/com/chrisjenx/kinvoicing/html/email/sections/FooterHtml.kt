@@ -12,20 +12,26 @@ internal fun FlowContent.renderFooter(footer: InvoiceSection.Footer, style: Invo
                 attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"
                 +"Notes"
             }
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;" ; +flattened }
+            div {
+                attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;"
+                elements.forEach { renderElement(it, style) }
+            }
         }
         footer.terms?.let { elements ->
             div {
                 attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"
                 +"Terms"
             }
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +flattened }
+            div {
+                attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()};"
+                elements.forEach { renderElement(it, style) }
+            }
         }
         footer.customContent?.let { elements ->
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()}; margin-top: 8px;" ; +flattened }
+            div {
+                attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()}; margin-top: 8px;"
+                elements.forEach { renderElement(it, style) }
+            }
         }
         val pb = branding?.takeIf { it.layout == BrandLayout.POWERED_BY_FOOTER }?.poweredBy
         if (pb != null) {
