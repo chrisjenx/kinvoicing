@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -20,7 +19,7 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
         modifier = Modifier
             .fillMaxWidth()
             .background(style.mutedBgComposeColor, RoundedCornerShape(4.dp))
-            .padding(InvoiceSpacing.lg)
+            .padding(InvoiceSpacing.lg),
     ) {
         Text(
             text = "PAYMENT INFORMATION",
@@ -40,21 +39,12 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
             Text(text = "Routing: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         payment.paymentLink?.let { link ->
-            val linkWrapper = LocalLinkWrapper.current
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            linkWrapper(link.href) {
-                Text(
-                    text = link.text,
-                    fontSize = InvoiceTypography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = style.primaryComposeColor,
-                )
-            }
+            ElementContent(link)
         }
         payment.notes?.let { elements ->
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
-            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            elements.forEach { ElementContent(it) }
         }
     }
 }
