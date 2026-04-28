@@ -41,12 +41,31 @@ internal fun FlowContent.renderElement(element: InvoiceElement, style: InvoiceSt
                 }
             }
         }
-        is InvoiceElement.Link -> {
-            div {
+        is InvoiceElement.Link -> when (element.style) {
+            LinkStyle.TEXT -> div {
                 a {
                     href = requireSafeUrl(element.href, "href")
-                    attributes["style"] = "font-size: 14px; color: ${style.primaryColor.toHexColor()}; text-decoration: none; font-weight: bold;"
+                    attributes["style"] =
+                        "font-size:14px; color:${style.primaryColor.toHexColor()}; font-weight:500; text-decoration:none;"
                     +element.text
+                }
+            }
+            LinkStyle.BUTTON -> table {
+                attributes["cellpadding"] = "0"
+                attributes["cellspacing"] = "0"
+                attributes["border"] = "0"
+                attributes["style"] = "margin: 8px 0;"
+                tr {
+                    td {
+                        attributes["style"] =
+                            "background:${style.primaryColor.toHexColor()}; border-radius:20px; padding:10px 24px;"
+                        a {
+                            href = requireSafeUrl(element.href, "href")
+                            attributes["style"] =
+                                "color:#ffffff; font-weight:500; font-size:14px; text-decoration:none; display:inline-block;"
+                            +element.text
+                        }
+                    }
                 }
             }
         }

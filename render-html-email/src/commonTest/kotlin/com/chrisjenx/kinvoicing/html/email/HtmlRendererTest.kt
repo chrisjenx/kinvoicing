@@ -195,4 +195,45 @@ class HtmlRendererTest {
         assertTrue(html.isNotBlank())
         assertTrue("INV-2026-0001" in html)
     }
+
+    @Test
+    fun customSectionTextLinkRendersAsInlineAnchor() {
+        val doc = invoice {
+            custom("test") { link("Home", "https://example.com") }
+        }
+        val html = doc.toHtml()
+        assertTrue(
+            "href=\"https://example.com\"" in html,
+            "Expected an <a href=\"https://example.com\"> in TEXT-style output",
+        )
+        assertTrue(">Home<" in html, "Expected the link's display text to render")
+        // TEXT-style links live inside a <div>, not a bulletproof <table><td>.
+        val anchorIdx = html.indexOf("href=\"https://example.com\"")
+        val priorTagOpen = html.lastIndexOf("<", anchorIdx)
+        val priorTag = html.substring(priorTagOpen, anchorIdx)
+        assertFalse("<td" in priorTag, "TEXT link should not be wrapped in a <td>")
+    }
+
+    @Test
+    fun customSectionButtonRendersInsideTable() {
+        val doc = invoice {
+            custom("test") { button("Pay Now", "https://pay.example.com") }
+        }
+        val html = doc.toHtml()
+        assertTrue(
+            "href=\"https://pay.example.com\"" in html,
+            "Expected an <a href=\"https://pay.example.com\"> in BUTTON-style output",
+        )
+        assertTrue(">Pay Now<" in html, "Expected the button's label to render")
+        // Bulletproof BUTTON: anchor lives inside <td> within a <table>.
+        val anchorIdx = html.indexOf("href=\"https://pay.example.com\"")
+        val precedingHtml = html.substring(0, anchorIdx)
+        val tableIdx = precedingHtml.lastIndexOf("<table")
+        val tdIdx = precedingHtml.lastIndexOf("<td")
+        assertTrue(tableIdx >= 0 && tdIdx > tableIdx, "BUTTON link should be wrapped in <table><tr><td>")
+        // Confirm M3 visual defaults land on the <td>.
+        val tdAttrs = precedingHtml.substring(tdIdx)
+        assertTrue("border-radius:20px" in tdAttrs, "Expected border-radius:20px on button <td>")
+        assertTrue("padding:10px 24px" in tdAttrs, "Expected padding:10px 24px on button <td>")
+    }
 }
