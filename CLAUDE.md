@@ -24,8 +24,6 @@ Fidelity report after tests: `kinvoicing-fidelity-test/build/reports/fidelity/in
 
 HTML fidelity tests require Playwright: `npx playwright install chromium` (skips gracefully if missing).
 
-`:fidelity-test:jvmTest` is **macOS-only in CI** — libskiko-linux-x64.so SIGSEGVs in `SkPixmap::getColor` on ubuntu-latest, even with system fonts/fontconfig installed (issue #6). It's excluded from the Linux `jvm-tests` job and runs only in the macOS `fidelity-tests` job. Locally on Linux, expect the same crash.
-
 ## Architecture
 
 ```
