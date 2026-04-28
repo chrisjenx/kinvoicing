@@ -46,8 +46,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: JVM tests
-        # :fidelity-test:jvmTest runs in the dedicated `fidelity-tests` matrix
-        # job (macOS + Linux). Excluding here avoids a redundant double-run.
+        # Excludes :fidelity-test:jvmTest — libskiko-linux-x64.so SIGSEGVs in
+        # SkPixmap::getColor on the standard ubuntu-latest runner image, even
+        # with fonts-dejavu/fontconfig installed. The dedicated fidelity-tests
+        # job on macOS still covers it. See #6.
         run: ./gradlew jvmTest -x :fidelity-test:jvmTest
 
       - name: Upload test reports
@@ -137,11 +139,10 @@ jobs:
           retention-days: 7
 
   fidelity-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    # Linux is intentionally not covered: libskiko-linux-x64.so SIGSEGVs in
+    # SkPixmap::getColor on the GH-hosted ubuntu-latest image, even with
+    # fonts-dejavu/fontconfig installed (verified in PR #7). Tracked as #6.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -154,21 +155,6 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
-      # Skiko on the GH-hosted ubuntu-latest image SIGSEGVs in
-      # SkPixmap::getColor without the runtime fonts / fontconfig data it
-      # expects. Installing dejavu + fontconfig fixes this at the source so
-      # we get Linux fidelity coverage in addition to macOS. See #6.
-      - name: Install Linux system fonts (skiko prerequisite)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            fonts-dejavu \
-            fontconfig \
-            libfreetype6 \
-            libfontconfig1
-          fc-cache -f -v
-
       - name: Install Playwright browsers
         run: npx playwright install chromium
 
@@ -179,7 +165,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: fidelity-report-${{ matrix.os }}
+          name: fidelity-report
           path: 'kinvoicing-fidelity-test/build/reports/fidelity/'
           retention-days: 14
 
@@ -187,7 +173,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: fidelity-test-reports-${{ matrix.os }}
+          name: fidelity-test-reports
           path: '**/build/reports/tests/'
           retention-days: 7
 
