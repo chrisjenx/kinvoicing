@@ -1,6 +1,17 @@
 package com.chrisjenx.kinvoicing
 
 /**
+ * Visual style hint for [InvoiceElement.Link].
+ * Renderers map TEXT to inline hyperlink typography and BUTTON to a filled CTA.
+ */
+public enum class LinkStyle {
+    /** Inline text hyperlink — primary color, M3 labelLarge weight. */
+    TEXT,
+    /** Filled CTA button — primary container, white label, M3 FilledButton-equivalent. */
+    BUTTON,
+}
+
+/**
  * Low-level building blocks for [InvoiceSection.Custom] sections.
  * Renderers map each variant to platform-specific UI primitives.
  */
@@ -28,8 +39,13 @@ public sealed class InvoiceElement {
      * Hyperlink with display text.
      * @property text The visible label (e.g., "Visit Our Site").
      * @property href The link URL (e.g., "https://example.com").
+     * @property style Visual style — defaults to [LinkStyle.TEXT] (inline text link).
      */
-    public data class Link(val text: String, val href: String) : InvoiceElement()
+    public data class Link(
+        val text: String,
+        val href: String,
+        val style: LinkStyle = LinkStyle.TEXT,
+    ) : InvoiceElement()
 
     /**
      * Inline image from an [ImageSource].

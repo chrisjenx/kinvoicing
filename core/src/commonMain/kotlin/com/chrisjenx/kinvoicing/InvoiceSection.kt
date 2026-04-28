@@ -45,17 +45,17 @@ public sealed class InvoiceSection {
         val bankName: String? = null,
         val accountNumber: String? = null,
         val routingNumber: String? = null,
-        val paymentLink: String? = null,
+        val paymentLink: InvoiceElement.Link? = null,
         /** Raw data to encode as a QR code (e.g., a payment URL). */
         val qrCodeData: String? = null,
-        val notes: String? = null,
+        val notes: List<InvoiceElement>? = null,
     ) : InvoiceSection()
 
     /** Closing notes, terms and conditions, or free-form content. */
     public data class Footer(
-        val notes: String? = null,
-        val terms: String? = null,
-        val customContent: String? = null,
+        val notes: List<InvoiceElement>? = null,
+        val terms: List<InvoiceElement>? = null,
+        val customContent: List<InvoiceElement>? = null,
     ) : InvoiceSection()
 
     /**

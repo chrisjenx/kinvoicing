@@ -19,7 +19,7 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
         modifier = Modifier
             .fillMaxWidth()
             .background(style.mutedBgComposeColor, RoundedCornerShape(4.dp))
-            .padding(InvoiceSpacing.lg)
+            .padding(InvoiceSpacing.lg),
     ) {
         Text(
             text = "PAYMENT INFORMATION",
@@ -39,20 +39,12 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
             Text(text = "Routing: $it", fontSize = InvoiceTypography.bodyMedium, color = style.textComposeColor)
         }
         payment.paymentLink?.let { link ->
-            val linkWrapper = LocalLinkWrapper.current
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            linkWrapper(link) {
-                Text(
-                    text = "Pay Online: $link",
-                    fontSize = InvoiceTypography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = style.primaryComposeColor,
-                )
-            }
+            ElementContent(link)
         }
-        payment.notes?.let {
+        payment.notes?.let { elements ->
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            Text(text = it, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            elements.forEach { ElementContent(it) }
         }
     }
 }

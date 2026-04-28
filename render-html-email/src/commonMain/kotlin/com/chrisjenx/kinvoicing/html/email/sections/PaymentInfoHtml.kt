@@ -1,7 +1,6 @@
 package com.chrisjenx.kinvoicing.html.email.sections
 
 import com.chrisjenx.kinvoicing.*
-import com.chrisjenx.kinvoicing.util.requireSafeUrl
 import kotlinx.html.*
 
 internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, style: InvoiceStyle) {
@@ -23,15 +22,14 @@ internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, 
         payment.paymentLink?.let { link ->
             div {
                 attributes["style"] = "margin-top: 8px;"
-                a {
-                    href = requireSafeUrl(link, "paymentLink")
-                    attributes["style"] = "color: ${style.primaryColor.toHexColor()}; font-size: 14px; font-weight: bold; text-decoration: none;"
-                    +"Pay Online: $link"
-                }
+                renderElement(link, style)
             }
         }
-        payment.notes?.let {
-            div { attributes["style"] = "margin-top: 8px; font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+        payment.notes?.let { elements ->
+            div {
+                attributes["style"] = "margin-top: 8px;"
+                elements.forEach { renderElement(it, style) }
+            }
         }
     }
 }

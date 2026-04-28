@@ -302,7 +302,7 @@ class DslBuilderTest {
         assertEquals("First National", payment.bankName)
         assertEquals("****4242", payment.accountNumber)
         assertEquals("021000021", payment.routingNumber)
-        assertEquals("https://pay.example.com", payment.paymentLink)
+        assertEquals("https://pay.example.com", payment.paymentLink?.href)
     }
 
     @Test
@@ -430,5 +430,103 @@ class DslBuilderTest {
         InvoiceFixtures.all.forEachIndexed { i, doc ->
             assertTrue(doc.sections.isNotEmpty(), "Fixture $i has no sections")
         }
+    }
+
+    @Test
+    fun paymentInfoLinkWithCustomTextDefaultsToTextStyle() {
+        val doc = invoice {
+            paymentInfo { paymentLink("Pay this invoice", "https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay this invoice", pay.paymentLink?.text)
+        assertEquals("https://pay.example.com", pay.paymentLink?.href)
+        assertEquals(LinkStyle.TEXT, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoLinkWithExplicitButtonStyle() {
+        val doc = invoice {
+            paymentInfo { paymentLink("Pay Now", "https://pay.example.com", LinkStyle.BUTTON) }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals(LinkStyle.BUTTON, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentButtonShortcutProducesButtonStyle() {
+        val doc = invoice {
+            paymentInfo { paymentButton("Pay Now", "https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay Now", pay.paymentLink?.text)
+        assertEquals(LinkStyle.BUTTON, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoSingleArgPaymentLinkDefaultsToPayNowText() {
+        val doc = invoice {
+            paymentInfo { paymentLink("https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay Now", pay.paymentLink?.text)
+        assertEquals(LinkStyle.TEXT, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoNotesLambdaSupportsRichElements() {
+        val doc = invoice {
+            paymentInfo {
+                notes {
+                    text("See our ")
+                    link("policy", "https://acme.com/policy")
+                }
+            }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals(2, pay.notes?.size)
+        assertEquals("See our ", (pay.notes!![0] as InvoiceElement.Text).value)
+        assertEquals(LinkStyle.TEXT, (pay.notes!![1] as InvoiceElement.Link).style)
+    }
+
+    @Test
+    fun footerNotesLambdaSupportsLinks() {
+        val doc = invoice {
+            footer {
+                notes {
+                    text("Read our ")
+                    link("terms", "https://acme.com/terms")
+                }
+            }
+        }
+        val footer = doc.sections.filterIsInstance<InvoiceSection.Footer>().single()
+        assertEquals(2, footer.notes?.size)
+        assertEquals("terms", (footer.notes!![1] as InvoiceElement.Link).text)
+    }
+
+    @Test
+    fun footerTermsLambdaSupportsButton() {
+        val doc = invoice {
+            footer {
+                terms {
+                    button("Pay Now", "https://pay.acme.com")
+                }
+            }
+        }
+        val footer = doc.sections.filterIsInstance<InvoiceSection.Footer>().single()
+        val link = footer.terms!![0] as InvoiceElement.Link
+        assertEquals(LinkStyle.BUTTON, link.style)
+    }
+
+    @Test
+    fun footerStringSettersStillWork() {
+        val doc = invoice {
+            footer {
+                notes("Thank you")
+                terms("Net 30")
+            }
+        }
+        val footer = doc.sections.filterIsInstance<InvoiceSection.Footer>().single()
+        assertEquals("Thank you", (footer.notes!![0] as InvoiceElement.Text).value)
+        assertEquals("Net 30", (footer.terms!![0] as InvoiceElement.Text).value)
     }
 }

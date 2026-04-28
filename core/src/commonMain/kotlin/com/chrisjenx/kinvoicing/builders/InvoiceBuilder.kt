@@ -89,7 +89,7 @@ public class InvoiceBuilder {
 
     /** Add a custom section identified by [key], built from [InvoiceElement] primitives. */
     public fun custom(key: String, init: CustomBuilder.() -> Unit) {
-        customSections.add(CustomBuilder(key).apply(init).build())
+        customSections.add(CustomBuilder(key).apply(init).buildSection())
     }
 
     /** Build the [InvoiceDocument], sorting sections into canonical order. */
