@@ -16,13 +16,6 @@ class InvoiceStatusTest {
     }
 
     @Test
-    fun ciGateFailureProbe_REVERT_ME() {
-        // Temporary: deliberate failure to confirm CI Gate fails closed.
-        // This commit will be reverted immediately.
-        assertEquals(1, 2, "deliberate failure for CI Gate verification")
-    }
-
-    @Test
     fun predefinedStatusesHaveDistinctColors() {
         val colors = listOf(
             InvoiceStatus.Draft, InvoiceStatus.Sent, InvoiceStatus.Paid,

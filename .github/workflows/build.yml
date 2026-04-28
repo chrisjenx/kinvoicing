@@ -46,9 +46,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: JVM tests
-        # Excludes :fidelity-test:jvmTest — Skia (libskiko) SIGSEGVs on Linux,
-        # and that test is already covered by the dedicated fidelity-tests
-        # job on macOS, so excluding it removes a redundant double-run.
+        # Excludes :fidelity-test:jvmTest — libskiko-linux-x64.so SIGSEGVs in
+        # SkPixmap::getColor on the standard ubuntu-latest runner image (see
+        # https://github.com/chrisjenx/kinvoicing/issues/6). The dedicated
+        # fidelity-tests job on macOS still covers it; excluding here also
+        # removes a redundant double-run that existed pre-split.
         run: ./gradlew jvmTest -x :fidelity-test:jvmTest
 
       - name: Upload test reports
