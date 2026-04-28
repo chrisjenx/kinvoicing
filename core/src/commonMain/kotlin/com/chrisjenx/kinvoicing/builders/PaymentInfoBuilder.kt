@@ -18,18 +18,56 @@ public class PaymentInfoBuilder {
 
     /** Set the bank or financial institution name. */
     public fun bankName(value: String) { bankName = value }
+
     /** Set the account number (consider masking for display, e.g., "****4242"). */
     public fun accountNumber(value: String) { accountNumber = value }
+
     /** Set the bank routing/sort code number. */
     public fun routingNumber(value: String) { routingNumber = value }
-    /** Set a URL where the recipient can pay online. Defaults to "Pay Now" inline TEXT link. */
-    public fun paymentLink(value: String) {
-        paymentLink = InvoiceElement.Link("Pay Now", requireSafeUrl(value, "paymentLink"), LinkStyle.TEXT)
+
+    /** Set a URL where the recipient can pay online. Renders as a "Pay Now" inline TEXT link. */
+    public fun paymentLink(href: String) {
+        paymentLink = InvoiceElement.Link(
+            text = "Pay Now",
+            href = requireSafeUrl(href, "paymentLink"),
+            style = LinkStyle.TEXT,
+        )
     }
+
+    /** Set a payment link with custom display [text] and explicit [style]. */
+    public fun paymentLink(
+        text: String,
+        href: String,
+        style: LinkStyle = LinkStyle.TEXT,
+    ) {
+        paymentLink = InvoiceElement.Link(
+            text = text,
+            href = requireSafeUrl(href, "paymentLink"),
+            style = style,
+        )
+    }
+
+    /** Convenience: render the payment CTA as a styled BUTTON. */
+    public fun paymentButton(text: String, href: String) {
+        paymentLink = InvoiceElement.Link(
+            text = text,
+            href = requireSafeUrl(href, "paymentLink"),
+            style = LinkStyle.BUTTON,
+        )
+    }
+
     /** Set raw data to encode as a QR code (e.g., a payment URL). */
     public fun qrCodeData(value: String) { qrCodeData = value }
-    /** Set additional payment-related notes. */
-    public fun notes(value: String) { notes = listOf(InvoiceElement.Text(value)) }
+
+    /** Set additional payment-related notes from a single string of plain text. */
+    public fun notes(value: String) {
+        notes = listOf(InvoiceElement.Text(value))
+    }
+
+    /** Set rich notes from a content lambda — supports text(), link(), button(), spacer(), etc. */
+    public fun notes(init: ContentBuilder.() -> Unit) {
+        notes = ContentBuilder().apply(init).build()
+    }
 
     internal fun build(): InvoiceSection.PaymentInfo = InvoiceSection.PaymentInfo(
         bankName = bankName,

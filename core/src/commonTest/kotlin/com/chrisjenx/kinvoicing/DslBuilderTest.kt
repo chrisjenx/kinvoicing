@@ -431,4 +431,60 @@ class DslBuilderTest {
             assertTrue(doc.sections.isNotEmpty(), "Fixture $i has no sections")
         }
     }
+
+    @Test
+    fun paymentInfoLinkWithCustomTextDefaultsToTextStyle() {
+        val doc = invoice {
+            paymentInfo { paymentLink("Pay this invoice", "https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay this invoice", pay.paymentLink?.text)
+        assertEquals("https://pay.example.com", pay.paymentLink?.href)
+        assertEquals(LinkStyle.TEXT, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoLinkWithExplicitButtonStyle() {
+        val doc = invoice {
+            paymentInfo { paymentLink("Pay Now", "https://pay.example.com", LinkStyle.BUTTON) }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals(LinkStyle.BUTTON, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentButtonShortcutProducesButtonStyle() {
+        val doc = invoice {
+            paymentInfo { paymentButton("Pay Now", "https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay Now", pay.paymentLink?.text)
+        assertEquals(LinkStyle.BUTTON, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoSingleArgPaymentLinkDefaultsToPayNowText() {
+        val doc = invoice {
+            paymentInfo { paymentLink("https://pay.example.com") }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals("Pay Now", pay.paymentLink?.text)
+        assertEquals(LinkStyle.TEXT, pay.paymentLink?.style)
+    }
+
+    @Test
+    fun paymentInfoNotesLambdaSupportsRichElements() {
+        val doc = invoice {
+            paymentInfo {
+                notes {
+                    text("See our ")
+                    link("policy", "https://acme.com/policy")
+                }
+            }
+        }
+        val pay = doc.sections.filterIsInstance<InvoiceSection.PaymentInfo>().single()
+        assertEquals(2, pay.notes?.size)
+        assertEquals("See our ", (pay.notes!![0] as InvoiceElement.Text).value)
+        assertEquals(LinkStyle.TEXT, (pay.notes!![1] as InvoiceElement.Link).style)
+    }
 }

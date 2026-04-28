@@ -201,4 +201,18 @@ class SecurityTest {
             summary {}
         }
     }
+
+    @Test
+    fun paymentLinkWithTextRejectsJavascriptScheme() {
+        assertFailsWith<IllegalArgumentException> {
+            invoice { paymentInfo { paymentLink("Click", "javascript:alert(1)") } }
+        }
+    }
+
+    @Test
+    fun paymentButtonRejectsJavascriptScheme() {
+        assertFailsWith<IllegalArgumentException> {
+            invoice { paymentInfo { paymentButton("Click", "javascript:alert(1)") } }
+        }
+    }
 }
