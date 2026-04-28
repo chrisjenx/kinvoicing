@@ -62,6 +62,7 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - **Image decoding expect/actual:** `decodeImageBytes()` in render-compose uses Skia on JVM/iOS/wasmJs and `BitmapFactory` on Android. Actuals live in `jvmMain`, `nativeMain`, `wasmJsMain`, `androidMain`.
 - **runBlockingCompat expect/actual:** Wraps `runBlocking` for JVM/native/Android; throws on wasmJs (wasmJs consumers use Compose renderer path via `painterResource`, not `bytes`).
 - **URL/CSS sanitization:** `core/.../util/Sanitize.kt` provides `requireSafeUrl` (public), `sanitizeFontFamily` (internal), `requireFinite` (internal). render-html has its own `sanitizeUrl` in `SvgToSemanticHtmlConverter.kt` since it can't import from core.
+- **Headless Compose rasterization (test-only):** When converting an `ImageComposeScene.render()` result to a `BufferedImage`, **encode the image while the scene is alive, then close** — `image.encodeToData()` returns owned bytes; `image.peekPixels()` returns a `Pixmap` that aliases the surface's native memory and goes dangling once `scene.close()` runs. macOS hides the bug (freed bytes stay readable briefly); Linux glibc SIGSEGVs in `SkPixmap::getColor`. Reference impl: `kinvoicing-fidelity-test/.../TestHelpers.kt` and `fidelity-test/.../RasterizeCompose.kt`. Background: issue #6.
 
 ## Code Style
 
