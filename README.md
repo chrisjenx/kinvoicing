@@ -323,15 +323,33 @@ lineItems {
 
 ### Payment info
 
+The pay link can render as an inline text link (default) or as a styled "Pay Now" CTA button.
+Both are clickable across PDF, HTML email, and Compose.
+
 ```kotlin
 paymentInfo {
     bankName("First National Bank")
     accountNumber("1234567890")
     routingNumber("021000021")
+
+    // Default: text link, label "Pay Now"
     paymentLink("https://pay.example.com/inv-001")
-    notes("Wire transfer preferred for amounts over $1,000")
+
+    // Or a custom-labelled text link:
+    // paymentLink("Pay this invoice", "https://pay.example.com/inv-001")
+
+    // Or a styled CTA button (Material 3 FilledButton-equivalent):
+    // paymentButton("Pay $1,000 Now", "https://pay.example.com/inv-001")
+
+    notes {
+        text("Wire transfer alternative — see ")
+        link("transfer policy", "https://example.com/wire-policy")
+    }
 }
 ```
+
+`link()` and `button()` are also available inside `footer { notes { ... } }` /
+`terms { ... }` / `customContent { ... }` and inside any `custom("...") { ... }` block.
 
 ### Metadata blocks
 

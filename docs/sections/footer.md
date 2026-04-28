@@ -6,7 +6,7 @@ nav_order: 6
 
 # Footer
 
-The footer section displays notes and terms at the bottom of the invoice.
+The footer section displays notes, terms, and free-form custom content at the bottom of the invoice.
 
 ```kotlin
 footer {
@@ -16,6 +16,36 @@ footer {
 ```
 
 {% include example-preview.html name="section-footer" height="200px" %}
+
+## Inline links and rich content
+
+Each of `notes`, `terms`, and `customContent` accepts a content lambda — embed
+links, buttons, dividers, and other inline elements:
+
+```kotlin
+footer {
+    notes {
+        text("Thanks for your business! Read our ")
+        link("terms", "https://acme.com/terms")
+        text(" or ")
+        link("contact support", "mailto:billing@acme.com")
+        text(".")
+    }
+    terms {
+        text("Net 30. ")
+        link("Late payment policy", "https://acme.com/late-payment")
+    }
+}
+```
+
+Plain-string forms still work for simple cases:
+
+```kotlin
+footer {
+    notes("Thank you for your business!")
+    terms("Net 30")
+}
+```
 
 ## Powered-by Branding
 
@@ -45,5 +75,9 @@ footer {
 
 | Method | Description |
 |--------|-------------|
-| `notes(value)` | Thank-you message or general notes |
-| `terms(value)` | Payment terms and conditions |
+| `notes(value)` | Thank-you message or general notes (plain string) |
+| `notes { ... }` | Rich notes — `text()`, `link()`, `button()`, etc. |
+| `terms(value)` | Payment terms and conditions (plain string) |
+| `terms { ... }` | Rich terms |
+| `customContent(value)` | Free-form content rendered below notes/terms (plain string) |
+| `customContent { ... }` | Rich custom content |

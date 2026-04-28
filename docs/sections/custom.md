@@ -60,11 +60,27 @@ row(2f, 1f) {       // 2:1 ratio columns
 }
 ```
 
-### Link
+### Link (inline text)
 
 ```kotlin
 link("View terms", "https://example.com/terms")
 ```
+
+Renders as a primary-colored Material 3 `labelLarge` inline link. Clickable in
+PDF and HTML email.
+
+### Button (styled CTA)
+
+```kotlin
+button("Pay Now", "https://pay.example.com/inv-001")
+```
+
+Renders as an M3 `Button`-equivalent — primary container, white label, 20dp pill
+corners. In email HTML this becomes a bulletproof `<table>`-wrapped button. In
+PDF the bounding rectangle becomes a clickable annotation.
+
+`link()` and `button()` are also available inside `paymentInfo { notes { ... } }`
+and `footer { notes { ... } }` / `terms { ... }` / `customContent { ... }`.
 
 ### Image
 
@@ -76,12 +92,17 @@ image(pngBytes, "image/png", width = 200, height = 100)
 
 ### CustomBuilder
 
+`CustomBuilder` extends `ContentBuilder`, so the same `link()`/`button()`/`text()`/etc.
+surface is available wherever rich content is accepted (Custom sections,
+`paymentInfo { notes { ... } }`, `footer { notes/terms/customContent { ... } }`).
+
 | Method | Description |
 |--------|-------------|
 | `text(value, styleRef?)` | Text element with optional style reference |
 | `divider()` | Horizontal divider line |
 | `spacer(height = 16)` | Vertical whitespace |
 | `row(vararg weights) { }` | Horizontal layout with column weights |
-| `link(text, href)` | Hyperlink |
+| `link(text, href)` | Inline TEXT-style hyperlink (primary color, M3 labelLarge) |
+| `button(text, href)` | BUTTON-style CTA (filled primary container, white label) |
 | `image(data, contentType, width?, height?)` | Inline image from bytes |
 | `image(source, width?, height?)` | Inline image from `ImageSource` |
