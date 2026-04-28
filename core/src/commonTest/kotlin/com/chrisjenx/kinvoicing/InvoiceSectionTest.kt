@@ -24,7 +24,7 @@ class InvoiceSectionTest {
                 total = 100.0,
             ),
             InvoiceSection.PaymentInfo(bankName = "Bank"),
-            InvoiceSection.Footer(notes = "Thanks"),
+            InvoiceSection.Footer(notes = listOf(InvoiceElement.Text("Thanks"))),
             InvoiceSection.Custom(
                 key = "custom",
                 content = listOf(InvoiceElement.Text("Hello"))

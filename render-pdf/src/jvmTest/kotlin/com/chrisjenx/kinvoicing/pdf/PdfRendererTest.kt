@@ -91,7 +91,7 @@ class PdfRendererTest {
         val bytes = renderer.render(InvoiceFixtures.fullFeatured)
         val text = extractText(bytes)
         assertTrue(
-            "pay.acme.com" in text || "Pay Online" in text,
+            "Pay Now" in text || "Pay Online" in text || "pay.acme.com" in text,
             "PDF should contain payment link text"
         )
     }

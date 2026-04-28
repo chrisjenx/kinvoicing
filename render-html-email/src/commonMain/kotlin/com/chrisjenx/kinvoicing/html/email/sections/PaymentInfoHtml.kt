@@ -24,14 +24,15 @@ internal fun FlowContent.renderPaymentInfo(payment: InvoiceSection.PaymentInfo, 
             div {
                 attributes["style"] = "margin-top: 8px;"
                 a {
-                    href = requireSafeUrl(link, "paymentLink")
+                    href = requireSafeUrl(link.href, "paymentLink")
                     attributes["style"] = "color: ${style.primaryColor.toHexColor()}; font-size: 14px; font-weight: bold; text-decoration: none;"
-                    +"Pay Online: $link"
+                    +link.text
                 }
             }
         }
-        payment.notes?.let {
-            div { attributes["style"] = "margin-top: 8px; font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+        payment.notes?.let { elements ->
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            div { attributes["style"] = "margin-top: 8px; font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +flattened }
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -41,18 +42,19 @@ internal fun PaymentInfoSection(payment: InvoiceSection.PaymentInfo) {
         payment.paymentLink?.let { link ->
             val linkWrapper = LocalLinkWrapper.current
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            linkWrapper(link) {
+            linkWrapper(link.href) {
                 Text(
-                    text = "Pay Online: $link",
+                    text = link.text,
                     fontSize = InvoiceTypography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = style.primaryComposeColor,
                 )
             }
         }
-        payment.notes?.let {
+        payment.notes?.let { elements ->
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            Text(text = it, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
         }
     }
 }

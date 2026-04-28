@@ -7,22 +7,25 @@ import kotlinx.html.*
 internal fun FlowContent.renderFooter(footer: InvoiceSection.Footer, style: InvoiceStyle, branding: Branding? = null) {
     div {
         attributes["style"] = "padding: 16px; background-color: ${style.mutedBackgroundColor.toHexColor()}; border-radius: 4px;"
-        footer.notes?.let {
+        footer.notes?.let { elements ->
             div {
                 attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"
                 +"Notes"
             }
-            div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;" ; +it }
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            div { attributes["style"] = "font-size: 13px; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 8px;" ; +flattened }
         }
-        footer.terms?.let {
+        footer.terms?.let { elements ->
             div {
                 attributes["style"] = "font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${style.secondaryColor.toHexColor()}; margin-bottom: 4px;"
                 +"Terms"
             }
-            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +it }
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()};" ; +flattened }
         }
-        footer.customContent?.let {
-            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()}; margin-top: 8px;" ; +it }
+        footer.customContent?.let { elements ->
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            div { attributes["style"] = "font-size: 12px; color: ${style.secondaryColor.toHexColor()}; margin-top: 8px;" ; +flattened }
         }
         val pb = branding?.takeIf { it.layout == BrandLayout.POWERED_BY_FOOTER }?.poweredBy
         if (pb != null) {

@@ -302,7 +302,7 @@ class DslBuilderTest {
         assertEquals("First National", payment.bankName)
         assertEquals("****4242", payment.accountNumber)
         assertEquals("021000021", payment.routingNumber)
-        assertEquals("https://pay.example.com", payment.paymentLink)
+        assertEquals("https://pay.example.com", payment.paymentLink?.href)
     }
 
     @Test

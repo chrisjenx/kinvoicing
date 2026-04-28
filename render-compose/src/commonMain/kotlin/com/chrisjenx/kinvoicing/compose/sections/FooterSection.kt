@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chrisjenx.kinvoicing.BrandLayout
 import com.chrisjenx.kinvoicing.Branding
+import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.InvoiceSection
 import com.chrisjenx.kinvoicing.compose.*
 
@@ -26,7 +27,7 @@ internal fun FooterSection(footer: InvoiceSection.Footer, branding: Branding? = 
             .background(style.mutedBgComposeColor, RoundedCornerShape(4.dp))
             .padding(InvoiceSpacing.lg),
     ) {
-        footer.notes?.let {
+        footer.notes?.let { elements ->
             Text(
                 text = "NOTES",
                 fontSize = InvoiceTypography.caption,
@@ -34,10 +35,11 @@ internal fun FooterSection(footer: InvoiceSection.Footer, branding: Branding? = 
                 color = style.secondaryComposeColor,
             )
             Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
-            Text(text = it, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            Text(text = flattened, fontSize = InvoiceTypography.bodyMedium, color = style.secondaryComposeColor)
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
         }
-        footer.terms?.let {
+        footer.terms?.let { elements ->
             Text(
                 text = "TERMS",
                 fontSize = InvoiceTypography.caption,
@@ -45,11 +47,13 @@ internal fun FooterSection(footer: InvoiceSection.Footer, branding: Branding? = 
                 color = style.secondaryComposeColor,
             )
             Spacer(modifier = Modifier.height(InvoiceSpacing.xs))
-            Text(text = it, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
         }
-        footer.customContent?.let {
+        footer.customContent?.let { elements ->
             Spacer(modifier = Modifier.height(InvoiceSpacing.sm))
-            Text(text = it, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
+            val flattened = elements.joinToString("") { (it as? InvoiceElement.Text)?.value ?: "" }
+            Text(text = flattened, fontSize = InvoiceTypography.bodySmall, color = style.secondaryComposeColor)
         }
         val pb = branding?.takeIf { it.layout == BrandLayout.POWERED_BY_FOOTER }?.poweredBy
         if (pb != null) {
