@@ -19,6 +19,7 @@ import kotlin.test.*
 class LinkAndImageTest {
 
     private val fixture = InvoiceFixtures.linksAndImages
+    private val payButton = InvoiceFixtures.payButton
 
     // ── HTML Email Link Tests ──
 
@@ -199,6 +200,69 @@ class LinkAndImageTest {
         val pdfUris = extractPdfLinkUris(fixture.toPdf()).toSet()
         val missingFromPdf = expectedUrls - pdfUris
         assertTrue(missingFromPdf.isEmpty(), "PDF missing link annotations: $missingFromPdf")
+    }
+
+    // ── BUTTON-style and rich-notes cross-renderer assertions ──
+
+    @Test
+    fun pdf_payButtonProducesAnnotation() {
+        val uris = extractPdfLinkUris(payButton.toPdf())
+        assertTrue(
+            "https://pay.acme.com/inv-paybtn" in uris,
+            "PDF should have BUTTON-style payment link annotation, found: $uris",
+        )
+    }
+
+    @Test
+    fun htmlEmail_payButtonRendersInsideTable() {
+        val html = payButton.toHtml()
+        val anchorIdx = html.indexOf("href=\"https://pay.acme.com/inv-paybtn\"")
+        assertTrue(anchorIdx >= 0, "Expected payment link <a> in BUTTON-style HTML")
+        val precedingHtml = html.substring(0, anchorIdx)
+        val tableIdx = precedingHtml.lastIndexOf("<table")
+        val tdIdx = precedingHtml.lastIndexOf("<td")
+        assertTrue(
+            tableIdx >= 0 && tdIdx > tableIdx,
+            "BUTTON-style payment link should be wrapped in <table><tr><td>",
+        )
+    }
+
+    @Test
+    fun pdf_paymentNotesEmbeddedLinkProducesAnnotation() {
+        val uris = extractPdfLinkUris(payButton.toPdf())
+        assertTrue(
+            "https://acme.com/wire-policy" in uris,
+            "PDF should annotate inline link in PaymentInfo.notes, found: $uris",
+        )
+    }
+
+    @Test
+    fun htmlEmail_paymentNotesEmbeddedLinkRenders() {
+        val html = payButton.toHtml()
+        assertTrue(
+            "href=\"https://acme.com/wire-policy\"" in html,
+            "PaymentInfo.notes inline link should render as <a href>",
+        )
+    }
+
+    @Test
+    fun pdf_footerEmbeddedLinkProducesAnnotation() {
+        val uris = extractPdfLinkUris(payButton.toPdf())
+        assertTrue(
+            "https://acme.com/terms" in uris,
+            "PDF should annotate inline link in Footer.notes, found: $uris",
+        )
+        assertTrue(
+            "mailto:billing@acme.com" in uris,
+            "PDF should annotate mailto: link in Footer.notes, found: $uris",
+        )
+    }
+
+    @Test
+    fun htmlEmail_footerEmbeddedLinkRenders() {
+        val html = payButton.toHtml()
+        assertTrue("href=\"https://acme.com/terms\"" in html, "Footer.notes link should render")
+        assertTrue("href=\"mailto:billing@acme.com\"" in html, "Footer.notes mailto: link should render")
     }
 
     // ── Helper ──
