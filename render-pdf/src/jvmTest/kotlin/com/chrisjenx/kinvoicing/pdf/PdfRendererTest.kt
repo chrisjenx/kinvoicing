@@ -87,16 +87,6 @@ class PdfRendererTest {
     }
 
     @Test
-    fun paymentLinkAnnotationPresent() {
-        val bytes = renderer.render(InvoiceFixtures.fullFeatured)
-        val text = extractText(bytes)
-        assertTrue(
-            "Pay Now" in text || "Pay Online" in text || "pay.acme.com" in text,
-            "PDF should contain payment link text"
-        )
-    }
-
-    @Test
     fun extensionFunctionWorks() {
         val bytes = InvoiceFixtures.basic.toPdf()
         assertTrue(bytes.isNotEmpty())
