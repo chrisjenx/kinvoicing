@@ -11,12 +11,29 @@ public class FooterBuilder {
     private var terms: List<InvoiceElement>? = null
     private var customContent: List<InvoiceElement>? = null
 
-    /** Set closing notes (e.g., "Thank you for your business!"). */
+    /** Set closing notes from a single plain-text string. */
     public fun notes(value: String) { notes = listOf(InvoiceElement.Text(value)) }
-    /** Set payment terms (e.g., "Net 30"). */
+
+    /** Set rich closing notes — supports text(), link(), button(), etc. */
+    public fun notes(init: ContentBuilder.() -> Unit) {
+        notes = ContentBuilder().apply(init).build()
+    }
+
+    /** Set payment terms from a single plain-text string. */
     public fun terms(value: String) { terms = listOf(InvoiceElement.Text(value)) }
-    /** Set arbitrary custom content rendered below notes and terms. */
+
+    /** Set rich payment terms — supports text(), link(), button(), etc. */
+    public fun terms(init: ContentBuilder.() -> Unit) {
+        terms = ContentBuilder().apply(init).build()
+    }
+
+    /** Set arbitrary custom content from a single plain-text string. */
     public fun customContent(value: String) { customContent = listOf(InvoiceElement.Text(value)) }
+
+    /** Set rich custom content — supports text(), link(), button(), etc. */
+    public fun customContent(init: ContentBuilder.() -> Unit) {
+        customContent = ContentBuilder().apply(init).build()
+    }
 
     internal fun build(): InvoiceSection.Footer = InvoiceSection.Footer(
         notes = notes,
