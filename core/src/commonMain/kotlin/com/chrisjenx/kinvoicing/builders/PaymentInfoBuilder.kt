@@ -26,13 +26,7 @@ public class PaymentInfoBuilder {
     public fun routingNumber(value: String) { routingNumber = value }
 
     /** Set a URL where the recipient can pay online. Renders as a "Pay Now" inline TEXT link. */
-    public fun paymentLink(href: String) {
-        paymentLink = InvoiceElement.Link(
-            text = "Pay Now",
-            href = requireSafeUrl(href, "paymentLink"),
-            style = LinkStyle.TEXT,
-        )
-    }
+    public fun paymentLink(href: String): Unit = paymentLink("Pay Now", href, LinkStyle.TEXT)
 
     /** Set a payment link with custom display [text] and explicit [style]. */
     public fun paymentLink(
@@ -48,13 +42,7 @@ public class PaymentInfoBuilder {
     }
 
     /** Convenience: render the payment CTA as a styled BUTTON. */
-    public fun paymentButton(text: String, href: String) {
-        paymentLink = InvoiceElement.Link(
-            text = text,
-            href = requireSafeUrl(href, "paymentLink"),
-            style = LinkStyle.BUTTON,
-        )
-    }
+    public fun paymentButton(text: String, href: String): Unit = paymentLink(text, href, LinkStyle.BUTTON)
 
     /** Set raw data to encode as a QR code (e.g., a payment URL). */
     public fun qrCodeData(value: String) { qrCodeData = value }

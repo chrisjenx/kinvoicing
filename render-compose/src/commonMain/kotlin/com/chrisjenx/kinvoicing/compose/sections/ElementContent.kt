@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chrisjenx.kinvoicing.InvoiceElement
 import com.chrisjenx.kinvoicing.LinkStyle
 import com.chrisjenx.kinvoicing.compose.*
@@ -54,13 +53,12 @@ internal fun ElementContent(element: InvoiceElement) {
                 LinkStyle.TEXT -> linkWrapper(element.href) {
                     Text(
                         text = element.text,
-                        fontSize = 14.sp,
+                        fontSize = InvoiceTypography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = style.primaryComposeColor,
                     )
                 }
                 LinkStyle.BUTTON -> linkWrapper(element.href) {
-                    // Visual-only equivalent of M3 FilledButton — onClick handled by linkWrapper.
                     Box(
                         modifier = Modifier
                             .heightIn(min = 40.dp)
@@ -70,7 +68,7 @@ internal fun ElementContent(element: InvoiceElement) {
                     ) {
                         Text(
                             text = element.text,
-                            fontSize = 14.sp,
+                            fontSize = InvoiceTypography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             color = Color.White,
                         )

@@ -20,7 +20,7 @@ import com.chrisjenx.kinvoicing.util.requireSafeUrl
  * ```
  */
 @InvoiceDsl
-public class ContentBuilder {
+public open class ContentBuilder {
     private val elements: MutableList<InvoiceElement> = mutableListOf()
 
     /** Add a text element, optionally referencing a renderer-defined style via [styleRef]. */
@@ -74,7 +74,4 @@ public class ContentBuilder {
     }
 
     internal fun build(): List<InvoiceElement> = elements.toList()
-
-    /** Test-only accessor — kept `internal` to avoid widening the public surface. */
-    internal fun buildPublic(): List<InvoiceElement> = build()
 }

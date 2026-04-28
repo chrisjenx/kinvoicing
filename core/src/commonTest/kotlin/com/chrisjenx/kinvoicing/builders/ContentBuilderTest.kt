@@ -10,7 +10,7 @@ import kotlin.test.assertIs
 class ContentBuilderTest {
     @Test
     fun textAddsTextElement() {
-        val out = ContentBuilder().apply { text("hello") }.buildPublic()
+        val out = ContentBuilder().apply { text("hello") }.build()
         assertEquals(1, out.size)
         val t = assertIs<InvoiceElement.Text>(out[0])
         assertEquals("hello", t.value)
@@ -18,7 +18,7 @@ class ContentBuilderTest {
 
     @Test
     fun linkAddsTextStyleLink() {
-        val out = ContentBuilder().apply { link("Pay Now", "https://pay.example.com") }.buildPublic()
+        val out = ContentBuilder().apply { link("Pay Now", "https://pay.example.com") }.build()
         val l = assertIs<InvoiceElement.Link>(out[0])
         assertEquals("Pay Now", l.text)
         assertEquals("https://pay.example.com", l.href)
@@ -27,7 +27,7 @@ class ContentBuilderTest {
 
     @Test
     fun buttonAddsButtonStyleLink() {
-        val out = ContentBuilder().apply { button("Pay Now", "https://pay.example.com") }.buildPublic()
+        val out = ContentBuilder().apply { button("Pay Now", "https://pay.example.com") }.build()
         val l = assertIs<InvoiceElement.Link>(out[0])
         assertEquals(LinkStyle.BUTTON, l.style)
     }
@@ -55,7 +55,7 @@ class ContentBuilderTest {
                 text("L")
                 text("R")
             }
-        }.buildPublic()
+        }.build()
         assertEquals(3, out.size)
         assertIs<InvoiceElement.Spacer>(out[0])
         assertEquals(InvoiceElement.Divider, out[1])
