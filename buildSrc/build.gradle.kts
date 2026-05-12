@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-// No KGP dependency on buildSrc's classpath: the wasmjs-node-compose plugin
-// reaches `nodeJsArgs` reflectively on the `wasmJsNodeTest` task, avoiding
-// version-conflict and "two classloaders" pitfalls that come from
-// declaring `kotlin-gradle-plugin` here.
+// The wasmjs-node-compose plugin reaches KGP types reflectively, so this
+// buildSrc has no `kotlin-gradle-plugin` dependency. Declaring one
+// produces either a plugin-resolution conflict (`implementation`) or a
+// runtime NoClassDefFoundError (`compileOnly`).

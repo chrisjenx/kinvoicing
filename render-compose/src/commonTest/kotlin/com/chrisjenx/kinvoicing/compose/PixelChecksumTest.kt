@@ -3,26 +3,14 @@ package com.chrisjenx.kinvoicing.compose
 import com.chrisjenx.kinvoicing.InvoiceFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
-/**
- * Cross-platform validation that Skia (or per-platform decoder) produces
- * deterministic pixel data for [InvoiceFixtures.TEST_LOGO_PNG]. Each
- * target ships its own [expectedPixelChecksum] in its test source set:
- *
- *   - wasmJsTest    -> Skia wasm value (identical in Node and Browser)
- *   - jvmTest       -> Skiko-native value
- *   - nativeTest    -> Skiko-native value (iOS, macOS, Linux, Mingw)
- *   - androidUnitTest -> 0L sentinel (BitmapFactory needs Robolectric;
- *                         test logs and skips when value is 0)
- *
- * Native Skiko and Skia-wasm produce different byte layouts because of
- * differing default ColorType / alpha-premultiplication, but each is
- * internally deterministic. The migration claim that prompted this test
- * is "wasmJs/Node == wasmJs/Browser"; this file's wasmJsTest actual
- * (-5336315741981768721) is what both produce, so the equivalence is
- * locked in.
- */
+// Native Skiko (JVM, iOS, macOS, Linux, Mingw) and Skia wasm produce
+// different default byte layouts for the same decoded image, so each
+// test source set declares its own baseline value. The wasmJs baseline
+// is observed to be identical between `nodejs()` and `browser()` —
+// that equivalence is the safety net behind running tests on Node.
+internal expect val expectedPixelChecksum: Long
+
 class PixelChecksumTest {
 
     @Test
@@ -40,56 +28,33 @@ class PixelChecksumTest {
         val pixels = IntArray(decoded.bitmap.width * decoded.bitmap.height)
         decoded.bitmap.readPixels(pixels)
 
-        val checksum = pixelChecksum(pixels)
-        val nonTransparentCount = pixels.count { (it ushr 24) != 0 }
+        val (checksum, nonTransparent) = hashAndCountOpaque(pixels)
 
-        // Sanity: same number of non-transparent pixels on every platform.
-        // This held for JVM / iOS / wasmJs Node / wasmJs Browser when we
-        // collected the baselines, so it's a meaningful invariant even
-        // across decoders with different byte layouts.
-        assertEquals(
-            11988,
-            nonTransparentCount,
-            "Logo non-transparent pixel count drifted from the cross-platform invariant.",
-        )
+        // Cross-platform invariant: every Skia-backed decoder we tested
+        // (JVM, iOS, wasmJs Node, wasmJs Browser) produces 11988 opaque
+        // pixels. Drift here means the fixture or decoder changed.
+        assertEquals(11988, nonTransparent)
 
-        println("[PixelChecksumTest] checksum=$checksum nonTransparent=$nonTransparentCount")
+        println("[PixelChecksumTest] checksum=$checksum nonTransparent=$nonTransparent")
 
-        // Sentinel: 0L means this platform has no recorded baseline yet
-        // (e.g. Android needs Robolectric to run BitmapFactory in a unit
-        // test). Skip the assertion but still surface the value.
-        if (expectedPixelChecksum == 0L) {
-            println("[PixelChecksumTest] no baseline recorded for this platform; skipping equality check")
-            return
-        }
-        assertEquals(
-            expectedPixelChecksum,
-            checksum,
-            "Decoded logo pixel checksum drifted from this platform's baseline.",
-        )
+        // 0L sentinel means this platform has no recorded baseline yet
+        // (e.g. Android needs Robolectric to exercise BitmapFactory).
+        if (expectedPixelChecksum == 0L) return
+        assertEquals(expectedPixelChecksum, checksum)
     }
 }
 
-/**
- * Per-platform expected value, declared in each test source set. Native
- * Skiko targets and the Skia wasm build use different default pixel
- * formats, so the baselines differ between equivalence classes.
- */
-internal expect val expectedPixelChecksum: Long
-
-/**
- * Deterministic pixel hash. Defined in common code so the hash itself
- * cannot diverge per platform — only its input (decoded pixels) can.
- * 64-bit FNV-1a folded over each ARGB int.
- */
-internal fun pixelChecksum(pixels: IntArray): Long {
-    var h = -3750763034362895579L // FNV-1a 64-bit offset basis
+private fun hashAndCountOpaque(pixels: IntArray): Pair<Long, Int> {
+    var hash = -3750763034362895579L // FNV-1a 64-bit offset basis
+    var opaque = 0
     for (i in pixels.indices) {
         val p = pixels[i]
-        h = (h xor ((p ushr 24) and 0xff).toLong()) * 1099511628211L
-        h = (h xor ((p ushr 16) and 0xff).toLong()) * 1099511628211L
-        h = (h xor ((p ushr 8) and 0xff).toLong()) * 1099511628211L
-        h = (h xor (p and 0xff).toLong()) * 1099511628211L
+        val a = (p ushr 24) and 0xff
+        if (a != 0) opaque++
+        hash = (hash xor a.toLong()) * 1099511628211L
+        hash = (hash xor ((p ushr 16) and 0xff).toLong()) * 1099511628211L
+        hash = (hash xor ((p ushr 8) and 0xff).toLong()) * 1099511628211L
+        hash = (hash xor (p and 0xff).toLong()) * 1099511628211L
     }
-    return h
+    return hash to opaque
 }
