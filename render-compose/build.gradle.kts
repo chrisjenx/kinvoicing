@@ -5,10 +5,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
-    // Adds the doFirst hook + node --import shim required to run this
-    // module's wasmJs tests under `nodejs()` instead of Karma+Chrome.
-    // See buildSrc/src/main/kotlin/wasmjs-node-compose.gradle.kts.
-    id("wasmjs-node-compose")
+    id("com.chrisjenx.wasmjs-node-compose")
 }
 
 kotlin {
