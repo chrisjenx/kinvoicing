@@ -21,6 +21,9 @@ class WasmJsNodeComposePlugin : Plugin<Project> {
             doFirst {
                 if (skikoMjs.exists()) {
                     val text = skikoMjs.readText()
+                    // Undo Emscripten DCE: skiko.mjs ships with `if (false) {`
+                    // around its Node loader; flip it so module resolution works
+                    // under nodejs(). Skiko version bumps may invalidate this gate.
                     if (text.contains("if (false) {")) {
                         skikoMjs.writeText(
                             text.replace("if (false) {", "if (ENVIRONMENT_IS_NODE) {")
@@ -31,9 +34,11 @@ class WasmJsNodeComposePlugin : Plugin<Project> {
                 nodeTestShim.writeText(shimText + "\n")
 
                 @Suppress("UNCHECKED_CAST")
-                val nodeJsArgs = runCatching {
+                val nodeJsArgs = try {
                     javaClass.getMethod("getNodeJsArgs").invoke(this) as MutableList<String>
-                }.getOrNull()
+                } catch (_: NoSuchMethodException) {
+                    null
+                }
                 if (nodeJsArgs != null) {
                     val shimUrl = nodeTestShim.toURI().toASCIIString()
                     if (!nodeJsArgs.contains(shimUrl)) {

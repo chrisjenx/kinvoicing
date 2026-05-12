@@ -52,8 +52,11 @@ jobs:
 
       - name: Override versions
         run: |
+          set -euo pipefail
           perl -i -pe 's/^kotlin = ".*"/kotlin = "${{ matrix.version.kotlin-version }}"/' gradle/libs.versions.toml
           perl -i -pe 's/^compose-multiplatform = ".*"/compose-multiplatform = "${{ matrix.version.compose-version }}"/' gradle/libs.versions.toml
+          grep -qE "^kotlin = \"${{ matrix.version.kotlin-version }}\"$" gradle/libs.versions.toml
+          grep -qE "^compose-multiplatform = \"${{ matrix.version.compose-version }}\"$" gradle/libs.versions.toml
           echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
           grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
 
