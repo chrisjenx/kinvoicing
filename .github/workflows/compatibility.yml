@@ -1,0 +1,73 @@
+name: Compose Compatibility
+
+on:
+  pull_request:
+    paths:
+      - '.github/compose-versions.json'
+      - '.github/workflows/compatibility.yml'
+      - 'gradle/libs.versions.toml'
+      - 'render-compose/**'
+      - 'build-logic/**'
+  schedule:
+    - cron: '0 9 * * 1' # Weekly Monday 9am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  load-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.load.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - id: load
+        run: echo "matrix=$(jq -c '.versions' .github/compose-versions.json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: load-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        version: ${{ fromJson(needs.load-versions.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    name: CMP ${{ matrix.version.compose-version }} / ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Override versions
+        run: |
+          perl -i -pe 's/^kotlin = ".*"/kotlin = "${{ matrix.version.kotlin-version }}"/' gradle/libs.versions.toml
+          perl -i -pe 's/^compose-multiplatform = ".*"/compose-multiplatform = "${{ matrix.version.compose-version }}"/' gradle/libs.versions.toml
+          echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
+          grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
+
+      - name: Build and test render-compose
+        run: ./gradlew :render-compose:build :render-compose:wasmJsNodeTest --no-configuration-cache
+
+      - name: iOS simulator tests
+        if: matrix.os == 'macos-latest'
+        run: ./gradlew :render-compose:iosSimulatorArm64Test --no-configuration-cache
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: compat-${{ matrix.version.compose-version }}-${{ matrix.os }}
+          path: '**/build/reports/tests/'
+          retention-days: 7
