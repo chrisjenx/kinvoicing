@@ -16,10 +16,7 @@ kotlin {
     iosArm64()
     iosSimulatorArm64 {
         binaries.withType(org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable::class.java).configureEach {
-            // CMP 1.11+ ships compose.ui-uikit symbols referencing iOS 18
-            // APIs (UIViewLayoutRegion). Static test-executable linking
-            // pulls them in even when consumer apps don't. Bump the test
-            // binary's deployment target — main framework unaffected.
+            // CMP 1.11+'s compose.ui-uikit references iOS 18 symbols; test linkage needs the bump (main framework unaffected).
             linkerOpts("-platform_version", "ios-simulator", "18.0", "18.0")
         }
     }

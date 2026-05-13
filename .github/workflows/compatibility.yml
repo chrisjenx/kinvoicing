@@ -48,10 +48,8 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # macos-latest defaults to Xcode 16.4 whose iOS 18 SDK lacks the
-      # UIUtilities private framework that CMP 1.11+ auto-links from
-      # compose.ui-uikit (CMPLayoutRegion -> UIViewLayoutRegion). Xcode
-      # 26+ ships it.
+      # macos-latest default Xcode lacks the UIUtilities framework that
+      # CMP 1.11+ auto-links from compose.ui-uikit.
       - if: matrix.os == 'macos-latest'
         uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
         with:
@@ -62,17 +60,17 @@ jobs:
       - name: Override versions
         run: |
           set -euo pipefail
-          perl -i -pe 's/^kotlin = ".*"/kotlin = "${{ matrix.version.kotlin-version }}"/' gradle/libs.versions.toml
-          perl -i -pe 's/^compose-multiplatform = ".*"/compose-multiplatform = "${{ matrix.version.compose-version }}"/' gradle/libs.versions.toml
+          perl -i -pe '
+            s/^kotlin = ".*"/kotlin = "${{ matrix.version.kotlin-version }}"/;
+            s/^compose-multiplatform = ".*"/compose-multiplatform = "${{ matrix.version.compose-version }}"/;
+          ' gradle/libs.versions.toml
           grep -qE "^kotlin = \"${{ matrix.version.kotlin-version }}\"$" gradle/libs.versions.toml
           grep -qE "^compose-multiplatform = \"${{ matrix.version.compose-version }}\"$" gradle/libs.versions.toml
           echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
           grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
 
       - name: Assemble + JVM/wasmJs tests
-        # Skip :render-compose:build (aggregates Android testDebugUnitTest
-        # which needs Robolectric for BitmapFactory). Match build.yml's
-        # task selection instead.
+        # Avoid Android testDebugUnitTest (BitmapFactory needs Robolectric).
         run: ./gradlew :render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
 
       - name: iOS simulator tests
