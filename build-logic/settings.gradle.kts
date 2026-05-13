@@ -14,4 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "buildSrc"
+rootProject.name = "build-logic"
+
+include(":wasmjs-node-compose")

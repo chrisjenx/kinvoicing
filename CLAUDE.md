@@ -18,6 +18,8 @@ Kotlin Multiplatform invoicing library with sealed IR, DSL builder, and four ren
 ./gradlew :kinvoicing-docs:run               # Generate docs site assets (section preview HTML)
 cd docs && bundle exec jekyll serve           # Run docs site locally
 gh workflow run release.yml -f version=X.Y.Z  # Trigger Maven Central release + GitHub Release + version bump
+./gradlew :build-logic:wasmjs-node-compose:test  # Smoke-test the wasmJs Node test-runner plugin
+gh workflow run "Compose Compatibility"       # Run the CMP × OS compatibility matrix on demand
 ```
 
 Fidelity report after tests: `kinvoicing-fidelity-test/build/reports/fidelity/index.html`
@@ -38,6 +40,12 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 :fidelity-test           com.chrisjenx.kinvoicing.fidelity   Invoice renderer visual regression
 ```
 
+Composite included build (not a library module):
+```
+build-logic/wasmjs-node-compose   com.chrisjenx.wasmjsnode   Gradle plugin id "com.chrisjenx.wasmjs-node-compose"
+```
+Applied by `render-compose`; patches Skiko's Emscripten loader + injects a DOM/canvas shim so `wasmJsNodeTest` runs on Node.js instead of Karma+Chrome. Wired via `pluginManagement { includeBuild("build-logic") }` in root `settings.gradle.kts`.
+
 **Dependency flow:** core → render-compose → render-pdf / render-html (both via compose2pdf) ; core → render-html-email (standalone)
 
 **⚠ render-html does NOT depend on core.** Shared utilities from core must be duplicated in render-html or made `public`. render-html-email DOES depend on core.
@@ -46,9 +54,9 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 
 | Module | Targets |
 |--------|---------|
-| core | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
-| render-compose | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs |
-| render-html-email | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
+| core | jvm, android, iosArm64, iosSimulatorArm64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
+| render-compose | jvm, android, iosArm64, iosSimulatorArm64, wasmJs |
+| render-html-email | jvm, android, iosArm64, iosSimulatorArm64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
 | render-pdf | jvm only (compose2pdf) |
 | render-html | jvm only (compose2pdf) |
 | kinvoicing-examples | jvm only |
@@ -63,6 +71,8 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - **runBlockingCompat expect/actual:** Wraps `runBlocking` for JVM/native/Android; throws on wasmJs (wasmJs consumers use Compose renderer path via `painterResource`, not `bytes`).
 - **URL/CSS sanitization:** `core/.../util/Sanitize.kt` provides `requireSafeUrl` (public), `sanitizeFontFamily` (internal), `requireFinite` (internal). render-html has its own `sanitizeUrl` in `SvgToSemanticHtmlConverter.kt` since it can't import from core.
 - **Headless Compose rasterization (test-only):** When converting an `ImageComposeScene.render()` result to a `BufferedImage`, **encode the image while the scene is alive, then close** — `image.encodeToData()` returns owned bytes; `image.peekPixels()` returns a `Pixmap` that aliases the surface's native memory and goes dangling once `scene.close()` runs. macOS hides the bug (freed bytes stay readable briefly); Linux glibc SIGSEGVs in `SkPixmap::getColor`. Reference impl: `kinvoicing-fidelity-test/.../TestHelpers.kt` and `fidelity-test/.../RasterizeCompose.kt`. Background: issue #6.
+- **wasmJs tests on Node:** all three KMP modules (`core`, `render-compose`, `render-html-email`) declare `wasmJs { nodejs() }`. The `com.chrisjenx.wasmjs-node-compose` plugin (`build-logic/`) is applied by `render-compose` to make Compose/Skiko bootable under Node: it flips Skiko's Emscripten DCE gate (`if (false) {` → `if (ENVIRONMENT_IS_NODE) {`) and injects a `node --import` shim. The plugin reaches `KotlinJsTest.nodeJsArgs` reflectively to avoid coupling the build-logic classpath to a specific KGP version. `PixelChecksumTest` in render-compose validates the decoded-bitmap byte-layout matches across JVM/native/wasmJs (baselines in per-target `PixelChecksumExpected.<target>.kt`).
+- **Compose compatibility matrix:** `.github/compose-versions.json` declares `(compose-version, kotlin-version)` pairs (currently 3 entries: two stable minors + the newest pre-release). `.github/workflows/compatibility.yml` runs `:render-compose:build :render-compose:wasmJsNodeTest` (and `iosSimulatorArm64Test` on macOS) against each cell, fail-loud asserting the `perl` catalog override actually landed. `.github/workflows/update-compose-versions.yml` refreshes the JSON weekly from Maven Central and opens a PR via App token so the resulting compat run triggers automatically. Mirrors the compose2pdf pattern intentionally — keep them in lockstep.
 
 ## Code Style
 
@@ -76,3 +86,4 @@ HTML fidelity tests require Playwright: `npx playwright install chromium` (skips
 - Dependencies managed via `gradle/libs.versions.toml` version catalog; reference as `libs.<name>`
 - HTML safety tests: `EmailSafetyTest` (render-html-email safety, jsoup), `IframeSafetyTest` (render-html iframe safety, jsoup)
 - Cross-platform tests in `commonTest` run on all targets; use `allTests` task to verify
+- **CHANGELOG.md is reconciled at release time, not per-PR.** The `[Unreleased]` section stays empty between releases; do not add entries as PRs land. GitHub Release notes are auto-generated by `gh release create --generate-notes` from PR titles, independent of CHANGELOG.
