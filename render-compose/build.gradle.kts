@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
+    id("com.chrisjenx.wasmjs-node-compose")
 }
 
 kotlin {
@@ -13,9 +14,13 @@ kotlin {
     jvm()
     androidTarget()
     iosArm64()
-    iosSimulatorArm64()
-    iosX64()
-    wasmJs { browser() }
+    iosSimulatorArm64 {
+        binaries.withType(org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable::class.java).configureEach {
+            // CMP 1.11+'s compose.ui-uikit references iOS 18 symbols; test linkage needs the bump (main framework unaffected).
+            linkerOpts("-platform_version", "ios-simulator", "18.0", "18.0")
+        }
+    }
+    wasmJs { nodejs() }
 
     sourceSets {
         commonMain {

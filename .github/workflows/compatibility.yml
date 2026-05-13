@@ -1,0 +1,106 @@
+name: Compose Compatibility
+
+on:
+  pull_request:
+    paths:
+      - '.github/compose-versions.json'
+      - '.github/workflows/compatibility.yml'
+      - 'gradle/libs.versions.toml'
+      - 'render-compose/**'
+      - 'build-logic/**'
+  schedule:
+    - cron: '0 9 * * 1' # Weekly Monday 9am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  load-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.load.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - id: load
+        run: echo "matrix=$(jq -c '.versions' .github/compose-versions.json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: load-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        version: ${{ fromJson(needs.load-versions.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    name: CMP ${{ matrix.version.compose-version }} / ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # macos-latest default Xcode lacks the UIUtilities framework that
+      # CMP 1.11+ auto-links from compose.ui-uikit.
+      - if: matrix.os == 'macos-latest'
+        uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: latest-stable
+
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Override versions
+        run: |
+          set -euo pipefail
+          perl -i -pe '
+            s/^kotlin = ".*"/kotlin = "${{ matrix.version.kotlin-version }}"/;
+            s/^compose-multiplatform = ".*"/compose-multiplatform = "${{ matrix.version.compose-version }}"/;
+          ' gradle/libs.versions.toml
+          grep -qE "^kotlin = \"${{ matrix.version.kotlin-version }}\"$" gradle/libs.versions.toml
+          grep -qE "^compose-multiplatform = \"${{ matrix.version.compose-version }}\"$" gradle/libs.versions.toml
+          echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
+          grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
+
+      - name: Assemble + JVM/wasmJs tests
+        # Avoid Android testDebugUnitTest (BitmapFactory needs Robolectric).
+        run: ./gradlew :render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
+
+      - name: iOS simulator tests
+        if: matrix.os == 'macos-latest'
+        run: ./gradlew :render-compose:iosSimulatorArm64Test --no-configuration-cache
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: compat-${{ matrix.version.compose-version }}-${{ matrix.os }}
+          path: '**/build/reports/tests/'
+          retention-days: 7
+
+  compat-gate:
+    name: Compose Compatibility CI Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - load-versions
+      - test
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          echo "  load-versions: ${{ needs.load-versions.result }}"
+          echo "  test:          ${{ needs.test.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "::error::One or more required jobs did not succeed."
+            exit 1
+          fi
+          echo "All required jobs succeeded."

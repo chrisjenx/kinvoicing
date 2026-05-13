@@ -12,8 +12,7 @@ kotlin {
     androidTarget()
     iosArm64()
     iosSimulatorArm64()
-    iosX64()
-    wasmJs { browser() }
+    wasmJs { nodejs() }
     macosArm64()
     macosX64()
     linuxX64()
