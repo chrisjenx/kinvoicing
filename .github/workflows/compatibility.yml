@@ -60,8 +60,11 @@ jobs:
           echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
           grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
 
-      - name: Build and test render-compose
-        run: ./gradlew :render-compose:build :render-compose:wasmJsNodeTest --no-configuration-cache
+      - name: Assemble + JVM/wasmJs tests
+        # render-compose:build aggregates Android testDebugUnitTest, which
+        # needs Robolectric for BitmapFactory and is intentionally not in
+        # build.yml. Match build.yml's task selection instead.
+        run: ./gradlew :render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
 
       - name: iOS simulator tests
         if: matrix.os == 'macos-latest'
@@ -74,3 +77,23 @@ jobs:
           name: compat-${{ matrix.version.compose-version }}-${{ matrix.os }}
           path: '**/build/reports/tests/'
           retention-days: 7
+
+  compat-gate:
+    name: Compose Compatibility CI Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - load-versions
+      - test
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          echo "  load-versions: ${{ needs.load-versions.result }}"
+          echo "  test:          ${{ needs.test.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
+             || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "::error::One or more required jobs did not succeed."
+            exit 1
+          fi
+          echo "All required jobs succeeded."
