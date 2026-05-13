@@ -60,13 +60,11 @@ jobs:
           echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
           grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
 
-      - name: JVM + wasmJs tests
-        # Avoiding :render-compose:assemble: it builds every declared KMP
-        # target including iosX64, but newer CMP releases (1.11+) dropped
-        # iosX64 artifacts. The variant resolver then fails on Linux even
-        # though iosX64 isn't being exercised. Run specific test tasks
-        # instead — they only touch the targets they need.
-        run: ./gradlew :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
+      - name: Assemble + JVM/wasmJs tests
+        # Skip :render-compose:build (aggregates Android testDebugUnitTest
+        # which needs Robolectric for BitmapFactory). Match build.yml's
+        # task selection instead.
+        run: ./gradlew :render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
 
       - name: iOS simulator tests
         if: matrix.os == 'macos-latest'

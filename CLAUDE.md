@@ -54,9 +54,9 @@ Applied by `render-compose`; patches Skiko's Emscripten loader + injects a DOM/c
 
 | Module | Targets |
 |--------|---------|
-| core | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
-| render-compose | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs |
-| render-html-email | jvm, android, iosArm64, iosSimulatorArm64, iosX64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
+| core | jvm, android, iosArm64, iosSimulatorArm64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
+| render-compose | jvm, android, iosArm64, iosSimulatorArm64, wasmJs |
+| render-html-email | jvm, android, iosArm64, iosSimulatorArm64, wasmJs, macosArm64, macosX64, linuxX64, linuxArm64, mingwX64 |
 | render-pdf | jvm only (compose2pdf) |
 | render-html | jvm only (compose2pdf) |
 | kinvoicing-examples | jvm only |
