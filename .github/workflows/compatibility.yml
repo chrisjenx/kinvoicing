@@ -71,7 +71,15 @@ jobs:
 
       - name: Assemble + JVM/wasmJs tests
         # Avoid Android testDebugUnitTest (BitmapFactory needs Robolectric).
-        run: ./gradlew :render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest --no-configuration-cache
+        # Prerelease CMP pulls preview androidx artifacts whose AAR metadata demands
+        # a compileSdk we don't ship yet (1.12 alphas need 37) — skip the Android
+        # target for prereleases; JVM/wasmJs (and iOS on macOS) still build and test.
+        run: |
+          TASKS=(:render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest)
+          if [[ "${{ matrix.version.compose-version }}" == *-* ]]; then
+            TASKS=(:render-compose:jvmJar :render-compose:jvmTest :render-compose:wasmJsNodeTest)
+          fi
+          ./gradlew "${TASKS[@]}" --no-configuration-cache
 
       - name: iOS simulator tests
         if: matrix.os == 'macos-latest'
