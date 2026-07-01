@@ -2,6 +2,10 @@
 .gradle/
 build/
 
+# Python (docs compat-table generator)
+__pycache__/
+*.pyc
+
 # IDE
 .idea/
 *.iml
@@ -51,3 +55,6 @@ docs/Gemfile.lock
 # Claude Code
 .claude/settings.json
 .claude/settings.local.json
+
+# Superpowers process docs (specs/plans — not shipped)
+docs/superpowers/

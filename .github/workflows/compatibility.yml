@@ -6,7 +6,11 @@ on:
       - '.github/compose-versions.json'
       - '.github/workflows/compatibility.yml'
       - 'gradle/libs.versions.toml'
+      - 'core/**'
       - 'render-compose/**'
+      - 'render-html/**'
+      - 'render-pdf/**'
+      - 'compat-consumer/**'
       - 'build-logic/**'
   schedule:
     - cron: '0 9 * * 1' # Weekly Monday 9am UTC
@@ -46,6 +50,9 @@ jobs:
       - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
+          # Match the release/build.yml JDK (17) so the compat-published jars are the
+          # same bytecode users get; the compat-consumer's jvmToolchain(17) resolves this
+          # installed JDK with no auto-provision.
           java-version: 17
 
       # macos-latest default Xcode lacks the UIUtilities framework that
@@ -56,6 +63,31 @@ jobs:
           xcode-version: latest-stable
 
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      # Publish the SHIPPED JVM renderer binaries to mavenLocal at the pinned BASE
+      # Compose version — this runs BEFORE the perl override, so the jars are the
+      # ones users actually get, not recompiled against the cell. The compat-consumer
+      # then forces the Compose group to the cell version to prove the base binaries
+      # survive the runtime reshape.
+      #
+      #   * KMP modules (core / render-compose / render-pdf): publish ONLY the
+      #     Linux-buildable JVM + root-metadata publications. Full publishToMavenLocal
+      #     would drag in iOS/macOS/native publications that don't build on ubuntu.
+      #   * render-html is kotlin.jvm, so publishToMavenLocal is the whole module.
+      #   * -PVERSION_NAME=0.0.0-compat-SNAPSHOT: the -SNAPSHOT suffix makes the
+      #     vanniktech maven-publish plugin treat signing as NOT required
+      #     (setRequired(!version.endsWith("-SNAPSHOT"))), so with no GPG key on the
+      #     runner the sign* tasks skip cleanly instead of failing. (There is no
+      #     working RELEASE_SIGNING_ENABLED gate in this plugin version.)
+      - name: Publish shipped renderers to mavenLocal (base CMP)
+        run: |
+          set -euo pipefail
+          ./gradlew \
+            :core:publishJvmPublicationToMavenLocal :core:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-compose:publishJvmPublicationToMavenLocal :render-compose:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-pdf:publishJvmPublicationToMavenLocal :render-pdf:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-html:publishToMavenLocal \
+            -PVERSION_NAME=0.0.0-compat-SNAPSHOT --no-configuration-cache
 
       - name: Override versions
         run: |
@@ -85,6 +117,23 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: ./gradlew :render-compose:iosSimulatorArm64Test --no-configuration-cache
 
+      # Run the standalone compat-consumer against the SHIPPED jars in mavenLocal,
+      # forcing the Compose group to this cell. This exercises the published
+      # render-html / render-pdf binaries (built at the base above) on the cell's
+      # Compose runtime — the reshape a real downstream user would hit. Skia renders
+      # offscreen, so ubuntu needs a virtual display (xvfb); macOS does not.
+      # Prerelease cells stay non-blocking (Task 6 finalizes enforcement).
+      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }}
+        continue-on-error: ${{ contains(matrix.version.compose-version, '-') }}
+        run: |
+          # ubuntu renders Skia offscreen and needs a virtual display; macOS does not.
+          PREFIX=""
+          [ "${{ matrix.os }}" = "ubuntu-latest" ] && PREFIX="xvfb-run --auto-servernum"
+          $PREFIX ./gradlew -p compat-consumer run \
+            -PcomposeVersion=${{ matrix.version.compose-version }} \
+            -PkotlinVersion=${{ matrix.version.kotlin-version }} \
+            -PkinvoicingVersion=0.0.0-compat-SNAPSHOT --no-configuration-cache
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -93,6 +142,38 @@ jobs:
           path: '**/build/reports/tests/'
           retention-days: 7
 
+  # Blocking guard for the reflective NextDriver (CMP >=1.12 reshaped scene API).
+  # The rolling newest-prerelease cell in `test` is continue-on-error (tolerates upstream
+  # prerelease churn), which leaves the >=1.12 reflective dispatch with no BLOCKING check.
+  # This job pins a FROZEN, already-verified reshaped release (1.12.0-beta01 — an immutable
+  # artifact that can't churn) and fails CI if our NextDriver reflection regresses. Remove it
+  # once a STABLE 1.12.x enters the matrix (its cell is blocking and covers this).
+  nextdriver-guard:
+    name: Reflective NextDriver guard (CMP 1.12.0-beta01)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+      - name: Pin the reshaped CMP + build base
+        run: |
+          set -euo pipefail
+          perl -i -pe '
+            s/^kotlin = ".*"/kotlin = "2.4.0"/;
+            s/^compose-multiplatform = ".*"/compose-multiplatform = "1.12.0-beta01"/;
+            s/^compose2pdf = ".*"/compose2pdf = "1.2.0"/;
+          ' gradle/libs.versions.toml
+          grep -E '^(kotlin|compose-multiplatform|compose2pdf) = ' gradle/libs.versions.toml
+      - name: render-html + render-pdf tests on the reshaped scene API (NextDriver)
+        # render-html recompiled here exercises the SAME reflective ComposeSceneRenderer that
+        # ships (dispatch is runtime-based), so a broken NextDriver path fails this blocking job.
+        run: ./gradlew :render-html:test :render-pdf:jvmTest --no-configuration-cache
+
   compat-gate:
     name: Compose Compatibility CI Gate
     runs-on: ubuntu-latest
@@ -100,11 +181,13 @@ jobs:
     needs:
       - load-versions
       - test
+      - nextdriver-guard
     steps:
       - name: Verify all required jobs succeeded
         run: |
-          echo "  load-versions: ${{ needs.load-versions.result }}"
-          echo "  test:          ${{ needs.test.result }}"
+          echo "  load-versions:    ${{ needs.load-versions.result }}"
+          echo "  test:             ${{ needs.test.result }}"
+          echo "  nextdriver-guard: ${{ needs.nextdriver-guard.result }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then

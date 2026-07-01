@@ -1,14 +1,7 @@
-@file:OptIn(InternalComposeUiApi::class)
-
 package com.chrisjenx.kinvoicing.html.internal
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.InternalComposeUiApi
-import androidx.compose.ui.graphics.asComposeCanvas
-import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.Dispatchers
 import org.jetbrains.skia.OutputWStream
 import org.jetbrains.skia.PictureRecorder
 import org.jetbrains.skia.Rect
@@ -42,15 +35,9 @@ internal object ComposeToSvg {
             Rect.makeWH(widthPx.toFloat(), heightPx.toFloat())
         )
 
-        val scene = CanvasLayersComposeScene(
-            density = density,
-            size = IntSize(widthPx, heightPx),
-            coroutineContext = Dispatchers.Unconfined,
-            invalidate = {},
-        )
-        scene.setContent(content)
-        scene.render(recordCanvas.asComposeCanvas(), nanoTime = 0)
-        scene.close()
+        // The internal CanvasLayersComposeScene API is driven reflectively so one binary runs on
+        // both CMP 1.11 and 1.12+ (the driver does .asComposeCanvas() on recordCanvas internally).
+        ComposeSceneRenderer.drawContent(recordCanvas, widthPx, heightPx, density, content)
 
         val picture = recorder.finishRecordingAsPicture()
 

@@ -89,7 +89,22 @@ jobs:
           echo "Generated matrix:"
           cat .github/compose-versions.json
 
-          if git diff --quiet .github/compose-versions.json; then
+          # The published library ships one binary per module — pin its build base to
+          # the highest STABLE detected Compose version (never a pre-release) + the
+          # latest Kotlin, so we always ship against the currently-released CMP. The
+          # docs-regeneration step below picks up the new pin.
+          BASE_COMPOSE=$(echo "$LATEST_STABLE" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
+          if [ -z "$BASE_COMPOSE" ]; then
+            echo "ERROR: no stable Compose version detected for the build base"
+            exit 1
+          fi
+          echo "Build base -> Compose $BASE_COMPOSE + Kotlin $LATEST_KOTLIN"
+          perl -i -pe "s/^compose-multiplatform = .*/compose-multiplatform = \"$BASE_COMPOSE\"/" gradle/libs.versions.toml
+          perl -i -pe "s/^kotlin = .*/kotlin = \"$LATEST_KOTLIN\"/" gradle/libs.versions.toml
+
+          # Change gate: fire on a diff in the matrix JSON OR the build-base pin.
+          # (Docs regenerate in a later step; docs-sync CI is the gate that catches drift.)
+          if git diff --quiet .github/compose-versions.json gradle/libs.versions.toml; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -97,6 +112,13 @@ jobs:
             cat .github/compose-versions.json >> "$GITHUB_OUTPUT"
             echo "EOF" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Regenerate compatibility tables in docs + README
+        if: steps.detect.outputs.changed == 'true'
+        # Never let a docs-regeneration hiccup block the version-bump PR; the build
+        # workflow's docs-sync check is the gate that surfaces a stale/broken table.
+        continue-on-error: true
+        run: python3 .github/scripts/render-compat-tables.py
 
       - name: Create Pull Request
         if: steps.detect.outputs.changed == 'true'
@@ -112,8 +134,17 @@ jobs:
             ${{ steps.detect.outputs.matrix }}
             ```
 
-            The compatibility CI will run on this PR to verify all versions build and pass tests.
-            If a version fails, adjust its `kotlin-version` in `.github/compose-versions.json` before merging.
+            This PR also bumps the shipped build base in `gradle/libs.versions.toml` to the
+            latest stable Compose/Kotlin (each module ships one binary, built against the
+            currently-released CMP). The compatibility tables in `docs/compatibility.md` and
+            `README.md` have been regenerated from the matrix and the new pin.
+
+            The compatibility CI will run on this PR to verify the shipped binaries run against
+            every version in the matrix. If a stable version fails, drop it from
+            `.github/compose-versions.json` (or change the base) before merging. For pre-release
+            versions, the shipped-renderer compatibility smoke is non-blocking (informational),
+            but the `render-compose` recompile legs (`jvmTest`/`wasmJsNodeTest`/`iosSimulatorArm64Test`)
+            still block — if a pre-release fails those, drop it from the matrix before merging.
           branch: auto/update-compose-versions
           labels: dependencies
           commit-message: "Update Compose Multiplatform compatibility matrix"
