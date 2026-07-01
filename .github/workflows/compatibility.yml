@@ -142,6 +142,38 @@ jobs:
           path: '**/build/reports/tests/'
           retention-days: 7
 
+  # Blocking guard for the reflective NextDriver (CMP >=1.12 reshaped scene API).
+  # The rolling newest-prerelease cell in `test` is continue-on-error (tolerates upstream
+  # prerelease churn), which leaves the >=1.12 reflective dispatch with no BLOCKING check.
+  # This job pins a FROZEN, already-verified reshaped release (1.12.0-beta01 — an immutable
+  # artifact that can't churn) and fails CI if our NextDriver reflection regresses. Remove it
+  # once a STABLE 1.12.x enters the matrix (its cell is blocking and covers this).
+  nextdriver-guard:
+    name: Reflective NextDriver guard (CMP 1.12.0-beta01)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          lfs: true
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+      - name: Pin the reshaped CMP + build base
+        run: |
+          set -euo pipefail
+          perl -i -pe '
+            s/^kotlin = ".*"/kotlin = "2.4.0"/;
+            s/^compose-multiplatform = ".*"/compose-multiplatform = "1.12.0-beta01"/;
+            s/^compose2pdf = ".*"/compose2pdf = "1.2.0"/;
+          ' gradle/libs.versions.toml
+          grep -E '^(kotlin|compose-multiplatform|compose2pdf) = ' gradle/libs.versions.toml
+      - name: render-html + render-pdf tests on the reshaped scene API (NextDriver)
+        # render-html recompiled here exercises the SAME reflective ComposeSceneRenderer that
+        # ships (dispatch is runtime-based), so a broken NextDriver path fails this blocking job.
+        run: ./gradlew :render-html:test :render-pdf:jvmTest --no-configuration-cache
+
   compat-gate:
     name: Compose Compatibility CI Gate
     runs-on: ubuntu-latest
@@ -149,11 +181,13 @@ jobs:
     needs:
       - load-versions
       - test
+      - nextdriver-guard
     steps:
       - name: Verify all required jobs succeeded
         run: |
-          echo "  load-versions: ${{ needs.load-versions.result }}"
-          echo "  test:          ${{ needs.test.result }}"
+          echo "  load-versions:    ${{ needs.load-versions.result }}"
+          echo "  test:             ${{ needs.test.result }}"
+          echo "  nextdriver-guard: ${{ needs.nextdriver-guard.result }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then
