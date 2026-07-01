@@ -123,20 +123,13 @@ jobs:
       # Compose runtime — the reshape a real downstream user would hit. Skia renders
       # offscreen, so ubuntu needs a virtual display (xvfb); macOS does not.
       # Prerelease cells stay non-blocking (Task 6 finalizes enforcement).
-      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }} (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }}
         continue-on-error: ${{ contains(matrix.version.compose-version, '-') }}
         run: |
-          xvfb-run --auto-servernum ./gradlew -p compat-consumer run \
-            -PcomposeVersion=${{ matrix.version.compose-version }} \
-            -PkotlinVersion=${{ matrix.version.kotlin-version }} \
-            -PkinvoicingVersion=0.0.0-compat-SNAPSHOT --no-configuration-cache
-
-      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }} (macOS)
-        if: matrix.os == 'macos-latest'
-        continue-on-error: ${{ contains(matrix.version.compose-version, '-') }}
-        run: |
-          ./gradlew -p compat-consumer run \
+          # ubuntu renders Skia offscreen and needs a virtual display; macOS does not.
+          PREFIX=""
+          [ "${{ matrix.os }}" = "ubuntu-latest" ] && PREFIX="xvfb-run --auto-servernum"
+          $PREFIX ./gradlew -p compat-consumer run \
             -PcomposeVersion=${{ matrix.version.compose-version }} \
             -PkotlinVersion=${{ matrix.version.kotlin-version }} \
             -PkinvoicingVersion=0.0.0-compat-SNAPSHOT --no-configuration-cache
