@@ -7,7 +7,7 @@ plugins {
 
 val composeVersion = providers.gradleProperty("composeVersion").orElse("1.11.1").get()
 val kinvoicingVersion = providers.gradleProperty("kinvoicingVersion").orNull
-    ?: error("compat-consumer requires -PkinvoicingVersion=<published version> (e.g. 0.0.0-compat, matching the root VERSION_NAME override used to publishToMavenLocal)")
+    ?: error("compat-consumer requires -PkinvoicingVersion=<published version> (e.g. 0.0.0-compat-SNAPSHOT, matching the root VERSION_NAME override used to publishToMavenLocal — the -SNAPSHOT suffix makes signing not-required)")
 val skikoVersion = providers.gradleProperty("skikoVersion").orNull // fallback override; normally unset
 
 kotlin {

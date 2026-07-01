@@ -26,7 +26,7 @@ Kinvoicing is tested weekly against the 3 most recent Compose Multiplatform rele
 This table is generated from [`.github/compose-versions.json`](https://github.com/chrisjenx/kinvoicing/blob/main/.github/compose-versions.json) and updated weekly by the [update-compose-versions workflow](https://github.com/chrisjenx/kinvoicing/actions/workflows/update-compose-versions.yml), which discovers the 3 most recent CMP releases and runs the compatibility suite against each. The **current** row is the version the library itself pins. Edit `compose-versions.json`, not this table.
 
 {: .note }
-Stable rows are **blocking** — a failure fails CI. The newest **pre-release** row (e.g. an `-alpha`/`-beta`/`-rc` build) is exercised but **non-blocking** (`continue-on-error`), so upstream Compose pre-release churn can't red-flag the build; treat it as an early-warning signal.
+Stable rows are **blocking** — a failure fails CI. On the newest **pre-release** row (e.g. an `-alpha`/`-beta`/`-rc` build), the shipped-renderer compatibility smoke (`render-html`/`render-pdf`, which exercise the reflective `@InternalComposeUiApi` scene path) is **non-blocking** (`continue-on-error`), so upstream Compose pre-release churn in that internal API can't red-flag the build — treat it as an early-warning signal. The `render-compose` per-cell recompile stays **blocking** even on pre-release rows, since it uses only stable public Compose APIs.
 
 ---
 
@@ -47,7 +47,7 @@ Kinvoicing publishes several artifacts, so "Compose compatibility" means differe
 
 The [compatibility workflow](https://github.com/chrisjenx/kinvoicing/actions/workflows/compatibility.yml) runs on pull requests touching the Compose renderers, weekly on Monday at 9am UTC, and on demand.
 
-It loads the Compose Multiplatform versions from [`.github/compose-versions.json`](https://github.com/chrisjenx/kinvoicing/blob/main/.github/compose-versions.json), publishes the shipped renderer binaries at the pinned base version, then overrides the library's pinned Compose/Kotlin to each cell and runs `:render-compose:assemble`, `:render-compose:jvmTest`, `:render-compose:wasmJsNodeTest` (plus `iosSimulatorArm64Test` on macOS) and consumes the shipped renderers on the cell's runtime.
+It loads the Compose Multiplatform versions from [`.github/compose-versions.json`](https://github.com/chrisjenx/kinvoicing/blob/main/.github/compose-versions.json), publishes the shipped renderer binaries at the pinned base version, then overrides the library's pinned Compose/Kotlin to each cell and runs `:render-compose:assemble` (or `:render-compose:jvmJar` for pre-release cells, to skip the Android target whose preview androidx metadata needs a newer compileSdk), `:render-compose:jvmTest`, `:render-compose:wasmJsNodeTest` (plus `iosSimulatorArm64Test` on macOS) and consumes the shipped renderers on the cell's runtime.
 
 The [update-compose-versions workflow](https://github.com/chrisjenx/kinvoicing/actions/workflows/update-compose-versions.yml) automatically discovers new CMP releases weekly, bumps the shipped build base to the latest stable, regenerates this table, and opens a PR.
 
