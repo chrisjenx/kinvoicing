@@ -70,6 +70,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # macos-latest default Xcode lacks the UIUtilities framework that
+      # CMP 1.11+ auto-links from compose.ui-uikit (linkDebugTestIosSimulatorArm64
+      # fails on _OBJC_CLASS_$_UIViewLayoutRegion). Match compatibility.yml.
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: latest-stable
+
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: iOS simulator tests
