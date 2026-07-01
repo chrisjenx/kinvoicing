@@ -176,6 +176,18 @@ jobs:
           path: '**/build/reports/tests/'
           retention-days: 7
 
+  docs-sync:
+    # Fail the build if the generated compat tables in docs/compatibility.md or
+    # README.md have drifted from .github/compose-versions.json + the pinned
+    # compose-multiplatform/kotlin in gradle/libs.versions.toml. Regenerate with:
+    #   python3 .github/scripts/render-compat-tables.py
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Check compat tables are in sync
+        run: python3 .github/scripts/render-compat-tables.py --check
+
   ci-gate:
     name: CI Gate
     runs-on: ubuntu-latest
@@ -187,6 +199,7 @@ jobs:
       - wasm-tests
       - linux-tests
       - fidelity-tests
+      - docs-sync
     steps:
       - name: Verify all required jobs succeeded
         run: |
@@ -196,6 +209,7 @@ jobs:
           echo "  wasm-tests:     ${{ needs.wasm-tests.result }}"
           echo "  linux-tests:    ${{ needs.linux-tests.result }}"
           echo "  fidelity-tests: ${{ needs.fidelity-tests.result }}"
+          echo "  docs-sync:      ${{ needs.docs-sync.result }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]] \
              || [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then

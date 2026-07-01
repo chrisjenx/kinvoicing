@@ -5,7 +5,7 @@ Kotlin Multiplatform invoicing library with a sealed IR, type-safe DSL builder, 
 [![Maven Central](https://img.shields.io/maven-central/v/com.chrisjenx.kinvoicing/core.svg)](https://central.sonatype.com/namespace/com.chrisjenx.kinvoicing)
 [![Build](https://github.com/chrisjenx/kinvoicing/actions/workflows/build.yml/badge.svg)](https://github.com/chrisjenx/kinvoicing/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-purple.svg)](https://kotlinlang.org)
 [![Docs](https://img.shields.io/badge/Docs-kinvoicing-blue.svg)](https://chrisjenx.github.io/kinvoicing)
 
 > **[Full documentation](https://chrisjenx.github.io/kinvoicing)** — installation, section guides, theming, branding, recipes, and examples.
@@ -30,6 +30,22 @@ dependencies {
     implementation("com.chrisjenx.kinvoicing:render-html:1.0.0")  // Print-quality HTML via compose2pdf
 }
 ```
+
+## Compatibility
+
+[![Compose Compatibility](https://github.com/chrisjenx/kinvoicing/actions/workflows/compatibility.yml/badge.svg)](https://github.com/chrisjenx/kinvoicing/actions/workflows/compatibility.yml)
+
+Tested weekly against the 3 most recent Compose Multiplatform releases on macOS and Linux:
+
+<!-- BEGIN cmp-matrix -->
+| Compose Multiplatform | Kotlin | Status |
+|:----------------------|:-------|:-------|
+| 1.12.0-alpha01 | 2.4.0 | CI tested |
+| **1.11.1** | 2.4.0 | CI tested (current) |
+| 1.10.3 | 2.4.0 | CI tested |
+<!-- END cmp-matrix -->
+
+<sub>Generated from [`.github/compose-versions.json`](.github/compose-versions.json) by the update-compose-versions workflow — edit the JSON, not this table. See the [compatibility docs](https://chrisjenx.github.io/kinvoicing/compatibility) for what is tested per module.</sub>
 
 ## Quick Start
 
