@@ -6,7 +6,11 @@ on:
       - '.github/compose-versions.json'
       - '.github/workflows/compatibility.yml'
       - 'gradle/libs.versions.toml'
+      - 'core/**'
       - 'render-compose/**'
+      - 'render-html/**'
+      - 'render-pdf/**'
+      - 'compat-consumer/**'
       - 'build-logic/**'
   schedule:
     - cron: '0 9 * * 1' # Weekly Monday 9am UTC
@@ -46,7 +50,10 @@ jobs:
       - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
-          java-version: 17
+          # 21 so the compat-consumer's jvmToolchain(21) resolves the installed JDK
+          # (no auto-provision) and the shipped jars publish at the same JDK the
+          # release build uses. 21 runs the render-compose legs' bytecode fine too.
+          java-version: 21
 
       # macos-latest default Xcode lacks the UIUtilities framework that
       # CMP 1.11+ auto-links from compose.ui-uikit.
@@ -56,6 +63,31 @@ jobs:
           xcode-version: latest-stable
 
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      # Publish the SHIPPED JVM renderer binaries to mavenLocal at the pinned BASE
+      # Compose version — this runs BEFORE the perl override, so the jars are the
+      # ones users actually get, not recompiled against the cell. The compat-consumer
+      # then forces the Compose group to the cell version to prove the base binaries
+      # survive the runtime reshape.
+      #
+      #   * KMP modules (core / render-compose / render-pdf): publish ONLY the
+      #     Linux-buildable JVM + root-metadata publications. Full publishToMavenLocal
+      #     would drag in iOS/macOS/native publications that don't build on ubuntu.
+      #   * render-html is kotlin.jvm, so publishToMavenLocal is the whole module.
+      #   * -PVERSION_NAME=0.0.0-compat-SNAPSHOT: the -SNAPSHOT suffix makes the
+      #     vanniktech maven-publish plugin treat signing as NOT required
+      #     (setRequired(!version.endsWith("-SNAPSHOT"))), so with no GPG key on the
+      #     runner the sign* tasks skip cleanly instead of failing. (There is no
+      #     working RELEASE_SIGNING_ENABLED gate in this plugin version.)
+      - name: Publish shipped renderers to mavenLocal (base CMP)
+        run: |
+          set -euo pipefail
+          ./gradlew \
+            :core:publishJvmPublicationToMavenLocal :core:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-compose:publishJvmPublicationToMavenLocal :render-compose:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-pdf:publishJvmPublicationToMavenLocal :render-pdf:publishKotlinMultiplatformPublicationToMavenLocal \
+            :render-html:publishToMavenLocal \
+            -PVERSION_NAME=0.0.0-compat-SNAPSHOT --no-configuration-cache
 
       - name: Override versions
         run: |
@@ -84,6 +116,30 @@ jobs:
       - name: iOS simulator tests
         if: matrix.os == 'macos-latest'
         run: ./gradlew :render-compose:iosSimulatorArm64Test --no-configuration-cache
+
+      # Run the standalone compat-consumer against the SHIPPED jars in mavenLocal,
+      # forcing the Compose group to this cell. This exercises the published
+      # render-html / render-pdf binaries (built at the base above) on the cell's
+      # Compose runtime — the reshape a real downstream user would hit. Skia renders
+      # offscreen, so ubuntu needs a virtual display (xvfb); macOS does not.
+      # Prerelease cells stay non-blocking (Task 6 finalizes enforcement).
+      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }} (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        continue-on-error: ${{ contains(matrix.version.compose-version, '-') }}
+        run: |
+          xvfb-run --auto-servernum ./gradlew -p compat-consumer run \
+            -PcomposeVersion=${{ matrix.version.compose-version }} \
+            -PkotlinVersion=${{ matrix.version.kotlin-version }} \
+            -PkinvoicingVersion=0.0.0-compat-SNAPSHOT --no-configuration-cache
+
+      - name: Consume shipped renderers on CMP ${{ matrix.version.compose-version }} (macOS)
+        if: matrix.os == 'macos-latest'
+        continue-on-error: ${{ contains(matrix.version.compose-version, '-') }}
+        run: |
+          ./gradlew -p compat-consumer run \
+            -PcomposeVersion=${{ matrix.version.compose-version }} \
+            -PkotlinVersion=${{ matrix.version.kotlin-version }} \
+            -PkinvoicingVersion=0.0.0-compat-SNAPSHOT --no-configuration-cache
 
       - name: Upload test reports
         if: failure()
