@@ -17,13 +17,16 @@ Kinvoicing is tested weekly against the 3 most recent Compose Multiplatform rele
 <!-- BEGIN cmp-matrix -->
 | Compose Multiplatform | Kotlin | Status |
 |:----------------------|:-------|:-------|
-| 1.12.0-alpha01 | 2.4.0 | CI tested |
+| 1.12.0-beta01 | 2.4.0 | CI tested |
 | **1.11.1** | 2.4.0 | CI tested (current) |
 | 1.10.3 | 2.4.0 | CI tested |
 <!-- END cmp-matrix -->
 
 {: .note }
 This table is generated from [`.github/compose-versions.json`](https://github.com/chrisjenx/kinvoicing/blob/main/.github/compose-versions.json) and updated weekly by the [update-compose-versions workflow](https://github.com/chrisjenx/kinvoicing/actions/workflows/update-compose-versions.yml), which discovers the 3 most recent CMP releases and runs the compatibility suite against each. The **current** row is the version the library itself pins. Edit `compose-versions.json`, not this table.
+
+{: .note }
+Stable rows are **blocking** — a failure fails CI. The newest **pre-release** row (e.g. an `-alpha`/`-beta`/`-rc` build) is exercised but **non-blocking** (`continue-on-error`), so upstream Compose pre-release churn can't red-flag the build; treat it as an early-warning signal.
 
 ---
 
@@ -35,7 +38,7 @@ Kinvoicing publishes several artifacts, so "Compose compatibility" means differe
 |:-------|:-------------------------------------|
 | `:render-html` | **Tested directly** — its own reflective Compose scene driver renders through the cell's Compose/Skiko runtime. |
 | `:render-pdf` | **Tested via [compose2pdf](https://github.com/chrisjenx/compose2pdf)** — compose2pdf's reflective scene driver drives the render, so it inherits compose2pdf's own compatibility surface. |
-| `:render-compose` | **Source-recompiled per cell** — the shipped binary is republished, then a standalone consumer forces the Compose group to the cell version, exercising the normal KMP consumer contract (Compose is an `api` dependency, resolved by the consumer). |
+| `:render-compose` | **Source-recompiled per cell** — the library's pinned Compose/Kotlin is overridden to the cell, then `:render-compose`'s own `jvmTest`, `wasmJsNodeTest` (and `iosSimulatorArm64Test` on macOS) are recompiled and run against it. A multi-target KMP klib can't be reflectively bridged, so this is the normal KMP consumer contract (Compose is an `api` dependency, resolved by the consumer). |
 | `:core`, `:render-html-email` | **Compose-independent** — neither declares any `org.jetbrains.compose` or `skiko` dependency, so no Compose version can affect them. They are not part of the Compose matrix. |
 
 ---
