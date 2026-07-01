@@ -1,143 +1,131 @@
-# Compose Compatibility Matrix — Coverage Fix
+# Compose Compatibility Matrix — Coverage + Multi-CMP Support (Reflective Driver)
 
-**Date:** 2026-06-30
-**Status:** Approved design, ready for implementation plan
+**Date:** 2026-06-30 (revised 2026-07-01 after evaluating compose2pdf 1.2.0)
+**Status:** Approved direction; implementation sequenced below
 **Author:** Chris Jenkins (with Claude)
+
+> **Supersedes the original recompile-per-cell design in this file.** The first draft proposed
+> broadening the matrix to recompile every module per CMP cell and bumping compose2pdf to 1.1.3.
+> Investigation proved that wrong: (1) compose2pdf 1.1.3's *published* artifact was compiled against
+> CMP 1.10.3 and `NoSuchMethodError`s on 1.12 at consumer runtime; (2) render-html's own
+> `ComposeToSvg.kt` calls the `@InternalComposeUiApi` `CanvasLayersComposeScene` directly and won't
+> even compile against 1.12. The real fix mirrors what compose2pdf **1.2.0** did: a single-binary
+> **reflective scene driver** plus publish-then-consume compat testing and generated version-support docs.
 
 ## Problem
 
-The `Compose Compatibility` workflow (`.github/workflows/compatibility.yml`) is supposed to prove
-that Kinvoicing builds and passes tests against each Compose Multiplatform / Kotlin version in
-`.github/compose-versions.json` (currently `1.10.3`, `1.11.1`, `1.12.0-alpha02`).
+The `Compose Compatibility` workflow only runs `:render-compose:*` tasks. `render-compose` doesn't use
+compose2pdf and recompiles cleanly against any CMP, so the matrix passed green even though the two
+compose2pdf-consuming modules break on CMP 1.12:
 
-It passed green on the matrix update PR (#11) even though `compose2pdf 1.1.2` was **incompatible
-with Compose 1.12** — the exact class of failure the matrix exists to catch.
+- **`render-pdf`** — drives compose2pdf's `renderToPdf`; the pre-1.2.0 compose2pdf binary
+  `NoSuchMethodError`s on CMP 1.12 (its bytecode calls the reshaped `CanvasLayersComposeScene` API).
+- **`render-html`** — its `render-html/.../internal/ComposeToSvg.kt` calls `CanvasLayersComposeScene`
+  **directly** (pre-1.12 4-arg overload), so it fails to *compile* against CMP 1.12.
 
-### Root cause (verified)
+CMP 1.12 reshaped the `@InternalComposeUiApi androidx.compose.ui.scene` API: pre-1.12 used
+`coroutineContext`/`invalidate` factory params + `render(canvas, nanoTime)`; 1.12 uses a host-owned
+`FrameRecomposer` + a 7-arg factory + `performFrame`→`measureAndLayout`→`draw(canvas)`.
 
-The `test` job only runs `:render-compose:*` tasks:
+## What compose2pdf 1.2.0 did (the model to mirror) — verified
 
-```
-:render-compose:assemble :render-compose:jvmTest :render-compose:wasmJsNodeTest   # stable
-:render-compose:jvmJar   :render-compose:jvmTest :render-compose:wasmJsNodeTest   # prerelease
-:render-compose:iosSimulatorArm64Test                                             # macOS
-```
+- **Single published JVM jar + runtime reflection.** Deleted the `cmpLegacy`/`cmpNext` build-time
+  source sets. `internal object ComposeSceneRenderer` resolves the scene API by reflection, detecting
+  the shape *structurally* — `if (Class.forName("androidx.compose.ui.platform.FrameRecomposer") != null) NextDriver else LegacyDriver`,
+  cached in `by lazy`. Factory matched by static + name-prefix `CanvasLayersComposeScene` + returnType
+  `ComposeScene` + arity (excluding `$default`); other methods by name + param-type list with `"*"`
+  wildcards; `InvocationTargetException` unwrapped to preserve real exception types; every miss →
+  fail-loud `Compose2PdfException("…file an issue including your CMP version")`. Verified facts:
+  the factory takes a **boxed `IntSize`**; `PlatformContext.Empty` is a plain **no-arg-ctor class** on
+  both 1.11 and 1.12.
+- **"Publish once, consume many" testing.** CI publishes the one binary to mavenLocal, then a
+  standalone `compat-consumer` Gradle build (not in root `settings.gradle.kts`) forces
+  `org.jetbrains.compose*` to each matrix cell's version via
+  `resolutionStrategy.eachDependency` and runs a real `renderToPdf` smoke test — so it tests the
+  **shipped bytecode**, not a per-cell recompile.
+- **Generated version-support docs.** `.github/compose-versions.json` is the single source of truth;
+  `.github/scripts/render-compat-tables.py` injects a `| CMP | Kotlin | Status |` table between
+  `<!-- BEGIN cmp-matrix -->`/`<!-- END cmp-matrix -->` markers in `docs/compatibility.md` + `README.md`,
+  with a `--check` docs-sync CI gate; the weekly updater auto-bumps the build base to latest stable.
+- **One verified caveat:** the newest **prerelease** cell (`1.12.0-beta01`) is exercised but marked
+  `continue-on-error: contains(version, '-')`, so it is *not enforced green* — only the two stable
+  cells are blocking.
 
-`:render-compose` depends only on `:core` (`render-compose/build.gradle.kts:23`). The modules that
-actually consume compose2pdf are:
+## Design for kinvoicing
 
-- `:render-pdf` — `implementation(libs.compose2pdf)` (`render-pdf/build.gradle.kts:23`)
-- `:render-html` — `api(libs.compose2pdf)` (`render-html/build.gradle.kts:19`)
+**1. `render-html` reflective scene driver (load-bearing).**
+New `render-html/.../internal/ComposeSceneRenderer.kt`, a near-verbatim port of compose2pdf 1.2.0's,
+with: package `com.chrisjenx.kinvoicing.html.internal`; a render-html-local `ComposeSceneException`
+(render-html doesn't depend on core, so it can't use core/compose2pdf exceptions); and a small
+hardening so the `PlatformContext.Empty` no-arg-ctor miss routes through the fail-loud path (compose2pdf
+lets a `NoSuchMethodException` propagate raw there). `ComposeToSvg.kt` replaces its direct
+`CanvasLayersComposeScene` block with `ComposeSceneRenderer.drawContent(recordCanvas, w, h, density, content)`
+(`recordCanvas` is the Skia `Canvas` from `PictureRecorder.beginRecording`), keeping the
+`PictureRecorder`→`SVGCanvas` flow. Porting the full-arity factory call fixes the critique's point that
+render-html currently relies on default factory args (`layoutDirection`, `platformContext`) it never
+constructs.
 
-Neither is ever compiled or tested by the matrix, so compose2pdf never lands on a Compose-1.12
-classpath in CI. This is a **coverage gap**, not a silently-resolved version conflict — within any
-single Gradle build there is exactly one Compose version (highest-wins conflict resolution), and the
-matrix simply never puts compose2pdf into that build.
+**2. `render-pdf` inherits multi-CMP for free.** It goes through compose2pdf's `renderToPdf`; once
+`compose2pdf` is bumped to 1.2.0, its reflective driver handles the 1.12 break — zero render-pdf source
+change.
 
-Secondary gap: the regular `build.yml` *does* exercise compose2pdf (`jvmTest`, fidelity) but always
-at the default Compose `1.10.3`, never at the matrix versions. So no workflow runs
-`compose2pdf × Compose 1.12`.
+**3. Version alignment.** `gradle/libs.versions.toml`: `compose2pdf 1.1.2 → 1.2.0`; align the build base
+`compose-multiplatform 1.10.3 → 1.11.1` and `kotlin 2.3.20 → 2.4.0` (compose2pdf 1.2.0 is built against
+1.11.1/2.4.0; matches the matrix's Kotlin). **Risk gate:** the `build-logic/wasmjs-node-compose` plugin
+reaches `KotlinJsTest.nodeJsArgs` reflectively against a specific KGP version — re-verify
+`:build-logic:wasmjs-node-compose:test` and `:render-compose:wasmJsNodeTest` on Kotlin 2.4.0 before the
+bump lands. This is an M-effort task, not a free S bump.
 
-Note: the matrix `Override versions` step rewrites **both** `kotlin` and `compose-multiplatform` in
-`libs.versions.toml`, so a matrix run exercises the Kotlin bump too — which affects every module,
-including non-Compose ones like `:render-html-email`.
+**4. `compat-consumer` harness (publish-then-consume).** New standalone Gradle build mirroring
+compose2pdf's: own `settings.gradle.kts` (not in root includes), reads `-PcomposeVersion`/`-PkotlinVersion`,
+`mavenLocal()` first, requires `-PrenderHtmlVersion`/`-PrenderPdfVersion` (a fixed publish version string,
+e.g. `-Pversion=0.0.0-compat`, decided up front — kinvoicing has no `gradle.properties version=` SSOT),
+forces `org.jetbrains.compose*` to the cell version via `resolutionStrategy.eachDependency`, and a
+`Smoke.kt` that renders a PDF (asserts `%PDF-` + size) **and** the render-html SVG path (asserts `<svg`) —
+driving both the c2p-inherited and kinvoicing-owned reflective paths so a wrong dispatch fails at runtime.
 
-## Goal
+**5. Matrix CI rewrite.** `.github/workflows/compatibility.yml`: publish render-html/render-pdf to
+mavenLocal (at the pinned base), then run `compat-consumer` per cell (xvfb on Linux). **Keep** the
+existing `perl`-override recompile legs for `render-compose` (`:render-compose:jvmTest`/`wasmJsNodeTest`/
+`iosSimulatorArm64Test`) — a multi-target KMP klib can't be reflectively bridged and its per-cell
+recompile is the normal KMP consumer contract. Extend the `paths:` trigger to `render-html/**`,
+`render-pdf/**`, `compat-consumer/**`. Keep `compat-gate`.
 
-Every **published** module is compiled and functionally tested against each Compose/Kotlin pair in
-the matrix, so a compose2pdf-vs-Compose incompatibility (or a Kotlin-bump break) turns the matrix
-**red** instead of passing green.
+**6. Version-support docs.** Port `.github/scripts/render-compat-tables.py`; add a `docs/compatibility.md`
+Jekyll page + `README.md` `## Compatibility` marker block + a `docs-sync --check` gate + extend
+`update-compose-versions.yml` to auto-bump the base and regenerate. A **renderer-scope note** must state
+what the matrix actually reaches: `render-html` (own reflective driver, directly tested), `render-pdf`
+(via compose2pdf, directly tested), `render-compose` (source-recompiled per cell — normal KMP contract),
+`core`/`render-html-email` (Compose-independent — **verify by grep** before asserting this). Put every
+version number inside the generated block (avoid compose2pdf's stale hand-written deps-table drift).
 
-Published modules and their targets:
+## Prerelease enforcement decision
 
-| Module | Plugin | Targets | Uses compose2pdf |
-|--------|--------|---------|------------------|
-| `:core` | KMP | jvm, android, ios, wasmJs, macos, linux, mingw | no |
-| `:render-compose` | KMP | jvm, android, ios, wasmJs | no |
-| `:render-html-email` | KMP | jvm, android, ios, wasmJs, macos, linux, mingw | no |
-| `:render-pdf` | KMP | **jvm only** | **yes** |
-| `:render-html` | kotlin.jvm | **jvm only** | **yes** |
+Match compose2pdf: the two stable cells are blocking; the newest prerelease cell (kinvoicing's JSON has
+`1.12.0-alpha01`) is `continue-on-error`. Once render-html's driver + compose2pdf 1.2.0 make 1.12 pass,
+we may flip it to enforced — but the docs must not claim "all green" while `continue-on-error` remains.
+Pick one: enforce the prerelease cell, or document it as best-effort. (Also resync kinvoicing's JSON
+prerelease id with compose2pdf's, or confirm the drift is intended.)
 
-## Design
+## Verification
 
-### Change 1 — `.github/workflows/compatibility.yml`
-
-Broaden the `test` job's task set from `:render-compose:*` to all published modules, **additively**:
-keep the proven `:render-compose:assemble` / `:render-compose:jvmJar` compile line unchanged and
-*add* the published modules' JVM / wasm / iOS **test** tasks.
-
-Why additive rather than a top-level `assemble`: `:core` and `:render-html-email` declare
-`macosX64`/`macosArm64`/`mingwX64` targets, which Kotlin/Native **cannot build on the Linux runner**.
-A top-level or per-module `assemble` of those modules would fail on `ubuntu-latest`. The current
-workflow only assembles `:render-compose` (jvm/android/ios/wasmJs — no macOS/mingw), so it never hits
-this. Test tasks (`jvmTest`, `wasmJsNodeTest`, `iosSimulatorArm64Test`) only compile the target they
-run on, all host-buildable on their respective runners — so extending the *test* set is safe.
-
-**JVM leg (both OS):** run JVM tests for every published module (this is what exercises compose2pdf,
-via `render-pdf`/`render-html`), keeping the existing single-module compile check:
-
-```
-# compile check (unchanged): :render-compose:assemble  (stable)  /  :render-compose:jvmJar  (prerelease)
-:core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test
-```
-
-**wasm leg (both OS):** extend to the wasm-capable published modules:
-
-```
-:core:wasmJsNodeTest :render-compose:wasmJsNodeTest :render-html-email:wasmJsNodeTest
-```
-
-**iOS leg (macOS only):** extend to the iOS-capable published modules:
-
-```
-:core:iosSimulatorArm64Test :render-compose:iosSimulatorArm64Test :render-html-email:iosSimulatorArm64Test
-```
-
-`render-pdf`/`render-html` are JVM-only, so they appear only in the JVM leg.
-
-**Task-name rules** (verified against the build files):
-- KMP-jvm modules (`core`, `render-compose`, `render-html-email`, `render-pdf`) → `:m:jvmTest`.
-- `kotlin.jvm` module (`render-html`) → `:render-html:test`.
-
-**Pinning:** the matrix does **not** override the `compose2pdf` version. It must test whatever
-version actually ships, so a real incompatibility fails the build. (Highest-wins resolution upgrades
-compose2pdf's transitive Compose deps to the matrix version — exactly the condition under test.)
-
-**Path trigger:** extend the `pull_request.paths` list (currently `render-compose/**`, `build-logic/**`,
-plus the version files) to also include `core/**`, `render-pdf/**`, `render-html/**`,
-`render-html-email/**`, so edits to those modules re-run the matrix.
-
-Update the step comment to reflect the broadened scope (still explains the Android-on-prerelease skip).
-
-### Change 2 — `gradle/libs.versions.toml`
-
-Bump `compose2pdf = "1.1.2"` → `"1.1.3"` (the release that fixes Compose 1.12). Confirmed live on
-Maven Central (`<release>1.1.3`, POM 200), so it lands in the same PR — no propagation wait.
-
-## Testing / verification (evidence, not assertion)
-
-1. **Baseline (default Compose 1.10.3):** run the new JVM task set locally and confirm green:
-   `./gradlew :render-compose:assemble :core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test --no-configuration-cache`
-2. **Failing-test proof the guard works:** with `compose-multiplatform` overridden to `1.12.0-alpha02`
-   and `kotlin` to `2.4.0`, pin compose2pdf at the **old `1.1.2`** and run `:render-pdf:jvmTest`
-   `:render-html:test` → expect FAILURE (proves detection). Then set compose2pdf `1.1.3` → expect green.
-3. Confirm `compat-gate` still fails on any skipped/failed/cancelled leg (logic unchanged).
+- **render-html driver:** RED (current code fails to compile on CMP 1.12) → GREEN (`:render-html:test`
+  passes at base 1.10.3 AND under a 1.12.0-alpha01/2.4.0 + compose2pdf 1.2.0 override). `:render-pdf:jvmTest`
+  green under the same 1.12 override (proves the compose2pdf 1.2.0 inheritance).
+- **base bump:** `:build-logic:wasmjs-node-compose:test` + `:render-compose:wasmJsNodeTest` green on Kotlin 2.4.0.
+- **compat harness/CI:** each cell's `compat-consumer` smoke green (prerelease per the decision above).
+- **docs:** `render-compat-tables.py --check` passes; grep confirms core/render-html-email Compose-free.
 
 ## Out of scope
 
-- **Golden-image fidelity tests** (`:kinvoicing-fidelity-test:test`, `:fidelity-test:jvmTest`) stay in
-  `build.yml` at the default Compose version. Running them across Compose versions would false-positive
-  on pixel diffs from legitimate rendering changes, not real incompatibilities.
-- Native leg (`macosArm64Test`, `linuxX64Test`, etc.) is not added to the matrix — those targets can't
-  build on the Linux runner and only the iOS-sim leg runs on macOS. `build.yml` runs the native tests
-  at default Compose.
-- No change to `build.yml`, `release.yml`, `snapshot.yml`, or the versions JSON.
+- Golden-image fidelity tests stay in `build.yml` at the base CMP (pixel diffs false-positive across versions).
+- `render-compose` stays source-recompiled per cell (KMP klib; not reflectively bridgeable) — documented as such.
+- Native/Android legs beyond what already runs; no change to release/snapshot workflows.
 
-## Risks & mitigations
+## Blockers / risks (verified)
 
-| Risk | Mitigation |
-|------|------------|
-| Wrong task names (`jvmTest` vs `test`, `jvmJar` vs `jar`) | Rules pinned above from build files; baseline run in step 1 catches typos. |
-| Prerelease pulls preview androidx needing newer compileSdk | Preserved: prereleases use per-module JVM tasks, never top-level `assemble`/Android. |
-| Added iOS/wasm legs increase macOS runner time | Scoped to iOS/wasm-capable published modules only; `fail-fast: false` already isolates legs. |
-| compose2pdf 1.1.3 has its own floor/ceiling on Compose | Baseline + matrix runs surface it; 1.1.3 was released specifically for 1.12. |
+1. ~~compose2pdf 1.2.0 not published~~ — **resolved: 1.2.0 is live on Maven Central** (`<release>1.2.0`).
+2. Kotlin 2.4.0 base bump may break the reflective `wasmjs-node-compose` plugin — gated re-verify required.
+3. The `-Pversion`/publish-read-back mechanism for `compat-consumer` must be decided before the harness (fixed string).
+4. `PlatformContext.Empty`/`close()`/invoke fail paths: port must route them through the actionable fail-loud message, not copy compose2pdf's raw-exception paths verbatim.
+5. 1.10.3's factory shape is only smoke-verified (never javap-verified); keep the 1.10.3 compat cell blocking as the proof.
