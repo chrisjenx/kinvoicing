@@ -62,23 +62,22 @@ Published modules and their targets:
 
 ### Change 1 — `.github/workflows/compatibility.yml`
 
-Broaden the `test` job's task set from `:render-compose:*` to all published modules, keeping the
-existing structure (Android-avoidance on prereleases, wasm leg, iOS leg on macOS).
+Broaden the `test` job's task set from `:render-compose:*` to all published modules, **additively**:
+keep the proven `:render-compose:assemble` / `:render-compose:jvmJar` compile line unchanged and
+*add* the published modules' JVM / wasm / iOS **test** tasks.
 
-**JVM leg (both OS), stable versions:** top-level `assemble` (compiles every module / every target,
-including Android, native, wasm, iOS klibs) followed by the JVM test tasks:
+Why additive rather than a top-level `assemble`: `:core` and `:render-html-email` declare
+`macosX64`/`macosArm64`/`mingwX64` targets, which Kotlin/Native **cannot build on the Linux runner**.
+A top-level or per-module `assemble` of those modules would fail on `ubuntu-latest`. The current
+workflow only assembles `:render-compose` (jvm/android/ios/wasmJs — no macOS/mingw), so it never hits
+this. Test tasks (`jvmTest`, `wasmJsNodeTest`, `iosSimulatorArm64Test`) only compile the target they
+run on, all host-buildable on their respective runners — so extending the *test* set is safe.
+
+**JVM leg (both OS):** run JVM tests for every published module (this is what exercises compose2pdf,
+via `render-pdf`/`render-html`), keeping the existing single-module compile check:
 
 ```
-assemble
-:core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test
-```
-
-**JVM leg (both OS), prerelease versions** (compose-version contains `-`): keep avoiding Android by
-replacing top-level `assemble` with per-module JVM compile tasks, then the same JVM test set (all
-JVM-only → Android-safe):
-
-```
-:core:jvmJar :render-compose:jvmJar :render-html-email:jvmJar :render-pdf:jvmJar :render-html:jar
+# compile check (unchanged): :render-compose:assemble  (stable)  /  :render-compose:jvmJar  (prerelease)
 :core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test
 ```
 
@@ -94,9 +93,11 @@ JVM-only → Android-safe):
 :core:iosSimulatorArm64Test :render-compose:iosSimulatorArm64Test :render-html-email:iosSimulatorArm64Test
 ```
 
+`render-pdf`/`render-html` are JVM-only, so they appear only in the JVM leg.
+
 **Task-name rules** (verified against the build files):
-- KMP-jvm modules (`core`, `render-compose`, `render-html-email`, `render-pdf`) → `:m:jvmTest`, `:m:jvmJar`.
-- `kotlin.jvm` module (`render-html`) → `:render-html:test`, `:render-html:jar`.
+- KMP-jvm modules (`core`, `render-compose`, `render-html-email`, `render-pdf`) → `:m:jvmTest`.
+- `kotlin.jvm` module (`render-html`) → `:render-html:test`.
 
 **Pinning:** the matrix does **not** override the `compose2pdf` version. It must test whatever
 version actually ships, so a real incompatibility fails the build. (Highest-wins resolution upgrades
@@ -116,7 +117,7 @@ Maven Central (`<release>1.1.3`, POM 200), so it lands in the same PR — no pro
 ## Testing / verification (evidence, not assertion)
 
 1. **Baseline (default Compose 1.10.3):** run the new JVM task set locally and confirm green:
-   `./gradlew assemble :core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test --no-configuration-cache`
+   `./gradlew :render-compose:assemble :core:jvmTest :render-compose:jvmTest :render-html-email:jvmTest :render-pdf:jvmTest :render-html:test --no-configuration-cache`
 2. **Failing-test proof the guard works:** with `compose-multiplatform` overridden to `1.12.0-alpha02`
    and `kotlin` to `2.4.0`, pin compose2pdf at the **old `1.1.2`** and run `:render-pdf:jvmTest`
    `:render-html:test` → expect FAILURE (proves detection). Then set compose2pdf `1.1.3` → expect green.
@@ -127,9 +128,9 @@ Maven Central (`<release>1.1.3`, POM 200), so it lands in the same PR — no pro
 - **Golden-image fidelity tests** (`:kinvoicing-fidelity-test:test`, `:fidelity-test:jvmTest`) stay in
   `build.yml` at the default Compose version. Running them across Compose versions would false-positive
   on pixel diffs from legitimate rendering changes, not real incompatibilities.
-- Native leg (`macosArm64Test`, `linuxX64Test`, etc.) is not added to the matrix beyond what top-level
-  `assemble` compiles on stable versions — matching current behaviour. `build.yml` runs those at default
-  Compose.
+- Native leg (`macosArm64Test`, `linuxX64Test`, etc.) is not added to the matrix — those targets can't
+  build on the Linux runner and only the iOS-sim leg runs on macOS. `build.yml` runs the native tests
+  at default Compose.
 - No change to `build.yml`, `release.yml`, `snapshot.yml`, or the versions JSON.
 
 ## Risks & mitigations
