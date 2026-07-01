@@ -50,10 +50,10 @@ jobs:
       - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
-          # 21 so the compat-consumer's jvmToolchain(21) resolves the installed JDK
-          # (no auto-provision) and the shipped jars publish at the same JDK the
-          # release build uses. 21 runs the render-compose legs' bytecode fine too.
-          java-version: 21
+          # Match the release/build.yml JDK (17) so the compat-published jars are the
+          # same bytecode users get; the compat-consumer's jvmToolchain(17) resolves this
+          # installed JDK with no auto-provision.
+          java-version: 17
 
       # macos-latest default Xcode lacks the UIUtilities framework that
       # CMP 1.11+ auto-links from compose.ui-uikit.

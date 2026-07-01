@@ -47,7 +47,9 @@ def version_key(v):
     pre = pre.lower()
     if pre:
         m = re.match(r"([a-z]+)\.?([0-9]*)", pre)
-        rank = _PRERELEASE_RANK.get(m.group(1), 0) if m else 0
+        # Unknown or non-alpha prerelease labels (e.g. "-snapshot", "-1") rank -1:
+        # below every known prerelease (dev=0..rc=3) but still below any stable (9).
+        rank = _PRERELEASE_RANK.get(m.group(1), -1) if m else -1
         num = int(m.group(2)) if (m and m.group(2)) else 0
     else:
         rank, num = 9, 0  # stable > any prerelease
@@ -93,7 +95,10 @@ def build_block():
             lines.append(f"| **{cv}** | {pinned_kotlin or kv} | CI tested (current) |")
             pinned_shown = True
         else:
-            lines.append(f"| {cv} | {kv} | CI tested |")
+            # Pre-release rows are exercised but non-blocking (continue-on-error on the
+            # shipped-renderer smoke), so don't label them the same as blocking stables.
+            status = "CI tested (pre-release, non-blocking)" if "-" in cv else "CI tested"
+            lines.append(f"| {cv} | {kv} | {status} |")
     table = "\n".join(lines)
 
     # Keep the shipped version visible even after it rolls out of the tested matrix.

@@ -132,6 +132,8 @@ Expected: PASS. Then repeat with `-PcomposeVersion=1.12.0-alpha01` → PASS (pro
 
 ### Task 6: Prerelease enforcement, JSON resync, CLAUDE.md
 
+> **Status: COMPLETE** — all steps shipped (commit `4bc8672`; review fixes `bcb545b`). Prerelease kept non-blocking (matches compose2pdf); JSON resynced `alpha01`→`beta01`; CLAUDE.md rewritten. Steps 1–4 below are done.
+
 **Files:** Modify `.github/compose-versions.json`, `.github/workflows/compatibility.yml`, `CLAUDE.md`.
 
 - [ ] **Step 1: Prerelease decision** — with the driver + compose2pdf 1.2.0 in place, either drop `continue-on-error` for the 1.12 cell (enforce green) or keep it and label the docs "newest prerelease = best-effort". Do not leave the docs claiming "all green" with `continue-on-error` still on.

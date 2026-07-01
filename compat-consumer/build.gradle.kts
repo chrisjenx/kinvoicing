@@ -12,7 +12,7 @@ val skikoVersion = providers.gradleProperty("skikoVersion").orNull // fallback o
 
 kotlin {
     // Match the JVM bytecode target of the published kinvoicing jars (built on JDK 21).
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 dependencies {

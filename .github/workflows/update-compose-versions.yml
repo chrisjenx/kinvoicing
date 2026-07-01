@@ -141,8 +141,10 @@ jobs:
 
             The compatibility CI will run on this PR to verify the shipped binaries run against
             every version in the matrix. If a stable version fails, drop it from
-            `.github/compose-versions.json` (or change the base) before merging; pre-release
-            failures are informational.
+            `.github/compose-versions.json` (or change the base) before merging. For pre-release
+            versions, the shipped-renderer compatibility smoke is non-blocking (informational),
+            but the `render-compose` recompile legs (`jvmTest`/`wasmJsNodeTest`/`iosSimulatorArm64Test`)
+            still block — if a pre-release fails those, drop it from the matrix before merging.
           branch: auto/update-compose-versions
           labels: dependencies
           commit-message: "Update Compose Multiplatform compatibility matrix"

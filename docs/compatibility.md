@@ -17,7 +17,7 @@ Kinvoicing is tested weekly against the 3 most recent Compose Multiplatform rele
 <!-- BEGIN cmp-matrix -->
 | Compose Multiplatform | Kotlin | Status |
 |:----------------------|:-------|:-------|
-| 1.12.0-beta01 | 2.4.0 | CI tested |
+| 1.12.0-beta01 | 2.4.0 | CI tested (pre-release, non-blocking) |
 | **1.11.1** | 2.4.0 | CI tested (current) |
 | 1.10.3 | 2.4.0 | CI tested |
 <!-- END cmp-matrix -->
