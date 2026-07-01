@@ -55,3 +55,6 @@ docs/Gemfile.lock
 # Claude Code
 .claude/settings.json
 .claude/settings.local.json
+
+# Superpowers process docs (specs/plans — not shipped)
+docs/superpowers/
