@@ -98,8 +98,17 @@ jobs:
           ' gradle/libs.versions.toml
           grep -qE "^kotlin = \"${{ matrix.version.kotlin-version }}\"$" gradle/libs.versions.toml
           grep -qE "^compose-multiplatform = \"${{ matrix.version.compose-version }}\"$" gradle/libs.versions.toml
+          # JetBrains material3 is versioned independently of the CMP umbrella. From CMP 1.13 it is
+          # released in lockstep (material3 1.13.x <-> CMP 1.13.x); older cells keep the 1.9.0 that
+          # the (deprecated) compose.material3 alias resolved to on CMP <= 1.12. Without this, the
+          # pinned 1.13 material3 would drag older cells' Compose UI up to 1.13 transitively.
+          CV="${{ matrix.version.compose-version }}"
+          MINOR=$(echo "$CV" | cut -d. -f2)
+          if [ "$MINOR" -ge 13 ]; then M3="$CV"; else M3="1.9.0"; fi
+          perl -i -pe "s/^compose-material3 = \".*\"/compose-material3 = \"$M3\"/" gradle/libs.versions.toml
+          grep -qE "^compose-material3 = \"$M3\"$" gradle/libs.versions.toml
           echo "Testing CMP ${{ matrix.version.compose-version }} + Kotlin ${{ matrix.version.kotlin-version }}"
-          grep -E '^(kotlin|compose-multiplatform) = ' gradle/libs.versions.toml
+          grep -E '^(kotlin|compose-multiplatform|compose-material3) = ' gradle/libs.versions.toml
 
       - name: Assemble + JVM/wasmJs tests
         # Avoid Android testDebugUnitTest (BitmapFactory needs Robolectric).
@@ -166,9 +175,10 @@ jobs:
           perl -i -pe '
             s/^kotlin = ".*"/kotlin = "2.4.0"/;
             s/^compose-multiplatform = ".*"/compose-multiplatform = "1.12.0-beta01"/;
+            s/^compose-material3 = ".*"/compose-material3 = "1.9.0"/;
             s/^compose2pdf = ".*"/compose2pdf = "1.2.0"/;
           ' gradle/libs.versions.toml
-          grep -E '^(kotlin|compose-multiplatform|compose2pdf) = ' gradle/libs.versions.toml
+          grep -E '^(kotlin|compose-multiplatform|compose-material3|compose2pdf) = ' gradle/libs.versions.toml
       - name: render-html + render-pdf tests on the reshaped scene API (NextDriver)
         # render-html recompiled here exercises the SAME reflective ComposeSceneRenderer that
         # ships (dispatch is runtime-based), so a broken NextDriver path fails this blocking job.

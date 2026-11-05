@@ -58,3 +58,6 @@ docs/Gemfile.lock
 
 # Superpowers process docs (specs/plans — not shipped)
 docs/superpowers/
+
+# Kotlin Gradle plugin per-project caches
+.kotlin/

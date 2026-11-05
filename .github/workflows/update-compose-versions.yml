@@ -98,6 +98,16 @@ jobs:
             echo "ERROR: no stable Compose version detected for the build base"
             exit 1
           fi
+          # Never DOWNGRADE the base: it may be deliberately pinned to a newer pre-release (e.g. a
+          # 1.13 beta ahead of 1.13.0 stable). Only move forward — a stable whose X.Y.Z is higher than
+          # the pin's, or the same X.Y.Z when the pin is that version's pre-release.
+          CURRENT_BASE=$(sed -n 's/^compose-multiplatform = "\(.*\)"/\1/p' gradle/libs.versions.toml)
+          CURRENT_CORE="${CURRENT_BASE%%-*}"
+          NEWEST_CORE=$(printf '%s\n%s\n' "$CURRENT_CORE" "$BASE_COMPOSE" | sort -V | tail -1)
+          if [ "$NEWEST_CORE" != "$BASE_COMPOSE" ] || { [ "$CURRENT_CORE" = "$BASE_COMPOSE" ] && [ "$CURRENT_BASE" = "$CURRENT_CORE" ]; }; then
+            echo "Keeping build base Compose $CURRENT_BASE (latest stable $BASE_COMPOSE is not newer)"
+            BASE_COMPOSE="$CURRENT_BASE"
+          fi
           echo "Build base -> Compose $BASE_COMPOSE + Kotlin $LATEST_KOTLIN"
           perl -i -pe "s/^compose-multiplatform = .*/compose-multiplatform = \"$BASE_COMPOSE\"/" gradle/libs.versions.toml
           perl -i -pe "s/^kotlin = .*/kotlin = \"$LATEST_KOTLIN\"/" gradle/libs.versions.toml

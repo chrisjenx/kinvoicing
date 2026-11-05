@@ -1,5 +1,6 @@
 package com.chrisjenx.kinvoicing.pdf
 
+import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.kinvoicing.InvoiceFixtures
 import com.chrisjenx.kinvoicing.InvoiceSection
 import org.apache.pdfbox.Loader
@@ -83,6 +84,33 @@ class PdfRendererTest {
         val doc = Loader.loadPDF(bytes)
         doc.use {
             assertTrue(it.numberOfPages > 1, "Long fixture should span multiple pages, got ${it.numberOfPages}")
+        }
+    }
+
+    /**
+     * Guards the CMP 1.13 Skiko-registration regression ("No Compose UI graphics implementation is
+     * registered (SkikoGraphics)"): every compose2pdf render mode must produce a valid, parseable PDF.
+     * Covers every mode in one JVM so a mode that happens to register Skiko can't mask one that doesn't
+     * (each mode is also asserted independently, so the first-run mode is exercised cold).
+     */
+    @Test
+    fun everyRenderModeProducesValidPdf() {
+        assertTrue(RenderMode.entries.isNotEmpty())
+        for (mode in RenderMode.entries) {
+            val bytes = PdfRenderer(PdfRenderConfig(renderMode = mode)).render(InvoiceFixtures.basic)
+            assertTrue(bytes.size > 100, "$mode: PDF should have meaningful content (${bytes.size} bytes)")
+            assertEquals("%PDF-", bytes.copyOfRange(0, 5).decodeToString(), "$mode: missing PDF header")
+            Loader.loadPDF(bytes).use { doc ->
+                assertTrue(doc.numberOfPages >= 1, "$mode: PDF should have at least 1 page")
+                val page = doc.getPage(0)
+                assertTrue(page.mediaBox.width > 0 && page.mediaBox.height > 0, "$mode: empty page box")
+                if (mode == RenderMode.VECTOR) {
+                    val text = PDFTextStripper().getText(doc).replace(" ", "")
+                    assertTrue("INV-2026-0001" in text, "$mode: vector PDF should contain invoice number")
+                } else {
+                    assertTrue(page.resources.xObjectNames.any(), "$mode: raster PDF should embed an image")
+                }
+            }
         }
     }
 

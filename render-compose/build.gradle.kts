@@ -28,7 +28,7 @@ kotlin {
                 api(project(":core"))
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-                implementation(compose.material3)
+                implementation(libs.compose.material3)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
             }
@@ -48,9 +48,24 @@ kotlin {
 
 android {
     namespace = "com.chrisjenx.kinvoicing.compose"
-    compileSdk = 36
+    compileSdk {
+        version = release(37) { minorApiLevel = 1 }
+    }
     defaultConfig {
         minSdk = 23
+    }
+    // AGP 9.5 registers a Compose Preview runfiles task per variant (whenever compose is enabled) that
+    // refuses to configure unless that variant has unit tests that include compiled Android resources.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+}
+
+// AGP 9 disables release unit tests by default (AGP 8 had them on); re-enable them so the per-variant
+// Compose Preview runfiles task above can configure for 'release' too.
+androidComponents {
+    beforeVariants { variant ->
+        variant.hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
     }
 }
 
