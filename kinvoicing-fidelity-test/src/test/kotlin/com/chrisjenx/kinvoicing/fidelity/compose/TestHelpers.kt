@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.asComposeCanvas
+import androidx.compose.ui.platform.FrameRecomposer
+import androidx.compose.ui.platform.registerSkikoComposeImplementation
 import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
@@ -95,15 +97,28 @@ internal fun renderComposeToSvg(
     val recordCanvas = recorder.beginRecording(
         SkiaRect.makeWH(widthPx.toFloat(), heightPx.toFloat())
     )
-    val scene = CanvasLayersComposeScene(
-        density = density,
-        size = IntSize(widthPx, heightPx),
-        coroutineContext = Dispatchers.Unconfined,
-        invalidate = {},
-    )
-    scene.setContent(content)
-    scene.render(recordCanvas.asComposeCanvas(), nanoTime = 0)
-    scene.close()
+    // CMP >= 1.13: the bare CanvasLayersComposeScene factory doesn't register the Skiko graphics/text
+    // implementation (only ImageComposeScene/ComposeContainer do), so register it explicitly.
+    // Idempotent; harmless if an ImageComposeScene already registered it in this JVM.
+    registerSkikoComposeImplementation()
+    val frameRecomposer = FrameRecomposer(Dispatchers.Unconfined)
+    try {
+        val scene = CanvasLayersComposeScene(
+            frameRecomposer,
+            density = density,
+            size = IntSize(widthPx, heightPx),
+        )
+        try {
+            scene.setContent(content = content)
+            frameRecomposer.performFrame(0L)
+            scene.measureAndLayout()
+            scene.draw(recordCanvas.asComposeCanvas())
+        } finally {
+            scene.close()
+        }
+    } finally {
+        frameRecomposer.close()
+    }
     val picture = recorder.finishRecordingAsPicture()
 
     val baos = ByteArrayOutputStream()

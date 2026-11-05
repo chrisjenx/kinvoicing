@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Compose Multiplatform 1.13 support. No visual or API changes.
+
+### Changed
+
+- **Compose Multiplatform 1.13.0-beta02** is now the build base (was 1.11.1). Material3 is pinned explicitly to JetBrains `material3:1.13.0-beta02` (androidx M3 1.5.0-beta02), with skiko 0.156.1 arriving transitively.
+- **compose2pdf 1.5.0** (was 1.2.0). This release fixes the CMP 1.13 crash `No Compose UI graphics implementation is registered (SkikoGraphics)` in `render-pdf`.
+- Kotlin 2.4.21 (was 2.4.0; CMP 1.13's wasmJs klibs need it). AGP 9.5.0 and Gradle 9.8.2, because CMP 1.13's androidx artifacts require AGP ≥ 9.1.
+- Android `compileSdk` is now 37.1 (CMP 1.13's androidx artifacts require `minCompileSdk=37`, `minCompileMinorSdk=1`). `minSdk` is unchanged at 23.
+
+### Fixed
+
+- **render-html on CMP 1.13:** the reflective Compose scene driver now registers Compose's Skiko graphics/text implementation before building a `CanvasLayersComposeScene`. CMP 1.13 only registers it from the `ImageComposeScene`/`ComposeContainer` constructors, so without this `toHtml()` failed with `No Compose UI graphics implementation is registered (SkikoGraphics)`. Registration is resolved reflectively and is a no-op on CMP ≤ 1.12, so one binary still runs on 1.11 → 1.13.
+
+### Tests / CI
+
+- `render-pdf`: new test that renders an invoice in every compose2pdf `RenderMode` and checks that each output is a valid, parseable PDF.
+- Compatibility matrix is now 1.11.1 / 1.12.2 / 1.13.0-beta02. Matrix cells pin material3 per Compose version. The weekly updater no longer downgrades a pre-release build base to an older stable.
+
 ## [1.2.0] — 2026-04-28
 
 Generic `link()` / `button()` DSL across all blocks, a `LinkStyle` choice for the

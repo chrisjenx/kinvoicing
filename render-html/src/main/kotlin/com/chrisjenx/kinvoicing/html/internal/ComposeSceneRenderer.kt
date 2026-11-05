@@ -40,7 +40,8 @@ internal class ComposeSceneException(message: String, cause: Throwable? = null) 
  * the reflection handles are resolved once (they are instance-independent) and reused per render.
  * If neither known shape resolves, [drawContent] fails fast with a descriptive [ComposeSceneException].
  *
- * Mirrors compose2pdf 1.2.0's `ComposeSceneRenderer` intentionally — keep them in lockstep.
+ * Mirrors compose2pdf's `ComposeSceneRenderer` (1.2.0 scene driver, 1.5.0 Skiko registration)
+ * intentionally — keep them in lockstep.
  */
 internal object ComposeSceneRenderer {
 
@@ -58,14 +59,39 @@ internal object ComposeSceneRenderer {
     }
 
     // Detect + cache the strategy once. FrameRecomposer only exists on the >= 1.12 shape.
+    // Skiko registration runs first (once per process): CMP >= 1.13 needs it before any scene work.
     private val driver: SceneDriver by lazy {
+        registerSkikoImplementation()
         if (classOrNull(FRAME_RECOMPOSER) != null) NextDriver else LegacyDriver
+    }
+
+    /**
+     * CMP >= 1.13 moved Compose UI graphics/text behind a platform registry that is only populated
+     * from the `ImageComposeScene` / `ComposeContainer` constructors (via the `@InternalComposeUiApi`
+     * `registerSkikoComposeImplementation()`). The bare `CanvasLayersComposeScene` factory this
+     * driver uses does NOT register, so without this call the first draw fails with
+     * "No Compose UI graphics implementation is registered (SkikoGraphics)".
+     *
+     * Resolved reflectively because the function doesn't exist before 1.13 (one binary spans
+     * 1.11 → 1.13+); absent means "nothing to register". Registration is idempotent for the same
+     * Skiko singletons, so it's safe alongside compose2pdf or an ImageComposeScene registering too.
+     */
+    private fun registerSkikoImplementation() {
+        val runtime = classOrNull(SKIKO_RUNTIME) ?: return
+        val register = try {
+            runtime.getMethod(REGISTER_SKIKO)
+        } catch (e: NoSuchMethodException) {
+            fail("$SKIKO_RUNTIME has no $REGISTER_SKIKO()", e)
+        }
+        register.call(null)
     }
 
     private const val FACTORY_CLASS = "androidx.compose.ui.scene.CanvasLayersComposeScene_skikoKt"
     private const val COMPOSE_SCENE = "androidx.compose.ui.scene.ComposeScene"
     private const val FRAME_RECOMPOSER = "androidx.compose.ui.platform.FrameRecomposer"
     private const val PLATFORM_CONTEXT_EMPTY = "androidx.compose.ui.platform.PlatformContext\$Empty"
+    private const val SKIKO_RUNTIME = "androidx.compose.ui.platform.ComposeUiSkikoRuntime_nonAndroidKt"
+    private const val REGISTER_SKIKO = "registerSkikoComposeImplementation"
 
     // Parameter types used to disambiguate reflective method lookups (see [reflectMethod]).
     private const val COMPOSE_CANVAS = "androidx.compose.ui.graphics.Canvas"
